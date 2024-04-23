@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-cfoscontrolleramd64alpha2
+  namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cfoscontrolleramd64alpha2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cfoscontrolleramd64alpha2
+  template:
+    metadata:
+      labels:
+        app: cfoscontrolleramd64alpha2
+    spec:
+      serviceAccountName: sa-cfoscontrolleramd64alpha2
+      containers:
+      - name: cfoscontrolleramd64alpha2
+        image: interbeing/myfmg:cfoscontrolleramd64alpha2
+        imagePullPolicy: Always
+        env: 
+          - name: LOGLEVEL
+            value: "info"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: cfoscontrollerenv
+#        envFrom:
+#        - configMapRef:
+#            name: cfoscontrollerenv
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cfoscontrolleramd64alpha2-role
+rules:
+- apiGroups: ["", "extensions", "networking.k8s.io"]
+  resources: ["ingresses", "services", "endpoints", "pods", "nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses/status"]
+  verbs: ["get", "list", "watch", "update"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "update", "create"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cfoscontrolleramd64alpha2-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cfoscontrolleramd64alpha2-role
+subjects:
+- kind: ServiceAccount
+  name: sa-cfoscontrolleramd64alpha2
+  namespace: default
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfoscontrollerenv
+data:   
+#  protectedClusterIPSVCName: goweb
+#  CFOSLBSERVICENAME: fweb70577-service
