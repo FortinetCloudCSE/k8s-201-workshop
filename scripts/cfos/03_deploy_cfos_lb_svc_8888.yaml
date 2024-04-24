@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: cfos7210250-service
   annotations:
-    protectedClusterIPSVCName: goweb
+    protectedClusterIPSVCName: go2web
     metallb.universe.tf/loadBalancerIPs: 10.0.0.4
     service.beta.kubernetes.io/azure-dns-label-name: k8strainingmaster1
 spec:
@@ -12,8 +12,11 @@ spec:
   - port: 8080
     name: rest
     targetPort: 80
+  - port: 8889
+    name: cfos-nginx
+    targetPort: 8889
   - port: 8888
-    name: cfos7210250-service-8888
+    name: cfos-goweb
     targetPort: 8888
   selector:
     app: cfos
