@@ -7,3 +7,5 @@ kubectl run curl-pod --image=curlimages/curl --restart=Never -- curl cfos7210250
 kubectl logs curl-pod
 kubectl delete pod curl-pod
 
+#dns
+dig @k8strainingmaster1.westus.cloudapp.azure.com -p 8888 www.google.com
