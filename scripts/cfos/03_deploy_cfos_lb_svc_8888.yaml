@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: cfos7210250-service
   annotations:
-    protectedClusterIPSVCName: go2web
+    protectedClusterIPSVCName: go2web2
     metallb.universe.tf/loadBalancerIPs: 10.0.0.4
     service.beta.kubernetes.io/azure-dns-label-name: k8strainingmaster1
 spec:
@@ -17,9 +17,13 @@ spec:
     targetPort: 8889
     protocol: TCP
   - port: 8888
-    name: cfos-coredns-1
-    targetPort: 53
-    protocol: UDP
+    name: cfos-nginx-1
+    targetPort: 8888
+    protocol: TCP
+  - port: 8887
+    name: cfos-nginx-2
+    targetPort: 8887
+    protocol: TCP
   selector:
     app: cfos
   type: LoadBalancer
