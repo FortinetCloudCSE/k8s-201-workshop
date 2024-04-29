@@ -2,27 +2,27 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: sa-cfoscontrolleramd64alpha5
+  name: sa-cfoscontrolleramd64alpha9
   namespace: default
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cfoscontrolleramd64alpha5
+  name: cfoscontrolleramd64alpha9
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cfoscontrolleramd64alpha5
+      app: cfoscontrolleramd64alpha9
   template:
     metadata:
       labels:
-        app: cfoscontrolleramd64alpha5
+        app: cfoscontrolleramd64alpha9
     spec:
-      serviceAccountName: sa-cfoscontrolleramd64alpha5
+      serviceAccountName: sa-cfoscontrolleramd64alpha9
       containers:
-      - name: cfoscontrolleramd64alpha5
-        image: interbeing/myfmg:cfoscontrolleramd64alpha5
+      - name: cfoscontrolleramd64alpha9
+        image: interbeing/myfmg:cfoscontrolleramd64alpha9
         imagePullPolicy: Always
         env: 
           - name: LOGLEVEL
@@ -41,8 +41,14 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: cfoscontrolleramd64alpha5-role
+  name: cfoscontrolleramd64alpha9-role
 rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["", "extensions", "networking.k8s.io"]
   resources: ["ingresses", "services", "endpoints", "pods", "nodes"]
   verbs: ["get", "list", "watch"]
@@ -51,7 +57,7 @@ rules:
   verbs: ["get", "list", "watch", "update"]
 - apiGroups: [""]
   resources: ["configmaps"]
-  verbs: ["get", "list", "watch", "update", "create"]
+  verbs: ["get", "list", "watch", "update", "create","delete","patch"]
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "list", "watch"]
@@ -59,14 +65,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: cfoscontrolleramd64alpha5-rolebinding
+  name: cfoscontrolleramd64alpha9-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cfoscontrolleramd64alpha5-role
+  name: cfoscontrolleramd64alpha9-role
 subjects:
 - kind: ServiceAccount
-  name: sa-cfoscontrolleramd64alpha5
+  name: sa-cfoscontrolleramd64alpha9
   namespace: default
 ---
 apiVersion: v1
@@ -74,5 +80,7 @@ kind: ConfigMap
 metadata:
   name: cfoscontrollerenv
 data:   
+   cfosContainerImage: "interbeing/fos:latest"
+   cfosPullSecret: "dockerinterbeing"
 #  protectedClusterIPSVCName: goweb
 #  CFOSLBSERVICENAME: fweb70577-service
