@@ -11,12 +11,7 @@ CNI_PLUGINS_VERSION="v1.1.1"
 ```
 # install multus
 ```
-   cd /home/ubuntu
-   git clone -b v3.9.3  https://github.com/intel/multus-cni.git
-#   sed -i 's/multus-conf-file=auto/multus-conf-file=\/tmp\/multus-conf\/70-multus.conf/g' /home/ubuntu/multus-cni/deployments/multus-daemonset.yml
-   sed -i 's/stable/v3.9.3/g' /home/ubuntu/multus-cni/deployments/multus-daemonset.yml
-   cat /home/ubuntu/multus-cni/deployments/multus-daemonset.yml | kubectl --kubeconfig /home/ubuntu/.kube/config apply -f -
-
+./install_multus.sh
 ```
 # create nad for application pod
 ```
@@ -35,10 +30,42 @@ kubectl apply -f demo_application_pod.yaml
 
 # create cfos pod
 ```
+kubectl apply -f 01_create_cfos_account.yaml
+kubectl apply -f cfos_license.yaml 
+kubectl apply -f dockerinterbeing.yaml
 kubectl apply -f cfos_pod.yaml
+
 ```
 
 # config cfos
+login cfos 
+```
+XIANPINGs-MacBook-Air:egress i$ k exec -it po/cfos -- sh
+# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+3: eth0@if16: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default 
+    link/ether 7a:c7:8c:02:f5:43 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.244.166.11/32 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::78c7:8cff:fe02:f543/64 scope link 
+       valid_lft forever preferred_lft forever
+4: net1@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether ca:fe:c0:ff:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.200.252/24 brd 10.1.200.255 scope global net1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::c8fe:c0ff:feff:2/64 scope link 
+       valid_lft forever preferred_lft forever
+# fcnsh
+User: admin
+Password: 
+
+```
+and paste below config 
 ```
 config router static
     edit 10
