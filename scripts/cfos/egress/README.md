@@ -1,3 +1,9 @@
+# purpuse
+
+this is the demo for egress security. application pod will config explict route to 1.1.1.1 with nexthop point to cfos net1 interface.  the cfos net1 interface is created by multus CNI with proxy to bridge CNI. 
+
+from application pod, only traffic that destinated to 1.1.1.1 will be inspected by cFOS. rest of traffic will not be affected. 
+
 # install self managed ks8 with calico cni as well as bridge and macvlan cni
 macvlan and bridge shall come by default and placed in /opt/cni/bin
 # install multus
