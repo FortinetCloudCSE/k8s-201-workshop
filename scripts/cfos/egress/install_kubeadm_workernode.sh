@@ -52,12 +52,14 @@ CRICTL_VERSION="v1.25.0"
 ARCH="amd64"
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-$ARCH.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 
-#CNI_PLUGINS_VERSION="v1.1.1"
-#ARCH="amd64"
-#DEST="/opt/cni/bin"
-#sudo mkdir -p "$DEST"
-#curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
+function install_cni_binary() {
+CNI_PLUGINS_VERSION="v1.1.1"
+ARCH="amd64"
+DEST="/opt/cni/bin"
+sudo mkdir -p "$DEST"
+curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
 
+}
 
 #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
 RELEASE="v1.26.1"
@@ -81,6 +83,9 @@ sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/releas
 sudo chmod +x /usr/local/bin/kubectl
 
 sudo systemctl enable --now kubelet
+
+install_cni_binary 
+
 cd $HOME
 [ $? -eq 0 ] && echo "installation done on worker node"  
 trap - ERR

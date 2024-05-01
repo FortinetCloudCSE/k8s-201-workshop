@@ -21,7 +21,7 @@ address_prefix="10.0.0.0/16"
 subnet_prefix="10.0.0.0/24"
 domain="$location.cloudapp.azure.com"
 number_of_masters=1
-number_of_workers=0
+number_of_workers=1
 
 master_vm_names=()
 worker_vm_names=()
