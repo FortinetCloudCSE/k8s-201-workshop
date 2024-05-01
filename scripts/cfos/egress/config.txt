@@ -1,0 +1,51 @@
+config router static
+    edit 10
+        set dst 1.1.1.1/32
+        set gateway 169.254.1.1
+        set device "eth0"
+    next
+end
+
+
+config firewall policy
+    edit 10
+        set name "tointernet"
+        set srcintf "net1"
+        set dstintf "eth0"
+        set srcaddr "all"
+        set dstaddr "all"
+        set service "ALL"
+        set nat enable
+        set logtraffic all
+    next
+end
+/*
+# iptables -t nat --list -v
+Chain PREROUTING (policy ACCEPT 1 packets, 84 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+    3   252 fcn_prenat  all  --  any    any     anywhere             anywhere            
+    3   252 fcn_dnat   all  --  any    any     anywhere             anywhere            
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 1 packets, 84 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain POSTROUTING (policy ACCEPT 1 packets, 84 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+   10   832 fcn_nat    all  --  any    any     anywhere             anywhere            
+
+Chain fcn_dnat (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain fcn_nat (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    1    84 MASQUERADE  all  --  any    eth0    anywhere             anywhere             connmark match  0x10000/0xff0000
+
+Chain fcn_prenat (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    1    84 CONNMARK   all  --  net1   any     anywhere             anywhere             state NEW CONNMARK xset 0x10000/0xff0000
+# 
+
+*/

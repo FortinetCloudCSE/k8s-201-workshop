@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cfos
+  labels: 
+    app: cfos
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni6",  "ips": [ "10.1.200.252/32" ], "mac": "CA:FE:C0:FF:00:02" } ]'
+spec:
+  containers:
+  - name: cfos
+    image: interbeing/fos:latest
+    securityContext:
+#      privileged: true
+      capabilities:
+        add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
+    volumeMounts:
+    - mountPath: /data
+      name: data-volume
+  imagePullSecrets:
+  - name: dockerinterbeing
+  volumes:
+  - name: data-volume
+    hostPath:
+      path: /cfosdata
+      type: DirectoryOrCreate
+
