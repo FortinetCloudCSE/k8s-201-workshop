@@ -4,8 +4,10 @@ this is the demo for egress security. application pod will config explict route 
 
 from application pod, only traffic that destinated to 1.1.1.1 will be inspected by cFOS. rest of traffic will not be affected. 
 
-# install self managed ks8 with calico cni as well as bridge and macvlan cni
-macvlan and bridge shall come by default and placed in /opt/cni/bin
+```
+./create_kubeadm_k8s_on_ubuntu22.sh
+
+```
 # install multus
 ```
 ./install_multus.sh
@@ -30,64 +32,16 @@ kubectl apply -f demo_application_pod.yaml
 kubectl apply -f 01_create_cfos_account.yaml
 kubectl apply -f cfos_license.yaml 
 kubectl apply -f dockerinterbeing.yaml
-kubectl apply -f cfos_pod.yaml
+kubectl apply -f 02_create_cfos_deployment.yaml
 
 ```
 
 # config cfos
-login cfos 
-```
-XIANPINGs-MacBook-Air:egress i$ k exec -it po/cfos -- sh
-# ip a
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host 
-       valid_lft forever preferred_lft forever
-3: eth0@if16: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default 
-    link/ether 7a:c7:8c:02:f5:43 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.244.166.11/32 scope global eth0
-       valid_lft forever preferred_lft forever
-    inet6 fe80::78c7:8cff:fe02:f543/64 scope link 
-       valid_lft forever preferred_lft forever
-4: net1@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
-    link/ether ca:fe:c0:ff:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.1.200.252/24 brd 10.1.200.255 scope global net1
-       valid_lft forever preferred_lft forever
-    inet6 fe80::c8fe:c0ff:feff:2/64 scope link 
-       valid_lft forever preferred_lft forever
-# fcnsh
-User: admin
-Password: 
 
 ```
-and paste below config 
-```
-config router static
-    edit 10
-        set dst 1.1.1.1/32
-        set gateway 169.254.1.1
-        set device "eth0"
-    next
-end
-
-
-config firewall policy
-    edit 10
-        set name "tointernet"
-        set srcintf "net1"
-        set dstintf "eth0"
-        set srcaddr "all"
-        set dstaddr "all"
-        set service "ALL"
-        set nat enable
-        set logtraffic all
-    next
-end
+kubectl apply -f 03_cfos_firewallpolicycm.yaml
 
 ```
-
 # check result
 
 ```
