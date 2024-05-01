@@ -1,14 +1,5 @@
-# install self managed ks8 with calico cni
-# install cni binary
-this cni binary shall be installed during install k8s. if not. ssh into each of k8s node.
-do 
-```
-CNI_PLUGINS_VERSION="v1.1.1"
-    ARCH="amd64"
-    DEST="/opt/cni/bin"
-    sudo mkdir -p "$DEST"
-    curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
-```
+# install self managed ks8 with calico cni as well as bridge and macvlan cni
+macvlan and bridge shall come by default and placed in /opt/cni/bin
 # install multus
 ```
 ./install_multus.sh
