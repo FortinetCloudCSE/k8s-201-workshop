@@ -11,6 +11,12 @@ This document provides an overview of security measures and strategies to protec
 
 ## Scope of Kubernetes Security
 
+Applicaiton running on K8s include Cloud, K8s Clusters, Containers and Code(4C), 
+Each layer of the Cloud Native security model builds upon the next outermost layer. The Code layer benefits from strong base (Cloud, Cluster, Container) security layers.
+
+
+![4C] (https://miro.medium.com/v2/resize:fit:1400/format:webp/0*8xMUJB2t1HBj_Vyx.png "4C image")
+
 Securing workloads in Kubernetes involves multiple layers of the technology stack, from application development to runtime enforcement.
 
 ### During Application Development Phase
