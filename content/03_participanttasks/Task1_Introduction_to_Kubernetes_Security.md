@@ -31,13 +31,17 @@ Securing workloads in Kubernetes involves multiple layers of the technology stac
   - **Tool**: Fortinet FortiCSPM is also suited for this task.
 - **Workload Protection**: Implement measures to protect running workloads from threats through prevention, detection, and enforcement at both the Kubernetes API server level and at the Node/Container level.
   - **Tool**: Fortinet cFOS container firewall and FortiXDR can be used for workload Protection 
+  - **Tools** Fortinet Fortiweb WAF, FortiADC can be used for workload protection  for traffic entering Pods.
 
 #### Runtime Workload Protection 
 
 ##### Prevention/Protection via Network Security 
 - Actively stop unwanted traffic from entering or leaving Pods.
 - Includes network security enhancements and Kubernetes network policies.
-- **Tools**: Calico, Cilium provide advanced network policy enforcement. Fortinet cFOS can provide in-depth layer 7 security, other product like FortiWeb/FortiADC etc can offer Layer 4-Layer 7 protection to traffic entering Pods. 
+- **Tools**: Calico, Cilium provide advanced network policy enforcement. Fortinet cFOS can provide in-depth layer 7 security
+##### Prvention/Protection via Application Security
+- Actively stop API or Layer 4-7 traffic enter Application Pods. for example, malicous API traffic via k8s loadbalancer svc entering application POD, malicous TCP/UDP/SCTP traffic from external entering into application Pod etc., the attack is embeded in the traffic payload. 
+- **Tools**: Fortinet Fortiweb, Fortinet FortiADC etc product 
 
 ##### Prevention with Detection 
 - **Control Plane Monitoring**: Use Kubernetes API audit logs to detect unusual API access.
