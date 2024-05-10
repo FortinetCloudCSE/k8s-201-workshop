@@ -37,7 +37,7 @@ Securing workloads in Kubernetes involves multiple layers of the technology stac
 ##### Prevention/Protection via Network Security 
 - Actively stop unwanted traffic from entering or leaving Pods.
 - Includes network security enhancements and Kubernetes network policies.
-- **Tools**: Calico, Cilium provide advanced network policy enforcement. Fortinet cFOS can provide in-depth layer 7 security
+- **Tools**: Calico, Cilium provide advanced network policy enforcement. Fortinet cFOS can provide in-depth layer 7 security, other product like FortiWeb/FortiADC etc can offer Layer 4-Layer 7 protection to traffic entering Pods. 
 
 ##### Prevention with Detection 
 - **Control Plane Monitoring**: Use Kubernetes API audit logs to detect unusual API access.
