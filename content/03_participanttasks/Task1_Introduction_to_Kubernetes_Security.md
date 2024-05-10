@@ -34,15 +34,14 @@ Securing workloads in Kubernetes involves multiple layers of the technology stac
 
 #### Runtime Workload Protection 
 
-##### Active Approach via Network Security
+##### Prevention/Protection via Network Security 
 - Actively stop unwanted traffic from entering or leaving Pods.
-
 - Includes network security enhancements and Kubernetes network policies.
 - **Tools**: Calico, Cilium provide advanced network policy enforcement. Fortinet cFOS can provide in-depth layer 7 security
 
-##### Passive Prevention
+##### Prevention with Detection 
 - **Control Plane Monitoring**: Use Kubernetes API audit logs to detect unusual API access.
-- **Runtime Monitoring**: Employ Linux agents to detect unusual container syscalls, such as privilege escalation.
+- **Runtime Monitoring**: Employ Linux agents or agentless technology  to detect unusual container syscalls, such as privilege escalation.
   - **Tool**: Fortinet XDR is designed for this purpose.
 
 Based on the collected information, product like FortiXDR can offer real-time or near real-time response. 
