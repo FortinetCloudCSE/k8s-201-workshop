@@ -38,7 +38,7 @@ Securing workloads in Kubernetes involves multiple layers of the technology stac
 - Actively stop unwanted traffic from entering or leaving Pods.
 
 - Includes network security enhancements and Kubernetes network policies.
-- **Tools**: Calico, Cilium provide advanced network policy enforcement.
+- **Tools**: Calico, Cilium provide advanced network policy enforcement. Fortinet cFOS can provide in-depth layer 7 security
 
 ##### Passive Prevention
 - **Control Plane Monitoring**: Use Kubernetes API audit logs to detect unusual API access.
@@ -60,20 +60,11 @@ Based on the collected information, product like FortiXDR can offer real-time or
   - Pod Security Admission (Pod Security Standards)
 - Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
 
-##### Security Contexts
+#### Pod Security Contexts
 
 - **PodSecurityContext** or **securityContext** defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
 
-#### Runtime Detection and Response
 
-- **Control Plane Monitoring**: Use Kubernetes API audit logs to detect unusual API access.
-- **Runtime Monitoring**: Employ Linux agents to detect unusual container syscalls, such as privilege escalation.
-  - **Tool**: Fortinet XDR is designed for this purpose.
-
-#### Runtime Active Prevention
-
-- Includes network security enhancements and Kubernetes network policies.
-- **Tools**: Calico, Cilium provide advanced network policy enforcement.
 
 ### Network Security in Detail
 
