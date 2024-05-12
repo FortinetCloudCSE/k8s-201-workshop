@@ -70,10 +70,72 @@ Based on the collected information, product like FortiXDR can offer real-time or
   - Pod Security Admission (Pod Security Standards)
 - Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
 
+
 #### Pod Security Contexts
 
 - **PodSecurityContext** or **securityContext** defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
 
+#### - Review the cfos securityContext
+container require linux capabilites to be functional. the container runtime by default has already granted most command linux capabilites, for example, *cri1.25.4* version has below 
+```
+            "CAP_CHOWN",
+            "CAP_DAC_OVERRIDE",
+            "CAP_FSETID",
+            "CAP_FOWNER",
+            "CAP_SETGID",
+            "CAP_SETUID",
+            "CAP_SETPCAP",
+            "CAP_NET_BIND_SERVICE",
+            "CAP_KILL"
+
+```
+some of applicaiton like cFOS may need more privieldge to be funlly functional, for example, the *CAP_NET_RAW* is not in the list, then you will not able to use *ping* function inside cfos container. 
+
+*NET_RAW* :
+
+Use RAW and PACKET sockets
+Bind to any address for transparent proxying
+This capability allows the program to craft IP packets from scratch, which includes sending and receiving ICMP packets (used in tools like ping).
+
+*NET_ADMIN*:
+ grants a process extensive capabilities over network configuration and operations. such as nat, iptables etc., 
+
+*SYS_ADMIN*:
+It might be necessary for some advanced operations, such as configuring system-wide logging settings or manipulating system logs.
+
+```bash
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cfos7210250-deployment
+  labels:
+    app: cfos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cfos
+  template:
+    metadata:
+      labels:
+        app: cfos
+    spec:
+      serviceAccountName: cfos-serviceaccount
+      containers:
+      - name: cfos7210250-container
+        image: interbeing/fos:latest
+        securityContext:
+          capabilities:
+              add: ["NET_ADMIN","NET_RAW"]
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /data
+          name: data-volume
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+```
 
 
 ### Network Security in Detail
