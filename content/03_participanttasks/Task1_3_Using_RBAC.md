@@ -5,7 +5,7 @@ Learn how to use RBAC to control access to the Kubernetes Cluster.
 
 ## What is RBAC 
 
-"Kubernetes RBAC (Role-Based Access Control) is an authorization mechanism that regulates interactions with resources within a cluster. It operates by defining roles with specific permissions and binding these roles to users or service accounts. This approach ensures that only authorized entities can perform actions on resources such as pods, deployments, or secrets. By adhering to the principle of least privilege, RBAC allows each user or application access only to the permissions necessary for their tasks. It's important to note that RBAC deals exclusively with authorization and not with authentication; it assumes that the identity of users or service accounts has been verified prior to enforcing access controls."
+Kubernetes RBAC (Role-Based Access Control) is an authorization mechanism that regulates interactions with resources within a cluster. It operates by defining roles with specific permissions and binding these roles to users or service accounts. This approach ensures that only authorized entities can perform actions on resources such as pods, deployments, or secrets. By adhering to the principle of least privilege, RBAC allows each user or application access only to the permissions necessary for their tasks. It's important to note that RBAC deals exclusively with authorization and not with authentication; it assumes that the identity of users or service accounts has been verified prior to enforcing access controls.
 
 Below let's walk through how to define a role with limited permission and apply to an user for access Kubernetes Cluster
 
