@@ -21,17 +21,28 @@ Securing workloads in Kubernetes involves multiple layers of the technology stac
 
 - **Shift-left Approach**: Focus on software supply chain security by checking the application code and dependencies before building application containers.
 
+Tools: Fortinet Product [FortiDevSec](https://www.fortinet.com/products/fortidevsec)  is build for this purpose 
+
 ### During Deployment Phase
 
-- **Script Scanning**: Scan deployment scripts like Terraform and CloudFormation to ensure they follow the principle of least privilege and comply with enterprise compliance requirements.
+- **Script Scanning**: Scan deployment scripts like Terraform and CloudFormation, Secret, IAM etc to ensure they follow the principle of least privilege and comply with enterprise compliance requirements.
 - **Configuration Checks**: Evaluate Kubernetes configurations against best practices and compliance standards, such as CIS benchmarks.
 - **Container Scanning**: Scan container images for known vulnerabilities (CVEs).
+
+Tools: 
+Fortinet Product [FortiDevSec](https://www.fortinet.com/products/fortidevsec)  , [FortiCSPM](https://www.fortinet.com/products/forticspm)  are build for this purpose 
 
 ### Runtime Phase
 
 - **Configuration Drift**: Continuously monitor for shifts in Kubernetes configurations, such as changes in application permissions or policies.
-- **Workload Protection**: Implement measures to protect running workloads from threats through prevention, detection, and enforcement at both the Kubernetes API server level and at the Node/Container level.
+- **Workload Protection**: Implement measures to protect running workloads from threats through prevention, detection, and enforcement at both the Kubernetes API server level and at the Node/Container level or enforce via Networking Policy and container firewall.
 
+Tools:
+Fortinet Product [FortiCSPM](https://www.fortinet.com/products/forticspm) can provide posture managment like Config Shift.
+Fortinet Product [Fortiweb](https://www.fortinet.com/products/web-application-firewall/fortiweb) and [FortiADC] (https://www.fortinet.com/products/application-delivery-controller/fortiadc) can provide application security to secure API traffic or other layer 4-7 malicious traffic coming into application POD
+Fortinet Product [cFOS] can provide Network Security to secure traffic enter or leaving application POD.
+Fortinet Product [FortiXDR](https://www.fortinet.com/products/fortixdr) can provide Node/Container level protection by continusly detect abnormal activites at Node/Container level.
+ 
 #### Runtime Workload Protection 
 
 ##### Prevention/Protection via Network Security 
@@ -45,26 +56,14 @@ Securing workloads in Kubernetes involves multiple layers of the technology stac
 - **Control Plane Monitoring**: Use Kubernetes API audit logs to detect unusual API access.
 - **Runtime Monitoring**: Employ Linux agents or agentless technology to detect unusual container syscalls, such as privilege escalation.
 
-#### Kubernetes API Level Security
-
-##### RBAC
-
-- **Least Privilege**: Provides authorization control to Kubernetes resources by granting authenticated users minimal necessary permissions.
-
-##### Admission Control
-
-- Controls access at the Kubernetes API level. Built-in controllers include:
-  - Pod Security Policy
-  - Pod Security Admission (Pod Security Standards)
-- Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
-
 #### Pod Security Contexts and Container SecurityContext 
 
 - **PodSecurityContext** or **securityContext** defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
 
-#### Config for cFOS
-Container require Linux capabilities to be functional. The container runtime by default has already granted most common Linux capabilities, for example, *cri1.25.4* version has below:
-\```
+-  cFOS use case  for securityContext
+
+Containers, by default, inherit Linux capabilities from the container runtime, such as CRI-O or containerd. For instance, the CRI-O runtime typically grants most common Linux capabilities. Below are the capabilities provided by default in version cri1.25.4:
+```
 "CAP_CHOWN",
 "CAP_DAC_OVERRIDE",
 "CAP_FSETID",
@@ -74,9 +73,10 @@ Container require Linux capabilities to be functional. The container runtime by 
 "CAP_SETPCAP",
 "CAP_NET_BIND_SERVICE",
 "CAP_KILL"
-\```
-Some applications like cFOS may need more privilege to be fully functional, for example, the *CAP_NET_RAW* is not in the list, then you will not be able to use *ping* function inside the cFOS container.
+```
+However, some network applications like cFOS may require additional privileges to be fully functional. For example, the capability CAP_NET_RAW is not included in the default list. Without CAP_NET_RAW, functions like ping cannot be executed inside the cFOS container.
 
+Here is the brief purpose of mentioned capabilites 
 *NET_RAW*:
 - Use RAW and PACKET sockets
 - Bind to any address for transparent proxying
@@ -88,7 +88,8 @@ Some applications like cFOS may need more privilege to be fully functional, for 
 *SYS_ADMIN*:
 - It might be necessary for some advanced operations, such as configuring system-wide logging settings or manipulating system logs.
 
-\```bash
+Below is a full Yaml file which include additional capabilities for deploy cFOS application 
+```bash
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -123,7 +124,7 @@ spec:
       volumes:
       - name: data-volume
         emptyDir: {}
-\```
+```
 
 #### Other configuration options for securityContext
 
@@ -134,6 +135,21 @@ spec:
   - Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host.
 
 For most containers, these two options shall be set to false. Other options like `runAsUser` and `runAsGroup` can specify a user and group ID for running the container. Applications like firewalls will require running as the root user.
+
+#### Kubernetes API Level Security
+
+##### RBAC
+
+- **Least Privilege**: Provides authorization control to Kubernetes resources by granting authenticated users minimal necessary permissions.
+
+##### Admission Control
+
+- Controls access at the Kubernetes API level. Built-in controllers include:
+  - Pod Security Policy
+  - Pod Security Admission (Pod Security Standards)
+- Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
+
+PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels." 
 
 ### Network Security in Detail
 
@@ -157,4 +173,6 @@ In this workshop, We will walk through using cFOS to protect:
 - Pod to Pod traffic - East-West 
   - Pod to Pod via Pod IP address
   - Pod to Pod via ClusterIP svc address/domain
+
+
 
