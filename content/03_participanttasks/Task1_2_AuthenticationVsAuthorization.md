@@ -1,19 +1,21 @@
 ---
 title: "Introduction to Kubernetes Security"
 chapter: false
-menuTitle: "Authentication vs. Authorization"
+menuTitle: "Authentication, Authorization, and Admission Control"
 weight: 2
 ---
 
-# Objective
+## Objective
 
-Understand the k8s Authentication vs Authorization 
+Understand the differences between Kubernetes Authentication, Authorization, and Admission Control.
 
-# Kubernetes Authentication vs. Authorization
+## Kubernetes Authentication, Authorization, and Admission Control
 
-Kubernetes security involves two primary processes: Authentication and Authorization. These processes ensure that only verified users can perform actions they are permitted to perform within the cluster.
+Kubernetes security involves three primary processes: Authentication, Authorization, and Admission Control. These processes ensure that only verified users can perform actions they are permitted to perform within the cluster, and that those actions are validated by Kubernetes before they are executed.
 
+![3A](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*6CGN47bA2mjzRGBlFKK25g.png "3A image")
 ## Authentication
+
 Authentication in Kubernetes confirms the identity of a user or process. It's about answering "who are you?" Kubernetes supports several authentication methods:
 - **Client Certificates**
 - **Bearer Tokens**
@@ -26,6 +28,7 @@ Authentication in Kubernetes confirms the identity of a user or process. It's ab
 - **OIDC**: Used in organizations with existing identity solutions like Active Directory or Google Accounts for user authentication.
 
 ## Authorization
+
 Authorization in Kubernetes determines what authenticated users are allowed to do. It answers "what can you do?" There are several authorization methods in Kubernetes:
 - **Role-Based Access Control (RBAC)**
 - **Attribute-Based Access Control (ABAC)**
@@ -50,46 +53,59 @@ Authorization in Kubernetes determines what authenticated users are allowed to d
 - **Use Case**: Used when integrating Kubernetes with external authorization systems for complex security environments.
 - **Example**: Integrating with an external policy engine that evaluates whether a particular action should be allowed based on external data not available within Kubernetes.
 
+## Admission Control
+
+Admission Control in Kubernetes is a process that intercepts requests to the Kubernetes API before they are persisted to ensure that they meet specific criteria set by the administrator. Admission Controllers are plugins that govern and enforce how the cluster is used.
+
+### Common Admission Controllers
+
+#### Pod Security Policies (PSP)
+- **Use Case**: Ensures that Pods meet security requirements by denying the creation of Pods that do not adhere to defined policies.
+- **Example**: Restricting the use of privileged containers or the host network.
+
+#### ResourceQuota
+- **Use Case**: Enforces limits on the aggregate resource consumption per namespace.
+- **Example**: Preventing any one namespace from using more than a certain amount of CPU or memory resources.
+
+#### LimitRanger
+- **Use Case**: Enforces defaults and limits on the sizes of resources like Pods, containers, and PersistentVolumeClaims.
+- **Example**: Ensuring that every Pod has a memory request and limit to avoid resource exhaustion.
+
 ## Conclusion
 
-Authentication and authorization are foundational to Kubernetes security, ensuring only authenticated and authorized actions are performed within the cluster. While authentication is about verifying identities, authorization ensures the actions those identities attempt to perform are permitted.
+Authentication, authorization, and admission control are foundational to Kubernetes security, ensuring only authenticated and authorized actions that meet the cluster's policy requirements are performed within the cluster.
 
 ## Task 1 
-Investigate your current user permission on k8s 
-- who are you
+Investigate your current user permission on Kubernetes:
+
+- **Who are you?**
 ```bash
 kubectl config get-users
 ```
-- whick cluster you are talking to 
+
+- **Which cluster are you connected to?**
 ```bash
-kubectl config get-contexts
+kubectl config current-context
 ```
-expected to see 
-```
-CURRENT   NAME                          CLUSTER      AUTHINFO           NAMESPACE
-*         kubernetes-admin@kubernetes   kubernetes   kubernetes-admin 
-```
-- what you can do
 
-for example,
-check whether has permission to read configmap in kube-system namespace 
+- **What can you do?**
+
+For example, check whether you have permission to read configmaps in the kube-system namespace:
 ```bash
-kubectl auth can-i 'list' 'configmaps' -n kube-system
+kubectl auth can-i list configmaps -n kube-system
 ```
 
-check whether i am allowed to do anything in all namespace 
-below cli is essentially asking, "Do I have permission to perform any action on any resource in any namespace?"
-
+Check whether you are allowed to do anything in all namespaces:
 ```bash
 kubectl auth can-i '*' '*' -A
 ```
 
-- how you authenicate to your cluster
+- **How do you authenticate to your cluster?**
 ```bash
 kubectl config view
-
 ```
-expected result 
+
+Expected result:
 ```
 apiVersion: v1
 clusters:
@@ -111,4 +127,5 @@ users:
     client-certificate-data: DATA+OMITTED
     client-key-data: DATA+OMITTED
 ```
-user "kubernetes-admin" use certificate and key to authenticate itself to k8s API.
+The user "kubernetes-admin" uses a certificate and key to authenticate itself to the Kubernetes API.
+
