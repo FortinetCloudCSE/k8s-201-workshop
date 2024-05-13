@@ -77,6 +77,7 @@ Containers, by default, inherit Linux capabilities from the container runtime, s
 However, some network applications like cFOS may require additional privileges to be fully functional. For example, the capability CAP_NET_RAW is not included in the default list. Without CAP_NET_RAW, functions like ping cannot be executed inside the cFOS container.
 
 Here is the brief purpose of mentioned capabilites 
+
 *NET_RAW*:
 - Use RAW and PACKET sockets
 - Bind to any address for transparent proxying
@@ -137,6 +138,8 @@ spec:
 
 For most containers, these two options shall be set to false. Other options like `runAsUser` and `runAsGroup` can specify a user and group ID for running the container. Applications like firewalls will require running as the root user.
 
+In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent. 
+
 #### Kubernetes API Level Security
 
 ##### RBAC
@@ -149,6 +152,7 @@ For most containers, these two options shall be set to false. Other options like
   - Pod Security Policy
   - Pod Security Admission (Pod Security Standards)
 - Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
+
 As of Kubernetes 1.21, PodSecurityPolicy (PSP) has been deprecated and is fully removed in Kubernetes 1.25 replaced by PSA.
 PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels." 
 
