@@ -39,7 +39,7 @@ Fortinet Product [FortiDevSec](https://www.fortinet.com/products/fortidevsec)  ,
 
 Tools:
 Fortinet Product [FortiCSPM](https://www.fortinet.com/products/forticspm) can provide posture managment like Config Shift.
-Fortinet Product [Fortiweb](https://www.fortinet.com/products/web-application-firewall/fortiweb) and [FortiADC] (https://www.fortinet.com/products/application-delivery-controller/fortiadc) can provide application security to secure API traffic or other layer 4-7 malicious traffic coming into application POD
+Fortinet Product [Fortiweb](https://www.fortinet.com/products/web-application-firewall/fortiweb) and [FortiADC](https://www.fortinet.com/products/application-delivery-controller/fortiadc) can provide application security to secure API traffic or other layer 4-7 malicious traffic coming into application POD
 Fortinet Product [cFOS] can provide Network Security to secure traffic enter or leaving application POD.
 Fortinet Product [FortiXDR](https://www.fortinet.com/products/fortixdr) can provide Node/Container level protection by continusly detect abnormal activites at Node/Container level.
  
@@ -114,6 +114,7 @@ spec:
         image: interbeing/fos:latest
         securityContext:
           allowPrivilegeEscalation: false
+          privileged: false
           capabilities:
               add: ["NET_ADMIN","NET_RAW"]
         ports:
