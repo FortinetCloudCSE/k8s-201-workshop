@@ -38,7 +38,12 @@ In the previous chapter, we learned how to use RBAC to grant users permission to
   Service Accounts are used by Pods to authenticate against the Kubernetes API, ensuring that API calls are securely identified and appropriately authorized based on the assigned roles and permissions.
 
 #### Pre-defined RBAC Default Roles
-Kubernetes comes with some default RBAC roles and clusterroles which are required for bootstrapping the cluster. For example, the role "system:controller:bootstrap-signer" grants the permission to Kubernetes nodes to bootstrap themselves. It automatically approves and signs certain CSRs used for node bootstrapping. Another example is the *cluster-admin* ClusterRole, which grants full administrative privileges across the entire cluster. This role allows nearly unrestricted access to all resources in the cluster, making it suitable for highly privileged users who need to manage and configure any aspect of the cluster.
+Kubernetes comes with some default RBAC roles and clusterroles which are required for bootstrapping the cluster. For example, the role "system:controller:bootstrap-signer" grants the permission to Kubernetes nodes to bootstrap themselves. It automatically approves and signs certain CSRs used for node bootstrapping. 
+
+
+- pre-defined role "system:controller:bootstrap-signer"
+
+this role is namespaced. it only grant permission to resource in namespace kube-system
 
 ```bash
 kubectl get role system:controller:bootstrap-signer -n kube-system -o yaml
@@ -71,6 +76,11 @@ To see which RoleBindings are associated with this role:
 ```bash
 kubectl get rolebinding -n kube-system system:controller:bootstrap-signer -o yaml
 ```
+- pre-definded Clusterrole 
+
+Another example is the *cluster-admin* ClusterRole, which grants full administrative privileges across the entire cluster. This role allows nearly unrestricted access to all resources in the cluster, making it suitable for highly privileged users who need to manage and configure any aspect of the cluster. 
+
+this clusterrole is cluster wide. it can apply to entire cluster with clusterrolebinding. 
 
 ```bash
 kubectl get clusterrole cluster-admin -o yaml
@@ -99,7 +109,40 @@ subjects:
 ```
 The clusterrole "cluster-admin" is bound to the group "system:masters" cluster-wide, providing all permissions to all resources in the cluster.
 
-### List all RBAC Default Roles and ClusterRoles
+```bash
+kubectl get clusterrolebinding cluster-admin -o yaml
+```
+Expected output
+you can find Clusterrole "cluster-admin" bound to subject user group -"system:masters" with clusterrolebinding
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: "2024-05-13T00:00:45Z"
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: cluster-admin
+  resourceVersion: "136"
+  uid: f5753f58-e17c-4ca6-9ff0-cd39eda5f654
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:masters
+
+```
+
+
+### Task:  List all RBAC Default Roles and ClusterRoles
+
+Take a look at what are the default role and clusterole pre-defined for a default cluster.
+
+default role/clusterrole come with a label "kubernetes.io/bootstrapping=rbac-defaults". you can use this label to filter the default role/clusterrole.
 
 - List all default ClusterRoles:
 ```bash
@@ -110,5 +153,4 @@ kubectl get clusterrole -l kubernetes.io/bootstrapping=rbac-defaults
 kubectl get role -l kubernetes.io/bootstrapping=rbac-defaults -A
 ```
 
-This structured approach helps in understanding the administrative capabilities and security configurations within Kubernetes through RBAC.
 
