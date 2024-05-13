@@ -148,7 +148,7 @@ For most containers, these two options shall be set to false. Other options like
   - Pod Security Policy
   - Pod Security Admission (Pod Security Standards)
 - Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
-
+As of Kubernetes 1.21, PodSecurityPolicy (PSP) has been deprecated and is fully removed in Kubernetes 1.25 replaced by PSA.
 PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels." 
 
 ### Network Security in Detail
@@ -173,6 +173,3 @@ In this workshop, We will walk through using cFOS to protect:
 - Pod to Pod traffic - East-West 
   - Pod to Pod via Pod IP address
   - Pod to Pod via ClusterIP svc address/domain
-
-
-
