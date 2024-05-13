@@ -71,11 +71,11 @@ Based on the collected information, product like FortiXDR can offer real-time or
 - Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
 
 
-#### Pod Security Contexts
+#### Pod Security Contexts and Container SecurityContext 
 
 - **PodSecurityContext** or **securityContext** defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
 
-#### - Review the cfos securityContext
+#### - Config for cFOS
 container require linux capabilites to be functional. the container runtime by default has already granted most command linux capabilites, for example, *cri1.25.4* version has below 
 ```
             "CAP_CHOWN",
@@ -121,10 +121,13 @@ spec:
         app: cfos
     spec:
       serviceAccountName: cfos-serviceaccount
+      securityContext:
+        runAsUser: 0
       containers:
       - name: cfos7210250-container
         image: interbeing/fos:latest
         securityContext:
+          allowPrivilegeEscalation: false
           capabilities:
               add: ["NET_ADMIN","NET_RAW"]
         ports:
@@ -136,6 +139,27 @@ spec:
       - name: data-volume
         emptyDir: {}
 ```
+#### Other configuration options for securityContext
+
+- pod.spec.containers.allowPrivilegeEscalation
+
+    AllowPrivilegeEscalation controls whether a process can gain more privileges
+    than its parent process. 
+
+- pod.spec.containers.privileged
+
+Run container in privileged mode. Processes in privileged containers are
+    essentially equivalent to root on the host.
+
+for most of container, these two options shall be set to false. 
+
+- other options
+
+runAsUser
+runAsGroup
+above will run container with non root user. you can specify the userid and group id for run container. application like firewall will require run as root user. 
+
+set "runAsUser: true" , Kubelet will validate the image at runtime. if image is not build with root, then it will run as none root user, otherwise ,it will fail to run.
 
 
 ### Network Security in Detail

@@ -71,6 +71,7 @@ so if use this configuration, make use cFOS use configmap for all the configurat
 
 
 ```bash
+cat << EOF | kubectl apply -n cfostest -f - 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -84,6 +85,8 @@ spec:
       app: cfos
   template:
     metadata:
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/cfos7210250-container: unconfined
       labels:
         app: cfos
     spec:
@@ -92,6 +95,9 @@ spec:
       - name: cfos7210250-container
         image: interbeing/fos:latest
         securityContext:
+#          runAsUser: 0
+#          appArmorProfile: 
+#            type: unconfined
           capabilities:
               add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
         ports:
@@ -99,9 +105,17 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: data-volume
+        - mountPath: /mybinary
+          name: host-temp
       volumes:
       - name: data-volume
         emptyDir: {}
+      - name: host-temp
+        hostPath:
+          path: /cfosextrabinary
+          type: DirectoryOrCreate
+
+EOF
 ```
 
 
