@@ -1,27 +1,31 @@
 ---
 title: "Managing Role-Based Access Control (RBAC)"
 chapter: false
-menuTitle: "Creating and Managing Roles and ClusterRoles"
+menuTitle: "Creating and Managing Roles and ClusterRoles for cFOS"
 weight: 2
 ---
 
 ## Objective
 
-Create Role and ClusterRoles for cFOS application.
+Create Roles and ClusterRoles for the cFOS application.
 
+### Core Concepts
 
-### Task 1 - Create a ClusterRole for cFOS to be able read configMaps
+- **Role for ConfigMaps**: cFOS needs to interact with the Kubernetes API to read ConfigMaps for configurations such as IPSEC, Firewall VIP, Policy config, and License.
+- **Role for Secrets**: cFOS needs to interact with the Kubernetes API to read secrets, such as those used for pulling images.
 
-cFOS PODs require permission to read Kubernetes resources such as configMaps for configurations like IPSEC configuration, Firewall VIP, Policy config, etc., and secrets for cFOS license.
+### Task 1 - Create a ClusterRole for cFOS to Read ConfigMaps
+
+cFOS pods require permission to read Kubernetes resources such as ConfigMaps. This includes permissions to watch, list, and read the ConfigMaps.
 
 #### Define Rule for Role
 
-A Rule should define the least permission on an API resource:
+A rule should define the least permission on an API resource:
 - **resources**: List of Kubernetes API resources, such as configmaps.
 - **apiGroups**: Lists which include the API group to which the resource belongs.
 - **verbs**: The permissions on resources.
 
-```
+```yaml
 rules:
 - apiGroups:
   - ""
@@ -33,121 +37,109 @@ rules:
   - watch
 ```
 
-`""` indicates the API group is the "CORE" API group. Use `kubectl api-resources | grep configmap` to get the API group for that resource. The output "V1" without a leading group string means it is an empty group, i.e., a CORE API group or legacy API group.
+`""` indicates the API group is the "CORE" API group.
 
 #### Decide to Use ClusterRole or Role
 
-The choice between ClusterRoles and Roles is not always straightforward and can depend on several factors, including management preferences, security requirements, and operational convenience. Using ClusterRoles with RoleBindings is particularly useful for maintaining standard permissions across a cluster while still allowing for namespace-specific customization and security controls. However, if each namespace truly has unique requirements and there is minimal overlap in permissions, your approach of using namespace-specific Roles is optimal and adheres closely to the principle of least privilege.
+For cFOS, either a ClusterRole or a Role can be used as cFOS only requires minimal permissions. 
 
-for cFOS, we can choose either use ClusterRole or Role, as cFOS only require very minimal permission. 
-
-```
+```yaml
 kind: ClusterRole
 ```
 
 #### Complete YAML File for a Role
 
-- use kubectl command  
-```bash
-kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps
-```
-use `kubectl get clusterrole configmap-reader -o yaml` to check the yaml version.
+- **Using kubectl command:**
+  ```bash
+  kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps
+  ```
 
-- use yaml file 
-```bash
-cat << EOF | tee cfosClusterRole1.yaml
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: configmap-reader
-rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["get", "watch", "list"]
-
-EOF
-
-```
-The ClusterRole itself is also a Kubernetes API resource which has an API group "rbac.authorization.k8s.io/v1".
-
+- **Using a YAML file:**
+  ```bash
+  cat << EOF | tee cfosConfigMapsClusterRole.yaml
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: configmap-reader
+  rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "watch", "list"]
+  EOF
+  ```
 
 #### Deploy ClusterRole
 
 ```bash
-kubectl create -f cfosClusterRole1.yaml
+kubectl create -f cfosConfigMapsClusterRole.yaml
 ```
+
 #### Check Result
-- check resource creation result
-```bash
-kubectl get clusterrole configmap-reader
-```
-expected Result
-```
-NAME               CREATED AT
-configmap-reader   2024-05-05T08:11:35Z
-```
-- check resource detail
+
+- **Check resource creation result:**
+  ```bash
+  kubectl get clusterrole configmap-reader
+  ```
+  Expected Result:
+  ```
+  NAME               CREATED AT
+  configmap-reader   2024-05-05T08:11:35Z
+  ```
+
+- **Check resource detail:**
+  ```bash
+  kubectl describe clusterrole configmap-reader
+  ```
+  Expected Result:
+  ```
+  Name:         configmap-reader
+  Labels:       <none>
+  Annotations:  <none>
+  PolicyRule:
+    Resources   Non-Resource URLs  Resource Names  Verbs
+    ---------   -----------------  --------------  -----
+    configmaps  []                 []              [get list watch]
+  ```
+  The empty list [] means the configmaps can read any configmaps.
+
+### Task 2 - Create a Role for cFOS to Read Secrets
+
+cFOS pods require using imagePullSecret to pull containers from an image repository. A "role" or "ClusterRole" is required to read the "secret."
+
+#### Create a ClusterRole for cFOS to Read Secrets
+
+- **Using kubectl command:**
+  ```bash
+  kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets --resource-name=cfosimagepullsecret,someothername
+  ```
+
+- **Using a YAML file:**
+  ```bash
+  cat << EOF | tee cfosSecretClusterRole.yaml
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+     name: secrets-reader
+  rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["cfosimagepullsecret","someothername"]
+    verbs: ["get", "watch", "list"]
+  EOF
+  ```
+
+#### Apply the YAML File
 
 ```bash
-kubectl describe clusterrole configmap-reader
-```
-expected Result
-```
-Name:         configmap-reader
-Labels:       <none>
-Annotations:  <none>
-PolicyRule:
-  Resources   Non-Resource URLs  Resource Names  Verbs
-  ---------   -----------------  --------------  -----
-  configmaps  []                 []              [get list watch]
-```
-the empty list [] means the configmaps can read any configmaps. 
-
-
-### Task 2 - Create a Role for cFOS to be able read secret.
-
-cFOS POD require use imagePullSecret to pull container from image repository.  the imagePullSecret is a "secret" resource in k8s. a "role" or "ClusterRole" is required to read the "secret"
-
-#### Create a ClusterRole for cFOS to read secrets
-
-- use kubectl command
-```bash
-kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets --resource-name=cfosimagepullsecret,someothername
-``` 
-- use yaml file 
-
-```bash
-cat << EOF | tee cfosClusterRole2.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-   name: secrets-reader
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["secrets"]
-  resourceNames: ["cfosimagepullsecret","someothername"]
-  verbs: ["get", "watch", "list"]
-EOF
-```
-the API groups for resource "secrets" is also CORE group which represented with empty string "".
-since read "secrets" could cause security issue, we can further narrow down cFOS can only read "secret" with name "cfosimagepullsecret" or "someothername". 
-
-#### Apply the yaml file
-
-```bash
-kubectl create -f cfosClusterRole2.yaml
+kubectl create -f cfosSecretClusterRole.yaml
 ```
 
-
-#### Check result
+#### Check Result
 
 ```bash
 kubectl describe clusterrole secrets-reader
 ```
-
-expected result
-
+Expected Result:
 ```
 Name:         secrets-reader
 Labels:       <none>
@@ -159,5 +151,7 @@ PolicyRule:
   secrets    []                 [someothername]        [get watch list]
 ```
 
+### Summary
 
-Summary
+We defined two ClusterRoles for cFOS in this chapter. In the next chapter, we will explore how to bind these ClusterRoles to the serviceAccount of cFOS.
+
