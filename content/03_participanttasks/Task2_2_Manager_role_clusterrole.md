@@ -7,7 +7,8 @@ weight: 2
 
 ## Objective
 
-Create Role and ClusterRoles
+Create Role and ClusterRoles for cFOS application.
+
 
 ### Task 1 - Create a ClusterRole for cFOS to be able read configMaps
 
