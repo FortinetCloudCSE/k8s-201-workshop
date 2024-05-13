@@ -1,7 +1,7 @@
 ---
 title: "Deep Dive into RoleBindings and ClusterRoleBindings"
 chapter: false
-menuTitle: "Difference Between RoleBindings and ClusterRoleBindings"
+menuTitle: "Use case for different usage"
 weight: 2
 ---
 
