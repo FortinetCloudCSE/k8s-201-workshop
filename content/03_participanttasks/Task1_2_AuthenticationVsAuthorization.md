@@ -57,6 +57,8 @@ Authorization in Kubernetes determines what authenticated users are allowed to d
 
 Admission Control in Kubernetes is a process that intercepts requests to the Kubernetes API before they are persisted to ensure that they meet specific criteria set by the administrator. Admission Controllers are plugins that govern and enforce how the cluster is used.
 
+Admission controllers are not enabled by default. They must be explicitly configured and enabled when starting the Kubernetes API server. The admission control process is specified through the --enable-admission-plugins flag on the API server. 
+
 ### Common Admission Controllers
 
 #### Pod Security Policies (PSP)
