@@ -1,140 +1,171 @@
 ---
-title: "Introduction to Kubernetes Security"
-chapter: false
-menuTitle: "Using RBAC for Secure Access"
-weight: 2
----
-
 # Objective
 
+Learn how to use RBAC to control access to the Kubernetes Cluster.
 
-## Task 1 Create a new user  accoutn for developer to use kubernetes cluster
+## Task 1: Create a New User Account for Developers to Access the Kubernetes Cluster
 
-Create a read-only user account for other user to use your cluster
+Create a read-only user account for others to use your cluster.
 
-### Create a certificate for User
-- Create a CSR 
+### Create a Certificate for the User
 
-the groups: "system:authenticated" is the pre-defined group name in k8s. k8s does not store user information internally also  do not validate user belong to which group. it's just trust the external client telling the user belong to which group. group name is just predefined labels which will be used to find the related role/permission
+- **Generate a Certificate Signing Request (CSR):**
+  Kubernetes uses the group "system:authenticated" as a predefined label, which is trusted by external clients to dictate group membership. Kubernetes itself does not validate which group a user belongs to. This step involves generating a private key and a CSR using OpenSSL.
 
-```bash
-openssl genrsa -out newuser.key 2048
-openssl req -new -key newuser.key -out newuser.csr -subj "/CN=tecworkshop/O=Devops"
-cat <<EOF | tee csrfortecworkshop.yaml
-apiVersion: certificates.k8s.io/v1
-kind: CertificateSigningRequest
-metadata:
-  name: tecworkshop
-spec:
-  groups:
-  - system:authenticated
-  request: $(cat newuser.csr | base64 | tr -d "\n")
-  signerName: kubernetes.io/kube-apiserver-client
-  usages:
-  - client auth
-EOF
-kubectl create -f csrfortecworkshop.yaml
-```
-- Check Result
-```bash
-kubectl get csr tecworkshop
-```
-Expected to got
-```
-NAME          AGE   SIGNERNAME                            REQUESTOR          REQUESTEDDURATION   CONDITION
-tecworkshop   18s   kubernetes.io/kube-apiserver-client   kubernetes-admin   <none>              Pending
-```
-- Sign CSR 
-```bash
-kubectl certificate approve tecworkshop
-```
-- Check Result agin
-```bash
-kubectl get csr tecworkshop
-```
-expect to get 
-```
-NAME          AGE   SIGNERNAME                            REQUESTOR          REQUESTEDDURATION   CONDITION
-tecworkshop   66s   kubernetes.io/kube-apiserver-client   kubernetes-admin   <none>              Approved,Issued
-```
-- save the certificate to a file
-```bash
-kubectl get csr tecworkshop -o jsonpath='{.status.certificate}' | base64 -d >> newuser.crt
-```
-optionaly, you can see certificate detail by use below command.
-```bash
-openssl x509 -in newuser.crt -text -noout
-```
-- set credentails for newuser
-the credentails will be used in kubeconfig file to interact with kubernetes API server
-```bash
-kubectl config set-credentials tecworkshop --client-certificate=newuser.crt --client-key=newuser.key
-```
-- create new context for newuser 
-```bash
-kubectl config set-context tecworkshop-context --cluster=kubernetes --user=tecworkshop
-```
-- use new context
-```bash
-kubectl config use-context tecworkshop-context
-```
-- verify
-```bash
-k auth can-i get pods
-```
-expected to see
-```no
-```
-- try to list pod
-```bash
-kubectl get pods
-```
-expected result
-```
-Error from server (Forbidden): pods is forbidden: User "tecworkshop" cannot list resource "pods" in API group "" in the namespace "default"
-```
-the user is authenticated, but have not "authorized" with any permission. to "authorize" user with pemission. kubernetes RBAC is the component for this. 
+  ```bash
+  openssl genrsa -out newuser.key 2048
+  openssl req -new -key newuser.key -out newuser.csr -subj "/CN=tecworkshop/O=Devops"
+  ```
 
-## Task 2 Authorize user  to list all pods in all namespace
+- **Prepare the CSR YAML:**
+  Create a YAML file for the CSR object in Kubernetes. This object includes the base64-encoded CSR data.
 
-RBAC is the recommend way to Authorize user. let's use RBAC to create a role for newuser. to be able to create a role. we have to switch back to use previous context. previous context include admin account which have enough permission to create a role  
-```bash
-kubectl config use-context kubernetes-admin@kubernetes
-```
+  ```bash
+  cat <<EOF | tee csrfortecworkshop.yaml
+  apiVersion: certificates.k8s.io/v1
+  kind: CertificateSigningRequest
+  metadata:
+    name: tecworkshop
+  spec:
+    groups:
+      - system:authenticated
+    request: $(cat newuser.csr | base64 | tr -d "\n")
+    signerName: kubernetes.io/kube-apiserver-client
+    usages:
+      - client auth
+  EOF
+  kubectl create -f csrfortecworkshop.yaml
+  ```
 
-- define a Role
-RBAC allow you to define a role which only valid in specific namespace or a clusterrole which work for all namespaces with clusterbinding. if we can list all pods in all namespace, the role will require be "clusterrole" and also require use "clusterrolebinding" 
+- **Check the CSR Status:**
+  Initially, the CSR will be in a pending state.
 
-```
-kubectl create clusterrole readpods --verb=get,list,watch --resource=pods
-``` 
+  ```bash
+  kubectl get csr tecworkshop
+  ```
 
-expected result
-```
-clusterrole.rbac.authorization.k8s.io/readpods created
-```
+  Expected output:
+  ```
+  NAME          AGE   SIGNERNAME                            REQUESTOR           REQUESTEDDURATION   CONDITION
+  tecworkshop   18s   kubernetes.io/kube-apiserver-client   kubernetes-admin    <none>              Pending
+  ```
 
-- bind to ClusterRole to User with clusterrolebinding
-```bash
-kubectl create clusterrolebinding readpodsbinding --clusterrole=readpods --user=tecworkshop
-```
-expected result
+- **Approve the CSR:**
+  Approve the CSR to issue the certificate.
 
-```
-clusterrolebinding.rbac.authorization.k8s.io/readpodsbinding created
-```
-- choose to use new context
-```bash
-kubectl config use-context tecworkshop-context
-```
-- check result
+  ```bash
+  kubectl certificate approve tecworkshop
+  ```
 
-you are expected to list all pods in all namespace and `kubectl auth can-i get pods -A` shall get "yes"
-```bash
-kubectl get pod -A
-```
-or 
-```bash
-kubectl auth can-i get pods -A
-```
+- **Verify the CSR has been approved and issued:**
+  Check the CSR status again.
+
+  ```bash
+  kubectl get csr tecworkshop
+  ```
+
+  Expected output:
+  ```
+  NAME          AGE   SIGNERNAME                            REQUESTOR           REQUESTEDDURATION   CONDITION
+  tecworkshop   66s   kubernetes.io/kube-apiserver-client   kubernetes-admin    <none>              Approved,Issued
+  ```
+
+- **Save the Certificate to a File:**
+  Extract and decode the certificate.
+
+  ```bash
+  kubectl get csr tecworkshop -o jsonpath='{.status.certificate}' | base64 --decode > newuser.crt
+  ```
+
+- **Optionally, View Certificate Details:**
+  ```bash
+  openssl x509 -in newuser.crt -text -noout
+  ```
+
+- **Set Credentials for the New User:**
+  Configure kubectl to use the new user's credentials.
+
+  ```bash
+  kubectl config set-credentials tecworkshop --client-certificate=newuser.crt --client-key=newuser.key
+  ```
+
+- **Create a New Context for the New User:**
+  Set up a context that specifies the new user and cluster.
+
+  ```bash
+  kubectl config set-context tecworkshop-context --cluster=kubernetes --user=tecworkshop
+  ```
+
+- **Switch to the New Context:**
+  Use the new context to interact with the cluster as the new user.
+
+  ```bash
+  kubectl config use-context tecworkshop-context
+  ```
+
+- **Verify Access:**
+  Attempt to retrieve pods; it should fail due to lack of permissions.
+
+  ```bash
+  kubectl get pods
+  ```
+
+  Expected output:
+  ```
+  Error from server (Forbidden): pods is forbidden: User "tecworkshop" cannot list resource "pods" in API group "" in the namespace "default"
+  ```
+
+## Task 2: Authorize the User to List All Pods in All Namespaces
+
+Use RBAC to grant the new user permission to list all pods across all namespaces.
+
+- **Switch to an Admin Context:**
+  You need sufficient permissions to create roles and role bindings.
+
+  ```bash
+  kubectl config use-context kubernetes-admin@kubernetes
+  ```
+
+- **Define a ClusterRole:**
+  Create a `ClusterRole` that allows reading pods across all namespaces.
+
+  ```bash
+  kubectl create clusterrole readpods --verb=get,list,watch --resource=pods
+  ```
+
+- **Bind the ClusterRole to the New User:**
+  Create a `ClusterRoleBinding` to assign the role to the new user.
+
+  ```bash
+  kubectl create clusterrolebinding readpodsbinding --clusterrole=readpods --user=tecworkshop
+  ```
+
+- **Switch Back to the New User Context:**
+  ```bash
+  kubectl config use-context tecworkshop-context
+  ```
+
+- **Verify Permissions:**
+  Now, the new user should be able to list pods in all namespaces.
+
+  ```bash
+  kubectl get pod -A
+  ```
+
+  Or, check specific permissions:
+
+  ```bash
+  kubectl auth can-i get pods -A
+  ```
+
+  Expected output:
+  ```
+  yes
+  ```
+### Summary
+
+
+Above, we have detailed the process for granting human users the least privilege necessary to access the Kubernetes cluster. In the next chapter, we will explore how to restrict a POD or container by using a service account with the least privilege necessary for accessing the cluster.
+
+This ensures that not only are human users operating under the principle of least privilege, but automated processes and applications within your cluster are also adhering to strict access controls, enhancing the overall security posture of your Kubernetes environment.
 
