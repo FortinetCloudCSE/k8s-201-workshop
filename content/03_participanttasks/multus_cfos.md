@@ -192,11 +192,12 @@ The most common way to install Multus is via a Kubernetes manifest file, which s
 
     Each configuration we'll add is a CNI configuration. If you're not familiar with them, let's break them down quickly. Here's an example CNI configuration:
 
-    {
+    ```{
     "cniVersion": "0.3.0",
     "type": "loopback",
     "additional": "information"
     }
+    ```
 
     CNI configurations are JSON, and we have a structure here that has a few things we're interested in:
 
@@ -238,7 +239,8 @@ spec:
         "gateway": "192.168.1.100"
       }
     }'
-EOF```
+EOF
+```
 
 ```kubectl get network-attachment-definitions```
 
@@ -301,7 +303,8 @@ spec:
   - name: samplepod
     command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
     image: alpine
-EOF```
+EOF
+```
 
 We can inspect the pod with ```kubectl exec -it samplepod -- ip a```
 
@@ -322,7 +325,8 @@ spec:
   - name: samplepod
     command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
     image: alpine
-EOF```
+EOF
+```
 
 Note that the annotation now reads k8s.v1.cni.cncf.io/networks: macvlan-conf,macvlan-conf. Where we have the same configuration used twice, separated by a comma.
 
