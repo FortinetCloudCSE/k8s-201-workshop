@@ -186,24 +186,25 @@ The most common way to install Multus is via a Kubernetes manifest file, which s
 
 **Step 2: Creating additional interfaces**
 
-    The first thing we'll do is create configurations for each of the additional interfaces that we attach to pods. We'll do this by creating Custom Resources. Part of the quickstart installation creates a "CRD" -- a custom resource definition that is the home where we keep these custom resources -- we'll store our configurations for each interface in these.
+The first thing we'll do is create configurations for each of the additional interfaces that we attach to pods. We'll do this by creating Custom Resources. Part of the quickstart installation creates a "CRD" -- a custom resource definition that is the home where we keep these custom resources -- we'll store our configurations for each interface in these.
 
 **CNI Configurations**:
 
-    Each configuration we'll add is a CNI configuration. If you're not familiar with them, let's break them down quickly. Here's an example CNI configuration:
+Each configuration we'll add is a CNI configuration. If you're not familiar with them, let's break them down quickly. Here's an example CNI configuration:
 
-    ```{
+    {
     "cniVersion": "0.3.0",
     "type": "loopback",
     "additional": "information"
     }
-    ```
+    
 
-    CNI configurations are JSON, and we have a structure here that has a few things we're interested in:
+CNI configurations are JSON, and we have a structure here that has a few things we're interested in:
 
-    - cniVersion: Tells each CNI plugin which version is being used and can give the plugin information if it's using a too late (or too early) version.
-    - type: This tells CNI which binary to call on disk. Each CNI plugin is a binary that's called. Typically, these binaries are stored in /opt/cni/bin on each node, and CNI executes this binary. In this case we've specified the loopback binary (which create a loopback-type network interface). If this is your first time installing Multus, you might want to verify that the plugins that are in the "type" field are actually on disk in the /opt/cni/bin directory.
-    - additional: This field is put here as an example, each CNI plugin can specify whatever configuration parameters they'd like in JSON. These are specific to the binary you're calling in the type field.
+- cniVersion: Tells each CNI plugin which version is being used and can give the plugin information if it's using a too late (or too early) version.
+- type: This tells CNI which binary to call on disk. Each CNI plugin is a binary that's called. Typically, these binaries are stored in /opt/cni/bin on each node, and CNI executes this binary. In this case we've specified the loopback binary (which create a loopback-type network interface). If this is your first time installing Multus, you might want to verify that the plugins that are in the "type" field are actually on disk in the /opt/cni/bin directory.
+- additional: This field is put here as an example, each CNI plugin can specify whatever configuration parameters they'd like in JSON. These are specific to the binary you're calling in the type field.
+
 
 **Step 3: Storing a configuration as a Custom Resource**
 
