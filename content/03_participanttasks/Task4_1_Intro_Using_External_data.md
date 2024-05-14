@@ -5,6 +5,8 @@ menuTitle: "Introduction to ConfigMaps and Secrets"
 weight: 2
 ---
 
+## Overview of how POD access external data
+
 Containers running in a Kubernetes pod can access external data in various ways, each catering to different needs such as configuration, secrets, and runtime variables. Here are the most common methods:
 
 - 1. Environment Variables
@@ -44,49 +46,10 @@ Containers can also access external data via APIs or web services during runtime
 
 These methods provide versatile options for passing data to containers, ensuring that Kubernetes can manage both stateless and stateful applications effectively.
 
-As a native container build for k8s, cFOS is able to leverage above mechanism to access external for various purpose.
+## Task 1 Access External Data with ConfigMap
 
-### Environment Variable
-
-
-```bash
-cat << EOF | tee cfosPOD.yaml 
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: cfos-pod
-spec:
-  serviceAccountName: cfos-serviceaccount-i
-  containers:
-    - name: cfos-container
-      image: interbeing/fos:latest
-      env: 
-        - name: LOGLEVEL
-          value: "info"
-      securityContext:
-        capabilities:
-          add:
-            - NET_ADMIN
-            - NET_RAW
-            - SYS_ADMIN
-      volumeMounts:
-      - mountPath: /data
-        name: data-volume
-  volumes:
-  - name: data-volume
-    emptyDir: {}
-EOF
-kubectl create -f cfosPOD.yaml
-```
-
-#### Check Result
-you can check whether the container has Environement variable passed from external. 
-it's up to container whether to handle the passed environment or not. 
-
-```bash
-kubectl exec -it po/cfos-pod -n cfostest -- sh -c 'busybox env | grep LOGLEVEL'
-```
+cFOS can continusely watch the Add/Del of the ConfigMap in K8s. then use configMap data to config cFOS. 
+ 
 
 ### ConfigMap
 
@@ -124,10 +87,8 @@ while read -r line; do printf "      %s\n" "$line"; done < FGVMULTM23000022.lic 
 ```
 - apply the resource 
 ```bash
-kubectl create -f cfos_license_$USER.yaml  -n cfostest
+kubectl create -f cfos_license.yaml  -n cfostest
 ```
-
-
 
 cFOS will "watch" ConfigMap has with label= "app: fos", then import the license into cFOS.
 
@@ -163,15 +124,33 @@ data:
            edit "test"
                set extip "10.244.166.15"
                set mappedip "10.244.166.18"
-               set extinf "eth0"
+               set extintf eth0
                set portforward enable
                set extport "8888"
                set mappedport "80"
            next
        end
 EOF
-kubectl create -f fosconfigmapfirewallvip.yaml
+kubectl create -f fosconfigmapfirewallvip.yaml -n cfostest
 ```
+
+Above "partial" means only update config partially. 
+
+Check Result
+
+Check cFOS container log. you can find 
+
+```
+2024-05-14_10:57:18.63416 INFO: 2024/05/14 10:57:18 received a new fos configmap
+2024-05-14_10:57:18.63417 INFO: 2024/05/14 10:57:18 configmap name: foscfgvip, labels: map[app:fos category:config]
+2024-05-14_10:57:18.63417 INFO: 2024/05/14 10:57:18 got a fos config
+2024-05-14_10:57:18.63417 INFO: 2024/05/14 10:57:18 applying a partial fos config...
+2024-05-14_10:57:19.42525 INFO: 2024/05/14 10:57:19 fos config is applied successfully.
+```
+
+Delete a ConfigMap will not delete configuration on cFOS, however, you can create a ConfigMap with delete command to delete the configuration. 
+
+Update a Configmap will also update the configuration on cFOS
 
 #### Create ConfigMap for cFOS to delete a Firewall Config
 
@@ -189,4 +168,47 @@ data:
     config firewall vip
            del "test"
 ```
+
+Above will delete the configuration from cFOS. 
+
+#### cFOS configMap with data type: full
+
+if data: type is set to full
+
+cFOS will use this configuration to replace all current configuration. cFOS will be reloaded then load this function.
+
+```bash
+cat << EOF | tee kubectl apply -f -n cfostest
+
+apiVersion: v1
+data:
+  config: |2
+  type: full
+kind: ConfigMap
+metadata:
+  labels:
+    app: fos
+    category: config
+  name: cm-full-empty
+  namespace: default
+```
+
+Expected Result
+
+```
+
+2024-05-14_12:22:58.24465 INFO: 2024/05/14 12:22:58 received a new fos configmap
+2024-05-14_12:22:58.24466 INFO: 2024/05/14 12:22:58 configmap name: cm-full-empty, labels: map[app:fos category:config]
+2024-05-14_12:22:58.24466 INFO: 2024/05/14 12:22:58 got a fos config
+2024-05-14_12:22:58.24493 INFO: 2024/05/14 12:22:58 applying a full fos config...
+```
+then cFOS will be reloaded with this empty configuraiton, effectively, this is reset cFOS back to the factory default.
+
+```
+
+### Secret
+
+#### image pull secret
+
+kubectl create secret generic ipsec-certs --from-literal=ipsec-cert-pass=12345678
 
