@@ -247,7 +247,8 @@ EOF
 
 Output: 
 
-sallam@master1:~$ kubectl get network-attachment-definitions
+```sallam@master1:~$ kubectl get network-attachment-definitions```
+
 NAME            AGE
 macvlan-conf    5d23h
 
