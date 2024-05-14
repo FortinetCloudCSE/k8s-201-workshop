@@ -254,7 +254,7 @@ For more detail:
 
 ```kubectl describe network-attachment-definitions macvlan-conf```
 
-
+```
 sallam@master1:~$kubectl describe network-attachment-definitions macvlan-conf
 Name:         macvlan-conf
 Namespace:    default
@@ -284,6 +284,7 @@ Metadata:
 Spec:
   Config:  { "cniVersion": "0.3.0", "type": "macvlan", "master": "eth0", "mode": "bridge", "ipam": { "type": "host-local", "subnet": "192.168.1.0/24", "rangeStart": "192.168.1.200", "rangeEnd": "192.168.1.216", "routes": [ { "dst": "0.0.0.0/0" } ], "gateway": "192.168.1.100" } }
 Events:    <none>
+```
 
 Creating a pod that attaches an additional interface:
 
@@ -357,10 +358,12 @@ Security Best Practices: It ensures adherence to the principle of least privileg
 
 output:
 
+```
 clusterrole.rbac.authorization.k8s.io/configmap-reader configured
 rolebinding.rbac.authorization.k8s.io/read-configmaps configured
 clusterrole.rbac.authorization.k8s.io/secrets-reader configured
 rolebinding.rbac.authorization.k8s.io/read-secrets configured
+```
 
 4. To run the cfos deployment, just run the ```kubectl apply -f 02_create_cfos_deployment.yaml```. this will create a deployment that utilizes the secret, configmap that was deployed in previous chapters
 
