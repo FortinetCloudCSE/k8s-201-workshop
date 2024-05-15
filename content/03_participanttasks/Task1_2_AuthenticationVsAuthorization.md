@@ -13,45 +13,45 @@ Understand the differences between Kubernetes Authentication, Authorization, and
 
 Kubernetes security involves three primary processes: Authentication, Authorization, and Admission Control. These processes ensure that only verified users can perform actions they are permitted to perform within the cluster, and that those actions are validated by Kubernetes before they are executed.
 
-![3A](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*6CGN47bA2mjzRGBlFKK25g.png "3A image")
+![3A](https://miro.medium.com/v2/resize:fit:1400/format:webp/16CGN47bA2mjzRGBlFKK25g.png "3A image")
 ## Authentication
 
 Authentication in Kubernetes confirms the identity of a user or process. It's about answering "who are you?" Kubernetes supports several authentication methods:
-- **Client Certificates**
-- **Bearer Tokens**
-- **Basic Authentication**
-- **External Identity Providers** such as OIDC or LDAP
+- Client Certificates
+- Bearer Tokens
+- Basic Authentication
+- External Identity Providers such as OIDC or LDAP
 
 ### Common Use Cases for Authentication
-- **Client Certificates**: Used in environments where certificates are managed through a corporate PKI.
-- **Bearer Tokens**: Common in automated processes or scripts that interact with the Kubernetes API.
-- **OIDC**: Used in organizations with existing identity solutions like Active Directory or Google Accounts for user authentication.
+- Client Certificates: Used in environments where certificates are managed through a corporate PKI.
+- Bearer Tokens: Common in automated processes or scripts that interact with the Kubernetes API.
+- OIDC: Used in organizations with existing identity solutions like Active Directory or Google Accounts for user authentication.
 
 ## Authorization
 
 Authorization in Kubernetes determines what authenticated users are allowed to do. It answers "what can you do?" There are several authorization methods in Kubernetes:
 - **Role-Based Access Control (RBAC)**
-- **Attribute-Based Access Control (ABAC)**
-- **Node Authorization**
-- **Webhook**
+- Attribute-Based Access Control (ABAC)
+- Node Authorization
+- Webhook
 
 ### Common Use Cases for Each Authorization Method
 
 #### RBAC (Role-Based Access Control)
-- **Use Case**: The most common authorization method, used to finely tune permissions at a granular level based on the roles assigned to users or groups.
-- **Example**: Granting a developer read-only access to Pods in a specific namespace.
+- Use Case: The most common authorization method, used to finely tune permissions at a granular level based on the roles assigned to users or groups.
+- Example: Granting a developer read-only access to Pods in a specific namespace.
 
 #### ABAC (Attribute-Based Access Control)
-- **Use Case**: Used in environments requiring complex access control decisions based on attributes of the user, resource, or environment.
-- **Example**: Allowing access to a resource based on the department attribute of the user and the sensitivity attribute of the resource.
+- Use Case: Used in environments requiring complex access control decisions based on attributes of the user, resource, or environment.
+- Example: Allowing access to a resource based on the department attribute of the user and the sensitivity attribute of the resource.
 
 #### Node Authorization
-- **Use Case**: Specific to controlling what actions a Kubernetes node can perform, primarily in secure or multi-tenant environments.
-- **Example**: Restricting nodes to only read Secrets and ConfigMaps referenced by the Pods running on them.
+- Use Case: Specific to controlling what actions a Kubernetes node can perform, primarily in secure or multi-tenant environments.
+- Example: Restricting nodes to only read Secrets and ConfigMaps referenced by the Pods running on them.
 
 #### Webhook
-- **Use Case**: Used when integrating Kubernetes with external authorization systems for complex security environments.
-- **Example**: Integrating with an external policy engine that evaluates whether a particular action should be allowed based on external data not available within Kubernetes.
+- Use Case: Used when integrating Kubernetes with external authorization systems for complex security environments.
+- Example: Integrating with an external policy engine that evaluates whether a particular action should be allowed based on external data not available within Kubernetes.
 
 ## Admission Control
 
@@ -62,35 +62,34 @@ Admission controllers are not enabled by default. They must be explicitly config
 ### Common Admission Controllers
 
 #### Pod Security Policies (PSP)
-- **Use Case**: Ensures that Pods meet security requirements by denying the creation of Pods that do not adhere to defined policies.
-- **Example**: Restricting the use of privileged containers or the host network.
+- Use Case: Ensures that Pods meet security requirements by denying the creation of Pods that do not adhere to defined policies.
+- Example: Restricting the use of privileged containers or the host network.
 
 #### ResourceQuota
-- **Use Case**: Enforces limits on the aggregate resource consumption per namespace.
-- **Example**: Preventing any one namespace from using more than a certain amount of CPU or memory resources.
+- Use Case: Enforces limits on the aggregate resource consumption per namespace.
+- Example: Preventing any one namespace from using more than a certain amount of CPU or memory resources.
 
 #### LimitRanger
-- **Use Case**: Enforces defaults and limits on the sizes of resources like Pods, containers, and PersistentVolumeClaims.
-- **Example**: Ensuring that every Pod has a memory request and limit to avoid resource exhaustion.
+- Use Case: Enforces defaults and limits on the sizes of resources like Pods, containers, and PersistentVolumeClaims.
+- Example: Ensuring that every Pod has a memory request and limit to avoid resource exhaustion.
 
-## Conclusion
+## Summary
 
 Authentication, authorization, and admission control are foundational to Kubernetes security, ensuring only authenticated and authorized actions that meet the cluster's policy requirements are performed within the cluster.
 
-## Task 1 
-Investigate your current user permission on Kubernetes:
+## Task 1 Investigate your k8s environment
 
-- **Who are you?**
+- Who are you?
 ```bash
 kubectl config get-users
 ```
 
-- **Which cluster are you connected to?**
+- Which cluster are you connected to?
 ```bash
 kubectl config current-context
 ```
 
-- **What can you do?**
+- What can you do?
 
 For example, check whether you have permission to read configmaps in the kube-system namespace:
 ```bash
@@ -99,10 +98,10 @@ kubectl auth can-i list configmaps -n kube-system
 
 Check whether you are allowed to do anything in all namespaces:
 ```bash
-kubectl auth can-i '*' '*' -A
+kubectl auth can-i '' '' -A
 ```
 
-- **How do you authenticate to your cluster?**
+- How do you authenticate to your cluster?
 ```bash
 kubectl config view
 ```

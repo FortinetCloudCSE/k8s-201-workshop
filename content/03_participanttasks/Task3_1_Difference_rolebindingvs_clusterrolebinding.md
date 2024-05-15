@@ -5,7 +5,7 @@ menuTitle: "Difference Between RoleBindings and ClusterRoleBindings"
 weight: 2
 ---
 
-# Objective
+## Objective
 
 Understand the difference between RoleBindings and ClusterRoleBindings.
 
@@ -23,23 +23,23 @@ In contrast, a ClusterRoleBinding applies a ClusterRole across all namespaces wi
 
 ## Key Differences and Usage
 
-- **Scope**:
-  - **RoleBinding**: Limited to a single namespace.
-  - **ClusterRoleBinding**: Applies across all namespaces.
+- Scope:
+  - RoleBinding: Limited to a single namespace.
+  - ClusterRoleBinding: Applies across all namespaces.
 
-- **Usage**:
-  - **RoleBinding**: Often used when the permissions need to be namespace-specific.
-  - **ClusterRoleBinding**: Used when permissions need to be cluster-wide, such as for system administrators or certain automated tasks.
+- Usage:
+  - RoleBinding: Often used when the permissions need to be namespace-specific.
+  - ClusterRoleBinding: Used when permissions need to be cluster-wide, such as for system administrators or certain automated tasks.
 
-- **Flexibility and Policy Management**:
-  - **Reusability**: ClusterRoles are reusable across multiple namespaces with just additional RoleBindings, avoiding duplication.
-  - **Policy Management**: ClusterRoles allow for centralized role definitions, simplifying the management and enforcement of policies across multiple namespaces.
+- Flexibility and Policy Management:
+  - Reusability: ClusterRoles are reusable across multiple namespaces with just additional RoleBindings, avoiding duplication.
+  - Policy Management: ClusterRoles allow for centralized role definitions, simplifying the management and enforcement of policies across multiple namespaces.
 
 ## Common Practices
 
-- **ClusterRole with RoleBinding**: Useful for applying a set of permissions uniformly across multiple namespaces without granting cluster-wide access. This approach adheres to the principle of least privilege by restricting access to resources within specific namespaces.
+- ClusterRole with RoleBinding: Useful for applying a set of permissions uniformly across multiple namespaces without granting cluster-wide access. This approach adheres to the principle of least privilege by restricting access to resources within specific namespaces.
 
-- **ClusterRole with ClusterRoleBinding**: Typically used for roles that require broad access across the entire cluster, which is common in roles designed for cluster administrators or core system components.
+- ClusterRole with ClusterRoleBinding: Typically used for roles that require broad access across the entire cluster, which is common in roles designed for cluster administrators or core system components.
 
 ## Example
 

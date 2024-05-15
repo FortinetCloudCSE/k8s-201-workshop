@@ -5,18 +5,23 @@ menuTitle: "Use case for different usage"
 weight: 2
 ---
 
-# Examples of Using Roles and ClusterRoles with Bindings in Kubernetes
+## Object
+
+Understand the use case of Rolebinding and ClusterRoleBinding 
+
+
+## Examples of Using Roles and ClusterRoles with Bindings in Kubernetes
 
 Understanding when to use `Role`, `ClusterRole`, `RoleBinding`, and `ClusterRoleBinding` is crucial for proper access control within a Kubernetes environment. Here are some practical examples of each:
 
-## 1. Namespace-Specific Permissions with Role and RoleBinding
+## Namespace-Specific Permissions with Role and RoleBinding
 
 ### Use Case: Managing Pods within a Single Namespace
 
-- **Scenario**: You want to grant a user permissions to only `create` and `delete` Pods within the `development` namespace.
-- **Why Choose Role and RoleBinding**:
-  - **Role**: Defines permissions within a specific namespace.
-  - **RoleBinding**: Applies those permissions to specific users within the same namespace.
+- Scenario: You want to grant a user permissions to only `create` and `delete` Pods within the `development` namespace.
+- Why Choose Role and RoleBinding:
+  - Role: Defines permissions within a specific namespace.
+  - RoleBinding: Applies those permissions to specific users within the same namespace.
 
 ### Example:
 
@@ -47,14 +52,14 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-## 2. Cluster-Wide Permissions with ClusterRole and ClusterRoleBinding
+## Cluster-Wide Permissions with ClusterRole and ClusterRoleBinding
 
 ### Use Case: Reading Secrets Across All Namespaces
 
-- **Scenario**: A monitoring tool needs to read Secrets across all namespaces to gather configuration information.
-- **Why Choose ClusterRole and ClusterRoleBinding**:
-  - **ClusterRole**: Appropriate for defining permissions that span multiple namespaces.
-  - **ClusterRoleBinding**: Applies permissions across the entire cluster.
+- Scenario: A monitoring tool needs to read Secrets across all namespaces to gather configuration information.
+- Why Choose ClusterRole and ClusterRoleBinding:
+  - ClusterRole: Appropriate for defining permissions that span multiple namespaces.
+  - ClusterRoleBinding: Applies permissions across the entire cluster.
 
 ### Example:
 
@@ -84,14 +89,14 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-## 3. Scoped ClusterRole with RoleBinding
+## Scoped ClusterRole with RoleBinding
 
 ### Use Case: Limiting a Cluster-Wide Role to a Specific Namespace
 
-- **Scenario**: You want to allow a CI/CD tool to manage Deployments and StatefulSets, but only within the `staging` namespace.
-- **Why Choose ClusterRole with RoleBinding**:
-  - **ClusterRole**: Defined once and can be used across multiple scenarios.
-  - **RoleBinding**: Limits the broad permissions of a ClusterRole to a specific namespace, enhancing security without duplicating role definitions.
+- Scenario: You want to allow a CI/CD tool to manage Deployments and StatefulSets, but only within the `staging` namespace.
+- Why Choose ClusterRole with RoleBinding:
+  - ClusterRole: Defined once and can be used across multiple scenarios.
+  - RoleBinding: Limits the broad permissions of a ClusterRole to a specific namespace, enhancing security without duplicating role definitions.
 
 ### Example:
 
@@ -122,7 +127,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-## Conclusion
+## Summary
 
 Choosing between `Role` and `ClusterRole` largely depends on the scope of access required. `RoleBinding` helps limit broader permissions defined in `ClusterRole` to specific namespaces, thereby providing flexibility and enhancing security through precise access control.
 
