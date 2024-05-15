@@ -315,6 +315,37 @@ spec:
 ```bash
 kubectl create secret generic ipsec-psks --from-literal=psk1="12345678"
 ```
+- create a clustersvc for cfos ipsec 
+
+```bash
+cat << EOF | kubectl apply -n cfostest -f - 
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cfos
+  name: ipsec
+spec:   
+  internalTrafficPolicy: Cluster
+  clusterIP: 10.110.17.42
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 500
+    protocol: UDP
+    targetPort: 500
+    name: udp-500
+  - port: 4500
+    protocol: UDP
+    targetPort: 4500
+    name: udp-4500
+  selector:
+    app: cfos
+  sessionAffinity: None
+  type: ClusterIP
+```
+
 - use secret in configmap data
 
 ```bash
@@ -325,6 +356,7 @@ data:
     config vpn ipsec phase1-interface
         edit "test-p1"
            set interface "eth0"
+           set remote-gw 10.110.17.42
            set peertype any
            set proposal aes128-sha256 aes256-sha256 aes128gcm-prfsha256 aes256gcm-prfsha384 chacha20poly1305-prfsha256
            set psksecret {{ipsec-psks:psk1}}
