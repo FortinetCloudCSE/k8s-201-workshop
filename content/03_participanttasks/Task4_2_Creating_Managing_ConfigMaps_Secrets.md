@@ -1,28 +1,34 @@
 ---
-title: "How container access external data"
+title: "Access External Data"
 chapter: false
 menuTitle: "Introduction to ConfigMaps and Secrets"
 weight: 2
 ---
 
+## Objective
 
-## Task 1 Access External Data with ConfigMap
+Learn how cFOS can use ConfigMaps and Secrets to Config itself
 
-cFOS can continusely watch the Add/Del of the ConfigMap in K8s. then use configMap data to config cFOS. 
+## Access External Data with ConfigMap
+
+cFOS can continusely watch the Add/Del/Update of the ConfigMap in K8s, then use configMap data to config cFOS. 
  
-
-### ConfigMap
-
 ConfigMap holds configuration data for pods to consume. configuration data can be binary or text data , both is a map of string. cnofigmap data can be set to "immutable" to prevent the change. 
 
 cFOS has build in feature can read the configMap from k8s via k8s API. when cFOS POD serviceaccount configured with a permission to read configMaps, cFOS can read configMap as it's configuration such as license data , firewall policy related config etc.,
 
 
-#### Create a configMap for cFOS to import license
-- create a configmap file for cfos license 
-cFOS container use labels map[app: fos] to identify the ConfigMap.  
+- #### Task: Create a configMap for cFOS to import license
+
+- Create a configmap file for cfos license 
+
+{{% notice style="tip" %}}
+labels "app: fos" and "category: config" are required. Especially category is used to distinguish from other ConfigMaps such as license.
+cFOS only read those configMaps with label "app: fos".
+{{% /notice %}}
+
 ```bash
-cat <<EOF | tee cfos_license_$USER.yaml
+cat <<EOF | tee cfos_license.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -33,30 +39,41 @@ metadata:
 data:
     license: |6
 EOF
+kubectl apply -f cfos_license.yaml 
 ```
 now you created a configmap with an empty cFOS license. 
 
+{{% notice style="tip" %}}
 | (Pipe): This is a block indicator used for literal style, where line breaks and leading spaces are preserved. It’s commonly used to define multi-line strings.
 
 6 : a directive to the parser that the subsequent lines are expected to be indented by at least 6 spaces.
 
-- add your license 
-get your license file, then append the content to yaml file
+{{% /notice %}}
+
+- Add your license 
+
+get your license file, then append the content to yaml file, replace "cfoslicense.lic" with your actual file name
+
 ```bash
-while read -r line; do printf "      %s\n" "$line"; done < FGVMULTM23000022.lic >> cfos_license_$USER.yaml
+licfile="cfoslicense.lic"
+while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
 ```
-- apply the resource 
+- Apply the resource 
+
 ```bash
-kubectl create -f cfos_license.yaml  -n cfostest
+kubectl create -f cfos_license.yaml  
 ```
 
 cFOS will "watch" ConfigMap has with label= "app: fos", then import the license into cFOS.
 
-From cFOS log
+- Check cFOS log 
+
 ```bash
-k logs -f po/cfos-pod -n cfostest
+kubectl logs -f  -l app=cfos
 ```
+
 Expected Result
+
 ```
 2024-05-08_10:20:15.11899 INFO: 2024/05/08 10:20:15 received a new fos configmap
 2024-05-08_10:20:15.11910 INFO: 2024/05/08 10:20:15 configmap name: cfos-license, labels: map[app:fos category:license]
@@ -65,7 +82,7 @@ Expected Result
 ```
 
 
-#### Create ConfigMap for cFOS to read Firewall Config Read
+- #### Create ConfigMap for cFOS to read Firewall VIP config
 
 
 ```bash
@@ -93,10 +110,11 @@ data:
 EOF
 kubectl create -f fosconfigmapfirewallvip.yaml -n cfostest
 ```
+cFOS configuration contains one or more CLI commands. There are two types configurations: partial and full. For a partial configuration, it will be applied on top of current configuration in cFOS. Multiple partial configurations are accepted, so a bigger configuration can be splitted into small ones and apply them one by one. For full configuration, the active configuration will be wiped out and the new configuration will be fully restored.
 
-Above "partial" means only update config partially. 
+type: partial indicates this is a partial configuration
 
-Check Result
+- Check Result
 
 Check cFOS container log. you can find 
 
@@ -107,12 +125,16 @@ Check cFOS container log. you can find
 2024-05-14_10:57:18.63417 INFO: 2024/05/14 10:57:18 applying a partial fos config...
 2024-05-14_10:57:19.42525 INFO: 2024/05/14 10:57:19 fos config is applied successfully.
 ```
+- Delete ConfigMap 
 
-Delete a ConfigMap will not delete configuration on cFOS, however, you can create a ConfigMap with delete command to delete the configuration. 
+use `kubectl delete cm <configMap Name> to delete configmap, however 
+delete a ConfigMap will not delete configuration on cFOS, but you can create a ConfigMap with delete command to delete the configuration. 
+
+- Update ConfigMap
 
 Update a Configmap will also update the configuration on cFOS
 
-#### Create ConfigMap for cFOS to delete a Firewall Config
+- #### Create ConfigMap for cFOS to delete a Firewall Config
 
 ```bash
 apiVersion: v1
@@ -142,7 +164,7 @@ cat << EOF | tee kubectl apply -f -n cfostest
 
 apiVersion: v1
 data:
-  config: |2
+  config: |
   type: full
 kind: ConfigMap
 metadata:
@@ -170,20 +192,22 @@ then cFOS will be reloaded with this empty configuraiton, effectively, this is r
 
 Kubernetes Secrets are objects that store sensitive data such as passwords, OAuth tokens, SSH keys, etc. The primary purpose of using secrets is to protect sensitive configuration from being exposed in your application code or script. Secrets provide a mechanism to supply containerized applications with confidential data while keeping the deployment manifests or source code non-confidential.
 
-Benefits of Using Secrets
+- #### Benefits of Using Secrets
 
-Security: Secrets keep sensitive data out of your application code and Pod definitions.
+- Security: Secrets keep sensitive data out of your application code and Pod definitions.
 Management: Simplifies sensitive data management as updates to secrets do not require image rebuilds or application redeployments.
-Flexibility: Can be mounted as data volumes or exposed as environment variables to be used by a container in a Pod. Also, they can be used by the Kubernetes system itself for things like accessing a private image registry.
+- Flexibility: Can be mounted as data volumes or exposed as environment variables to be used by a container in a Pod. Also, they can be used by the Kubernetes system itself for things like accessing a private image registry.
 
-### How to Use Secrets 
+- #### How to Use Secrets 
 
 - Creating Secrets
 
 Using kubectl cli 
+
 ```bash
 kubectl create secret generic ipsec-shared-key --from-literal=ipsec-shared-pass=12345678
 ```
+
 use `kubectl get secret ipsec-shared-key -o yaml` can check the secret just created.
 
 the password "12345678" encoded with base64 and saved in k8s. you can still see the original password with 
@@ -207,19 +231,26 @@ data:
 
 ```
 
-The type field helps Kubernetes software and developers know how to treat the contents of the secret. The type Opaque is one of several predefined types that Kubernetes supports for secrets. Opaque: This is the default type for a secret. It indicates that the secret contains arbitrary data that isn't structured in any predefined way specific to Kubernetes. This type is used when you are storing secret data that doesn't fit into any of the other types of secrets that Kubernetes understands (like docker-registry or tls). the other options for type are : "kubernetes.io/service-account-token:", "kubernetes.io/dockerconfigjson","kubernetes.io/tls" etc., when we create secret for store docker login secret, we have to use type: kubernetes.io/dockerconfigjson. 
+The type field helps Kubernetes software and developers know how to treat the contents of the secret. The type Opaque is one of several predefined types that Kubernetes supports for secrets. 
+
+Opaque: This is the default type for a secret. It indicates that the secret contains arbitrary data that isn't structured in any predefined way specific to Kubernetes. This type is used when you are storing secret data that doesn't fit into any of the other types of secrets that Kubernetes understands (like docker-registry or tls). the other options for type are : "kubernetes.io/service-account-token:", "kubernetes.io/dockerconfigjson","kubernetes.io/tls" etc., when we create secret for store docker login secret, we have to use type: kubernetes.io/dockerconfigjson. 
 
 - Consuming Secrets in a Pod
 
 1. Environment Variables
+
 Secret can be passed into POD as environment variables. 
+
 2. Mount Secret as Volume
 3. ImagePullSecrets 
+
 Secret can be used in field "ImagePullSecrets" in serviceaccount or POD manifest
 for example. you can define a secriceaccount to include an ImagePullSecrets. or you can use secret in Pod or "Deployment" manifest for pod to pull image with secret.
 4. As port of ConfigMap
+
 Secret can be part of the ConfigMap for configuration purpose. for example, we can embeded secret in configMap for cFOS.
 5. Use external secret management system
+
 for example, HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault . These systems can dynamically inject secrets into your applications, often using a sidecar container or a mutating webhook to provide secrets to the application securely.
 
 #### Task - Create image pull secret and use it in serviceaccount.
@@ -310,6 +341,7 @@ spec:
         emptyDir: {}
 ```
 #### Task use secret in configMap
+
 - create secret with key to include the shared password 
 
 ```bash
@@ -384,5 +416,9 @@ in above configmap. inside the configuration. the line `set psksecret {{ipsec-ps
 
 k8s configmap does not support use secret in config data. it is up to cFOS application to parse secret. in above. it is cFOS responsibility to substitue {{ipsec-psks:psk1}} with actual k8s secret ipsec-psks. 
 
+
+### Summary
+
+cFOS has build-in support for read data from k8s configMaps and Secrets , which enable multiple cFOS container in one cluster to share the configuration data. 
 
 

@@ -98,7 +98,7 @@ kubectl auth can-i list configmaps -n kube-system
 
 Check whether you are allowed to do anything in all namespaces:
 ```bash
-kubectl auth can-i '' '' -A
+kubectl auth can-i '*' '*' -A
 ```
 
 - How do you authenticate to your cluster?

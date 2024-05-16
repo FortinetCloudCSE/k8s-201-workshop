@@ -10,23 +10,33 @@ weight: 2
 Create and Manage RoleBinding and ClusterRoleBinding 
 
 ## Create ServiceAccount
+
+K8s cluster internal application like cFOS will use serviceAccount with a JWT token to talk to k8s API. the Role or ClusterRole is bound to serviceAccount which in turn assocated with cFOS Pod.
+
 ServiceAccounts are namespaced resources; if no namespace is supplied, they default to the "default" namespace.
 
-### Using kubectl command
+- ### Task 1: Create a serviceAccount for cFOS and bind to ClusterRole
 
+- use kubectl  create cli
 ```bash
 kubectl create namespace cfostest
 kubectl create serviceaccount cfos-serviceaccount -n cfostest
+kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps 
+kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets 
 ```
 
-Optionally, add an imagePullSecret to this service account so a POD using this service account can pull container images:
+Optionally, add an imagePullSecret to this service account so a POD using this service account also include a image pull secret to pull container images:
+
+```bash
+kubectl apply -f ./../../scripts/cfos/imagepullsecret.yaml -n cfostest
+```
 
 ```bash
 kubectl patch serviceaccount cfos-serviceaccount -n cfostest \
   -p '{"imagePullSecrets": [{"name": "cfosimagepullsecret"}]}'
 ```
 
-### Using YAML file
+- use YAML manifest 
 
 ```
 cat << EOF | tee cfos-serviceaccount.yaml
@@ -41,7 +51,7 @@ EOF
 kubectl create -f cfos-serviceaccount.yaml 
 ```
 
-### Check Result
+#### Check Result
 
 ```bash
 kubectl describe sa cfos-serviceaccount -n cfostest
@@ -58,18 +68,18 @@ Tokens:              <none>
 Events:              <none>
 ```
 
-### Bind ClusterRole to ServiceAccount
+#### Bind ClusterRole to ServiceAccount
 
 Bind previously created ClusterRoles "configmap-reader" and "secrets-reader" to the service account in the namespace cfostest.
 
-### Using kubectl command
+- use kubectl create cli
 
 ```bash
-kubectl create rolebinding cfosrolebinding-configmap --clusterrole=configmap-reader --serviceaccount=cfostest:cfos-serviceaccount
-kubectl create rolebinding cfosrolebinding-secrets --clusterrole=secrets-reader --serviceaccount=cfostest:cfos-serviceaccount
+kubectl create rolebinding cfosrolebinding-configmap-reader --clusterrole=configmap-reader --serviceaccount=cfostest:cfos-serviceaccount -n cfostest
+kubectl create rolebinding cfosrolebinding-secrets-reader --clusterrole=secrets-reader --serviceaccount=cfostest:cfos-serviceaccount -n cfostest
 ```
 
-### Using YAML file
+- use yaml manifest 
 
 ```bash
 cat << EOF | tee cfosrolebinding.yaml
@@ -86,7 +96,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cfos-serviceaccount
-  namespace: cfostest
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -100,9 +109,8 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cfos-serviceaccount
-  namespace: cfostest
 EOF
-kubectl create -f cfosrolebinding.yaml
+kubectl create -f cfosrolebinding.yaml -n cfostest
 ```
 
 ### Check the result
@@ -125,6 +133,7 @@ Both commands should return "yes".
 ### Check service account with kubectl pod
 
 ```yaml
+cat << EOF | kubectl -n cfostest apply -f - 
 apiVersion: v1
 kind: Pod
 metadata:
@@ -139,9 +148,17 @@ spec:
     command:
     - "sleep"
     - "infinity"
+EOF
 ```
+Check Result
 
-### Create cFOS Deployment and use this service account
+```bash
+kubectl exec -it po/kubectl -n cfostest  -- kubectl get cm
+kubectl exec -it po/kubectl -n cfostest  -- kubectl get secret
+```
+both command show able to list cm and secret in namespace cfostest 
+
+### Task 2 - Create cFOS Deployment and with serviceaccount
 
 - Using kubectl with a YAML file 
 
@@ -182,51 +199,9 @@ Expected result:
 Service Account: cfos-serviceaccount
 ```
 
-
-### Q&A
-
-- How to verify the serviceAccount acutally has required permission to target resource ?
-
-Answer:
-
-Creaet a Pod which has kubectl cli , then bind Pod with serviceAccount
-for example , use below yaml 
-
-```
-### Check service account with kubectl pod
-
-```
-cat << EOF | kubectl apply -n cfostest -f - 
-apiVersion: v1
-kind: Pod
-metadata:
-  name: kubectl
-  labels:
-    app: kubectl
-spec:
-  serviceAccountName: cfos-serviceaccount
-  containers:
-  - name: kubectl
-    image: bitnami/kubectl
-    command:
-    - "sleep"
-    - "infinity"
-EOF
-
-```
-
-after deploy above yaml. then shell into this pod and run
-
-shell into pod
+### clean up
 
 ```bash
-kubectl exec -it po/kubectl -n cfostest -- sh
+kubectl delete namespace cfostest
 ```
-then 
-```bash
-kubectl get configmap
-```
-and 
-```bash
-kubectl get secret
-```
+

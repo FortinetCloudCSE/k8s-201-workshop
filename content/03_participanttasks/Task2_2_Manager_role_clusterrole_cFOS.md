@@ -12,9 +12,9 @@ Create Roles and ClusterRoles for the cFOS application.
 ### Core Concepts
 
 - Role for ConfigMaps: cFOS needs to interact with the Kubernetes API to read ConfigMaps for configurations such as IPSEC, Firewall VIP, Policy config, and License.
-- Role for Secrets: cFOS needs to interact with the Kubernetes API to read secrets, such as those used for pulling images.
+- Role for Secrets: cFOS needs to interact with the Kubernetes API to read secrets, such as those used for pulling images,ipsec shared key etc.,
 
-### Task 1 - Create a ClusterRole for cFOS to Read ConfigMaps
+### Create a ClusterRole for cFOS to Read ConfigMaps
 
 cFOS pods require permission to read Kubernetes resources such as ConfigMaps. This includes permissions to watch, list, and read the ConfigMaps.
 
@@ -37,7 +37,9 @@ rules:
   - watch
 ```
 
+{{% notice style="info" %}}
 `""` indicates the API group is the "CORE" API group.
+{{% /notice %}}
 
 #### Decide to Use ClusterRole or Role
 
@@ -47,11 +49,14 @@ For cFOS, either a ClusterRole or a Role can be used as cFOS only requires minim
 kind: ClusterRole
 ```
 
-#### Complete YAML File for a Role
+### Task 1 - Create a clusterrole for cFOS 
+
+you can use kubectl create comamnd or use a yaml file.
 
 - Using kubectl command:
+
 ```bash
-kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps
+kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps 
 ```
 
 - Using a YAML file:
@@ -67,17 +72,11 @@ rules:
   resources: ["configmaps"]
   verbs: ["get", "watch", "list"]
 EOF
+kubectl create -f cfosConfigMapsClusterRole.yaml 
 ```
 
-#### Deploy ClusterRole
+- Check Result
 
-```bash
-kubectl create -f cfosConfigMapsClusterRole.yaml
-```
-
-#### Check Result
-
-- Check resource creation result:
 
 ```bash
 kubectl get clusterrole configmap-reader
@@ -103,7 +102,7 @@ PolicyRule:
   ---------   -----------------  --------------  -----
   configmaps  []                 []              [get list watch]
 ```
-The empty list [] means the configmaps can read any configmaps.
+The empty list [] under "Non-Resource URLs" and "Resource Names" means the configmaps can read any configmaps.
 
 ### Task 2 - Create a Role for cFOS to Read Secrets
 
@@ -115,6 +114,9 @@ cFOS pods require using imagePullSecret to pull containers from an image reposit
 ```bash
 kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets --resource-name=cfosimagepullsecret,someothername
 ```
+{{% notice style="info" %}}
+--resource-name is optional, only needed if you want clusterrole only able to read the secret with specific resource name. 
+{{% /notice %}}
 
 - Using a YAML file:
 
@@ -130,11 +132,6 @@ rules:
   resourceNames: ["cfosimagepullsecret","someothername"]
   verbs: ["get", "watch", "list"]
 EOF
-```
-
-#### Apply the YAML File
-
-```bash
 kubectl create -f cfosSecretClusterRole.yaml
 ```
 

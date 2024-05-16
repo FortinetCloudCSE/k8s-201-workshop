@@ -120,9 +120,20 @@ NET_ADMIN:
 SYS_ADMIN:
 - It might be necessary for some advanced operations, such as configuring system-wide logging settings or manipulating system logs.
 
-- ##### Task:  Review  cFOS deployment securityContext config
+- #### Task: Fix cFOS boot permission issue  
+
+- deploy cfos license,imagepullsecret, serviceaccount 
 
 ```
+kubectl create namespace cfostest
+kubectl apply -f ./../../scripts/cfos/cfos_license.yaml -n cfostest
+kubectl apply -f ./../../scripts/cfos/imagepullsecret.yaml -n cfostest
+kubectl apply -f ./../../scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+```
+- deploy cfos  deployment
+
+```bash
+cat << EOF | kubectl apply -n cfostest -f - 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -149,7 +160,7 @@ spec:
           allowPrivilegeEscalation: false
           privileged: false
           capabilities:
-              add: ["NET_ADMIN","NET_RAW"]
+              add: ["CAP_NET_ADMIN"]
         ports:
         - containerPort: 80
         volumeMounts:
@@ -158,9 +169,37 @@ spec:
       volumes:
       - name: data-volume
         emptyDir: {}
+EOF
+```
+- check cFOS boot log
+
+```bash
+kubectl logs -f -l app=cfos -n cfostest
 ```
 
+Expected Result
+
+You will see error message like
+
+```
+...
+Perhaps iptables or your kernel needs to be upgraded.
+iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
+Perhaps iptables or your kernel needs to be upgraded.
+iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
+Perhaps iptables or your kernel needs to be upgraded
+...
+```
+
+- Try to solve the permission issue by adjust the securityContext Setting.
+
+{{% notice style="tip" %}}
+add linux capabilites to ["CAP_NET_ADMIN","CAP_NET_RAW"] then check log again
+{{% /notice %}}
+
+{{% notice style="info" %}}
 In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent.
+{{% /notice %}}
 
 
 ### Prevention/Protection via Network Security
@@ -188,3 +227,16 @@ In this workshop, We will walk through using cFOS to protect:
 - Pod to Pod traffic - East-West 
   - Pod to Pod via Pod IP address
   - Pod to Pod via ClusterIP svc address/domain
+
+### Clean up
+
+```bash
+kubectl delete namespace cfostest
+```
+
+### Q&A 
+
+does cFOS require run with priviledged: true ?  
+
+
+

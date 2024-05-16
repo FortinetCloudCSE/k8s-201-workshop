@@ -49,8 +49,8 @@ spec:
   signerName: kubernetes.io/kube-apiserver-client
   usages:
     - client auth
-kubectl create -f csrfortecworkshop.yaml
 EOF
+kubectl create -f csrfortecworkshop.yaml
 ```
 
 - Check the CSR Status:
@@ -201,3 +201,10 @@ Above, we have detailed the process for granting human users the least privilege
 
 This ensures that not only are human users operating under the principle of least privilege, but automated processes and applications within your cluster are also adhering to strict access controls, enhancing the overall security posture of your Kubernetes environment.
 
+### Clean up 
+
+make sure switch back to admin user
+
+```bash
+kubectl config use-context kubernetes-admin@kubernetes
+```
