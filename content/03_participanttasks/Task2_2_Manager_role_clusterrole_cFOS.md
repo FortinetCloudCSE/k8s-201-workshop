@@ -156,3 +156,10 @@ PolicyRule:
 
 We defined two ClusterRoles for cFOS in this chapter. In the next chapter, we will explore how to bind these ClusterRoles to the serviceAccount of cFOS.
 
+### Clean up
+
+```bash
+kubectl delete clusterrole configmap-reader
+kubectl delete clusterrole secrets-reader
+```
+
