@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cfos-deployment-2
+spec:
+  selector:
+    matchLabels:
+      app: cfos
+  template:
+    metadata:
+      labels:
+        app: cfos
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni6",  "ips": [ "10.1.200.252/32" ], "mac": "CA:FE:C0:FF:00:02"  }, { "name": "cfosdefaultcni6100",  "ips": [ "10.1.100.252/32" ], "mac": "CA:FE:C0:FF:01:00" } ]'
+    spec:
+      serviceAccountName: cfos-serviceaccount
+      containers:
+      - name: cfos
+        image: interbeing/fos:latest
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN", "SYS_ADMIN", "NET_RAW"]
+        volumeMounts:
+        - mountPath: /data
+          name: data-volume
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+
