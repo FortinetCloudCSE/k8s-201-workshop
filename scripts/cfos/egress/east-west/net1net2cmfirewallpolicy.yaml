@@ -25,6 +25,7 @@ data:
     end
     config firewall policy
       edit 11
+        set utm-status enable
         set srcintf "net2"
         set dstintf "net1"
         set srcaddr "all"
