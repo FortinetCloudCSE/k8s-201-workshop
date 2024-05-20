@@ -13,7 +13,7 @@ This document provides an overview of security measures and strategies to protec
 
 Applications running on Kubernetes include Cloud, Kubernetes Clusters, Containers, and Code (4C). Each layer of the Cloud Native security model builds upon the next outermost layer. The Code layer benefits from strong base (Cloud, Cluster, Container) security layers.
 
-![4C](https://miro.medium.com/v2/resize:fit:1400/format:webp/08xMUJB2t1HBj_Vyx.png "4C image")
+![4C](https://www.thinktecture.com/storage/2022/02/4cs-of-cloud-native-security.png "4C image")
 
 Securing workloads in Kubernetes involves multiple layers of the technology stack, from application development to runtime enforcement.
 
@@ -47,7 +47,7 @@ Fortinet Product [FortiXDR](https://www.fortinet.com/products/fortixdr) can prov
 - ### Prevention/Protection via Network Security 
 
 Actively stop unwanted traffic from entering or leaving Pods.
-Includes network security enhancements and Kubernetes network policies.
+Includes network security enhancements via deploy container based firewall like **cFOS** and CNI based Kubernetes network policies.
 
 - ### Prevention/Protection via Application Security
 
@@ -125,10 +125,11 @@ SYS_ADMIN:
 - deploy cfos license,imagepullsecret, serviceaccount 
 
 ```
+scriptDir="$HOME"
 kubectl create namespace cfostest
-kubectl apply -f ./../../scripts/cfos/cfos_license.yaml -n cfostest
-kubectl apply -f ./../../scripts/cfos/imagepullsecret.yaml -n cfostest
-kubectl apply -f ./../../scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/cfos_license.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
 - deploy cfos  deployment
 
@@ -201,7 +202,12 @@ add linux capabilites to ["CAP_NET_ADMIN","CAP_NET_RAW"] then check log again
 In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent.
 {{% /notice %}}
 
+- Answer
 
+```bash
+kubectl replace -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_Answer.yaml -n cfostest
+kubectl logs -f -l app=cfos -n cfostest
+```
 ### Prevention/Protection via Network Security
 
 Actively stop unwanted traffic from entering or leaving Pods.
@@ -220,13 +226,16 @@ In this workshop, We will walk through using cFOS to protect:
   - Layer 4 traffic to Pod
   - Layer 7 traffic to Pod
 
-- Egress traffic from Pod to Cluster External traffic - South Bound 
+- Egress traffic from Pod to Cluster External traffic(with Multus) - South Bound 
+  - POD traffic to Internet
+  - POD traffic to Enterprise internal application , such as Database in the same VPC 
+
+- Egress traffic from Pod to Cluster External traffic(with Multus) - South Bound 
   - POD traffic to Internet
   - POD traffic to Enterprise internal, such as Database in the same VPC 
 
-- Pod to Pod traffic - East-West 
+- Pod to Pod traffic - East-West (with Multus)
   - Pod to Pod via Pod IP address
-  - Pod to Pod via ClusterIP svc address/domain
 
 ### Clean up
 
@@ -236,7 +245,7 @@ kubectl delete namespace cfostest
 
 ### Q&A 
 
-does cFOS require run with priviledged: true ?  
+- Does cFOS require run with priviledged: true ?  
 
 
 
