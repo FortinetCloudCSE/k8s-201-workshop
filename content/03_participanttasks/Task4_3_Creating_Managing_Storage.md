@@ -72,10 +72,11 @@ A path directly on host node.
 - Create cFos license, imagePullSecret and serviceAccount
 
 ```bash
+scriptDir=$HOME
 kubectl create namespace cfostest
-kubectl apply -f ./../../scripts/cfos/cfos_license.yaml -n cfostest
-kubectl apply -f ./../../scripts/cfos/imagepullsecret.yaml -n cfostest
-kubectl apply -f ./../../scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/cfos_license.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
 - create PVC with required capacity
 
@@ -195,4 +196,6 @@ EOF
 
 ```bash
 kubectl delete namespace cfostest
+kubectl delete clusterrole configmap-reader
+kubectl delete clusterrole secrets-reader
 ```

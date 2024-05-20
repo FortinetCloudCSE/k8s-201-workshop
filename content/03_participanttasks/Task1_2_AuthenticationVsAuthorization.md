@@ -13,7 +13,7 @@ Understand the differences between Kubernetes Authentication, Authorization, and
 
 Kubernetes security involves three primary processes: Authentication, Authorization, and Admission Control. These processes ensure that only verified users can perform actions they are permitted to perform within the cluster, and that those actions are validated by Kubernetes before they are executed.
 
-![3A](https://miro.medium.com/v2/resize:fit:1400/format:webp/16CGN47bA2mjzRGBlFKK25g.png "3A image")
+![3A](https://kubernetes.io/images/docs/admin/access-control-overview.svg "3A image")
 ## Authentication
 
 Authentication in Kubernetes confirms the identity of a user or process. It's about answering "who are you?" Kubernetes supports several authentication methods:

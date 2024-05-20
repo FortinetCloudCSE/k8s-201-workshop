@@ -23,10 +23,11 @@ cFOS has build in feature can read the configMap from k8s via k8s API. when cFOS
 - create a cFOS without license 
 
 ```bash
+scriptDir="$HOME"
 kubectl create namespace cfostest
-kubectl apply -f ./../../scripts/cfos/imagepullsecret.yaml -n cfostest
-kubectl apply -f ./../../scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-kubectl apply -f ./../../scripts/cfos/02_create_cfos_deployment.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment.yaml -n cfostest
 ```
 
 - check cFOS running in restricted mode due to no license applied
@@ -153,6 +154,7 @@ delete a ConfigMap will not delete configuration on the running cFOS, but you ca
 - Create ConfigMap for cFOS to delete a Firewall Config
 
 ```bash
+cat << EOF | kubectl create -n cfostest -f - 
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -165,6 +167,7 @@ data:
   config: |-
     config firewall vip
            del "test"
+EOF
 ```
 
 Above will delete the configuration from cFOS. 
@@ -180,7 +183,7 @@ if data: type is set to full
 cFOS will use this configuration to replace all current configuration. cFOS will be reloaded then load this function.
 
 ```bash
-cat << EOF | tee kubectl apply -f -n cfostest
+cat << EOF | kubectl -n cfostest apply -f - 
 
 apiVersion: v1
 data:
@@ -192,10 +195,15 @@ metadata:
     app: fos
     category: config
   name: cm-full-empty
-  namespace: default
+EOF
 ```
 
 Expected Result
+
+```
+kubect logs -f -l app=cfos 
+
+```
 
 ```
 2024-05-14_12:22:58.24465 INFO: 2024/05/14 12:22:58 received a new fos configmap
@@ -231,7 +239,8 @@ use `kubectl get secret ipsec-shared-key -o yaml -n cfostest` can check the secr
 the password "12345678" encoded with base64 and saved in k8s. you can still see the original password with 
 
 ```bash
-kubectl get secret ipsec-shared-key -o yaml -n cfostest | yq .data.ipsec-shared-pass | base64 -d
+kubectl get secret ipsec-shared-key -o json -n cfostest | jq -r '.data["ipsec-shared-pass"]' | base64 -d
+
 
 ```
 
@@ -305,8 +314,9 @@ EOF
 - create a cFOS yaml manifest to use imagePullSecrets
 
 ```bash
-kubectl apply -f ./../../scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-kubectl apply -f ./../../scripts/cfos/02_create_cfos_deployment.yaml -n cfostest
+scriptDir="$HOME"
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment.yaml -n cfostest
 ```
 - ### Task 2 -  use secret in configMap
 
@@ -320,7 +330,8 @@ kubectl create secret generic ipsec-psks --from-literal=psk1="12345678"
 create a clusterIP svc for cfos to get an ip for ipsec
 
 ```bash
-kubectl apply -f ./../../scripts/cfos/02_clusterip_cfos.yaml -n cfostest
+scriptDir="$HOME"
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_clusterip_cfos.yaml -n cfostest
 ```
 
 
@@ -374,4 +385,6 @@ cFOS has build-in support for read data from k8s configMaps and Secrets , which 
 
 ```bash
 kubectl delete namespace cfostest
+kubectl delete clusterrole configmap-reader
+kubectl delete clusterrole secrets-reader
 ```

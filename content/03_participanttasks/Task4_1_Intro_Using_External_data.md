@@ -84,7 +84,6 @@ data:
 EOF
 kubectl apply -f cm_external_resource.yaml
 ```
-{{% badge style="primary" title="cFOS config sample" %}}7.2.1.250{{% /badge %}}
 
 
 ### clean up

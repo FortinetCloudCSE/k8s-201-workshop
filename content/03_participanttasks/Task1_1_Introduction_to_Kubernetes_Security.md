@@ -241,6 +241,8 @@ In this workshop, We will walk through using cFOS to protect:
 
 ```bash
 kubectl delete namespace cfostest
+kubectl get clusterrole configmap-reader
+kubectl get clusterrole secrets-reader
 ```
 
 ### Q&A 

@@ -25,10 +25,11 @@ kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=con
 kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets 
 ```
 
-Optionally, add an imagePullSecret to this service account so a POD using this service account also include a image pull secret to pull container images:
+Add an imagePullSecret to this service account so a POD using this service account also include a image pull secret to pull container images:
 
 ```bash
-kubectl apply -f ./../../scripts/cfos/imagepullsecret.yaml -n cfostest
+scriptDir="$HOME"
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 ```
 
 ```bash
@@ -36,7 +37,7 @@ kubectl patch serviceaccount cfos-serviceaccount -n cfostest \
   -p '{"imagePullSecrets": [{"name": "cfosimagepullsecret"}]}'
 ```
 
-- use YAML manifest 
+- or use YAML manifest 
 
 ```
 cat << EOF | tee cfos-serviceaccount.yaml
@@ -79,7 +80,7 @@ kubectl create rolebinding cfosrolebinding-configmap-reader --clusterrole=config
 kubectl create rolebinding cfosrolebinding-secrets-reader --clusterrole=secrets-reader --serviceaccount=cfostest:cfos-serviceaccount -n cfostest
 ```
 
-- use yaml manifest 
+- or use yaml manifest 
 
 ```bash
 cat << EOF | tee cfosrolebinding.yaml
@@ -203,5 +204,7 @@ Service Account: cfos-serviceaccount
 
 ```bash
 kubectl delete namespace cfostest
+kubectl delete clusterrole configmap-reader
+kubectl delete clusterrole secrets-reader
 ```
 

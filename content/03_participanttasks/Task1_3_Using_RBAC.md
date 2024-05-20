@@ -13,8 +13,10 @@ Learn how to use RBAC to control access to the Kubernetes Cluster.
 
 Kubernetes RBAC (Role-Based Access Control) is an authorization mechanism that regulates interactions with resources within a cluster. It operates by defining roles with specific permissions and binding these roles to users or service accounts. This approach ensures that only authorized entities can perform actions on resources such as pods, deployments, or secrets. By adhering to the principle of least privilege, RBAC allows each user or application access only to the permissions necessary for their tasks. It's important to note that RBAC deals exclusively with authorization and not with authentication; it assumes that the identity of users or service accounts has been verified prior to enforcing access controls.
 
-Below let's walk through how to define a role with limited permission and apply to an user for access Kubernetes Cluster
 
+![RBAC](https://snyk.io/_next/image/?url=https%3A%2F%2Fres.cloudinary.com%2Fsnyk%2Fimage%2Fupload%2Ff_auto%2Fq_auto%2Fv1618003343%2Fwordpress-sync%2Fblog-k8s-rbac-diagram.png&w=2560&q=75 "RBAC")
+
+Below let's walk through how to define a role with limited permission and apply to an user for access Kubernetes Cluster
 
 ## Task 1: Create Read-Only User for Access Cluster
 
@@ -193,7 +195,13 @@ Expected output:
 ```
 yes
 ```
+### Switch back to admin user
 
+make sure switch back to admin user for full control the k8s cluster
+
+```bash
+kubectl config use-context kubernetes-admin@kubernetes
+```
 ### Summary
 
 
@@ -201,10 +209,12 @@ Above, we have detailed the process for granting human users the least privilege
 
 This ensures that not only are human users operating under the principle of least privilege, but automated processes and applications within your cluster are also adhering to strict access controls, enhancing the overall security posture of your Kubernetes environment.
 
-### Clean up 
 
-make sure switch back to admin user
+
+### Clean up 
 
 ```bash
 kubectl config use-context kubernetes-admin@kubernetes
+kubectl config delete-context tecworkshop-context
+kubectl config delete-user tecworkshop
 ```
