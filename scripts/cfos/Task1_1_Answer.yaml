@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cfos7210250-deployment
+  labels:
+    app: cfos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cfos
+  template:
+    metadata:
+      labels:
+        app: cfos
+    spec:
+      serviceAccountName: cfos-serviceaccount
+      securityContext:
+        runAsUser: 0
+      containers:
+      - name: cfos7210250-container
+        image: interbeing/fos:latest
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          capabilities:
+              add: ["CAP_NET_ADMIN","CAP_NET_RAW"]
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /data
+          name: data-volume
+      volumes:
+      - name: data-volume
+        emptyDir: {}
