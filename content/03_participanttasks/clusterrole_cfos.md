@@ -328,7 +328,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: cfos-pod
-spec:
+spec:sudo docker stop 29904b82c88d
   serviceAccountName: cfos-serviceaccount-i
   containers:
     - name: cfos-container
