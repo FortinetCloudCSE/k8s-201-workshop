@@ -1,5 +1,5 @@
 ---
-title: "Intro to ConfigMaps and Secrets"
+title: "Task 1 - Intro to ConfigMaps and Secrets"
 chapter: false
 menuTitle: "Intro to ConfigMaps and Secrets"
 weight: 2

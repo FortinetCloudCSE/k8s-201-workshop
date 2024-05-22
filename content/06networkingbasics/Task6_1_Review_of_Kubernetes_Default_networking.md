@@ -1,5 +1,5 @@
 ---
-title: "Review of Kubernetes Default Networking"
+title: "Task 1 - Review of Kubernetes Default Networking"
 chapter: false
 menuTitle: "Kubernetes Default Networking"
 weight: 1
@@ -82,7 +82,7 @@ Pod-to-pod communication occurs between pods across the same or different nodes 
 
 **Challenges:** Ensuring network policies are in place to control access and traffic between pods for security purposes.
 
-![imagepod](../../images/pdtopd.png)
+![imagepod](../images/pdtopd.png)
 
 
 ## 3. Pod-to-Service Networking
@@ -93,7 +93,7 @@ Kubernetes services are abstractions that define a logical set of pods and a pol
 
 **Implementation:** Uses kube-proxy, which runs on every node, to route traffic or manage IP tables to direct traffic to the appropriate backend pods.
 
-![imagesvc](../../images/pdtosvc.png)
+![imagesvc](../images/pdtosvc.png)
 
 ## 4. External-to-Service Networking
 

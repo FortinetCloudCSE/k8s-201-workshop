@@ -1,8 +1,8 @@
 ---
-title: "Role Based Access Control(RBAC) for Secure Access"
+title: "Task 3 - Role Based Access Control(RBAC) for Secure Access"
 chapter: false
 menuTitle: "RBAC for Secure Access"
-weight: 15
+weight: 10
 ---
 
 # Objective

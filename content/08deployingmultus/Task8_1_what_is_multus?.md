@@ -1,3 +1,10 @@
+---
+title: "Task 1 - What is Multus"
+chapter: false
+menuTitle: "Multus"
+weight: 5
+---
+
 ## What is Multus?
 
 Multus is an open-source Container Network Interface (CNI) plugin for Kubernetes that enables attaching multiple network interfaces to pods. This capability significantly enhances networking flexibility and functionality in Kubernetes environments. Here’s a more detailed look at what Multus is and how it functions:

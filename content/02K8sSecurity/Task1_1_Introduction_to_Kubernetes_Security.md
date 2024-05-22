@@ -1,8 +1,8 @@
 ---
-title: "Overiview of Kubernetes Security"
+title: "Task 1 - Overiview of Kubernetes Security"
 chapter: false
 menuTitle: "Kubernetes Security"
-weight: 5
+weight: 1
 ---
 
 ## Objective

@@ -1,3 +1,10 @@
+---
+title: "Task 1 - Configuring and Securing Egress"
+chapter: false
+menuTitle: "Engress with cFOS"
+weight: 5
+---
+
 To configure egress with a containerized FortiOS using Multus CNI in Kubernetes, and ensure that the default route for outbound traffic goes through FortiOS, you need to follow these general steps:
 
 Key Configurations:

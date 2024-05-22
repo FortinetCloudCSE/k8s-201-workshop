@@ -1,3 +1,10 @@
+---
+title: "Task 2 - Installing Multus"
+chapter: false
+menuTitle: "Multus install"
+weight: 10
+---
+
 ## Deploying and Configuring Multus
 
 **Step 1: Install Multus CNI** 
