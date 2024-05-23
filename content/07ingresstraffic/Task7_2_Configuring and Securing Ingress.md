@@ -7,6 +7,8 @@ weight: 5
 
 ## Ingress
 
+![imageingress](../images/ingress.png)
+
 **cFOS installation:**
 
 To install cFOS we have few steps. 

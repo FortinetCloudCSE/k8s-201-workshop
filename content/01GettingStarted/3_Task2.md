@@ -7,9 +7,6 @@ weight: 3
 
 All the components required for Lab are deployed through terraform. 
 
-Here is the Architecture diagram for Lab1: 
-
-![lab1diagram](../vbfvjfgj)
 
 Perform the following steps in your Cloudshell console to create your environment.
 
@@ -25,28 +22,46 @@ terraform init
 
 ![lab11](../images/terraform1.png)
 
-
-4. Set the Terraform environment variables **(check in dedicated the e-mail send to you by the organizers)**:
     
-5. Run `terraform apply  -var='username=userXX' --auto-approve` or `terraform apply -var="username=$(whoami)" --auto-approve` to apply it
+4. Run the following command to apply it
 
-    Your username can be found in the login email.  
-    Say your Azure account login is se31@ftntxxxxx.onmicrosoft.com, your username is **se31** 
+    ```sh
+   terraform apply -var="username=$(whoami)" --auto-approve
+    ```
+
+    {{% notice style="warning" title="**IF THE COMMAND ABOVE RESULTS IN AN ERROR**" %}} 
+
+You can manually specify your username (found in your Azure Account email) in the command  
+If your Workshop Azure account login is se31@ftntxxxxx.onmicrosoft.com, your username is **se31**, and the command to enter is:
 
 ```sh
-terraform apply  -var='username=UserXX' --auto-approve
+terraform apply  -var='username=se31' --auto-approve
 ```
+    
+    {{% /notice %}} 
+
 
 ![lab12](../images/terraform2.png)
     
-6. Terraform deployment takes atleast 10-15 min to complete.
+5. Terraform deployment takes atleast 10-15 min to complete.
 
 ![lab13](../images/terraformoutput.png)
 
-7. Once Terraform is complete you should see the output. Please copy the output to notepad.
+6. Once Terraform is complete you should see the output. Please copy the output to notepad.
 
-    (will add picture here)
+![output](output.png)
 
-8. To print the node VM's login password, you can run this command ```terraform output -raw linuxvm_password```
+7. To print the node VM's login password, you can run this command 
 
-    (will add picture here)
+   ```
+   terraform output -raw linuxvm_password
+   ```
+
+![](linux_passwd.png)
+
+
+8. Create a kubernetes cluster by referencing the K8s-101-worshop. 
+
+Follow the steps in the link: 
+
+[https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html#use-kubeadm-to-install-kubernetes]([https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html#use-kubeadm-to-install-kubernetes])
