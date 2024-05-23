@@ -109,7 +109,6 @@ Kubernetes services are abstractions that define a logical set of pods and a pol
 
 **Challenges:** Requires careful configuration to ensure security, such as setting up appropriate firewall rules and security groups.
 
-<image>
+![imageinternet](../images/internettosvc.png)
 
 These different networking types together create a flexible and powerful system for managing both internal and external communications in a Kubernetes environment. The design ensures that applications are scalable, maintainable, and accessible, which is crucial for modern cloud-native applications.
-

@@ -5,6 +5,9 @@ menuTitle: "Engress with cFOS"
 weight: 5
 ---
 
+![imageegress](../images/egress.png)
+
+
 To configure egress with a containerized FortiOS using Multus CNI in Kubernetes, and ensure that the default route for outbound traffic goes through FortiOS, you need to follow these general steps:
 
 Key Configurations:
@@ -52,7 +55,7 @@ When deploying your application pods, you need to annotate them to attach to the
 apiVersion: v1
 kind: Pod
 metadata:
-  name: samplepod
+  name: diagpod
   annotations:
     k8s.v1.cni.cncf.io/networks: '[{
       "name": "macvlan-conf1",
@@ -61,9 +64,8 @@ metadata:
 spec:
   containers:
   - name: samplepod
-    command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
-    image: alpine
-EOF
+    command: ["/bin/bash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    image: praqma/network-multitool
 ```
 
 
@@ -126,7 +128,7 @@ NAME                                     READY   STATUS             RESTARTS   A
 fos-multus-deployment-5c64cf64b8-jdpb4   1/1     Running            2          13d
 goweb-846b59f567-42s97                   1/1     Running            0          6d
 nginx-748c667d99-qmtn4                   1/1     Running            3          18d
-samplepod                                1/1     Running            2          13d
+diagpod                                  1/1     Running            2          13d
 ```
 
 5. Log in to cFos container to check the interface created by multus**
@@ -199,23 +201,23 @@ end
 
 ```
 config firewall policy
-
     edit 1
         set name "tointernet"
+        set utm-status enable
         set srcintf "net1"
         set dstintf "eth0"
         set srcaddr "all"
         set dstaddr "all"
         set service "ALL"
+        set ips-sensor "high_security"
         set nat enable
-        set logtraffic all
     next
 end
 ```
 
 7. to check the outbound default route of sample pod that we have created in previous step**
 
-```kubectl exec -it samplepod -- ip route```
+```kubectl exec -it diagpod -- ip route```
 
 output:
 
@@ -223,9 +225,33 @@ output:
 sallam@sallam-master1:~$ kubectl exec -it samplepod -- ip route
 default via 192.168.1.100 dev net1 
 169.254.1.1 dev eth0  scope link 
-192.168.1.0/24 dev net1  proto kernel  scope link  src 192.168.1.204 
+192.168.1.0/24 dev net1  proto kernel  scope link  src 192.168.1.205
 ```
 
 We see that the first route in the table shows that default route is via cFOS to confirm. 
 
-8. we can also check in the cFOS logs if we try to ping/ssh from the sample pod. 
+8. Now lets try to generate an attack.
+
+```kubectl exec -it po/diagpod -- curl  -H "User-Agent: () { :; }; /bin/ls" http://www.example.com```
+
+there will be no output.
+
+9. Login to cfos: 
+
+```kubectl exec -it <cfos multus pod> -- dockerinit```
+
+- **user: admin**
+- **password: (press enter)**
+
+
+```
+cFOS # exec log filter device 1
+cFOS # exec log filter category 4
+cFOS # exec log display 
+date=2024-05-23 time=02:54:16 eventtime=1716432856 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=192.168.1.205 dstip=93.184.215.14 srcintf="net1" dstintf="eth0" sessionid=18 action="dropped" proto=6 service="HTTP" policyid=1 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=37562 dstport=80 hostname="www.example.com" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=196083714 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
+```
+
+You should see a log like above to show that container FOS has identified the Remote code execution. 
+
+
+

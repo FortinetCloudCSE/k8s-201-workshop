@@ -3,6 +3,8 @@ title: "Task 1 - Setup Azure CloudShell"
 weight: 2
 ---
 
+
+
 #### 1. **Setup your AzureCloud Shell**
 
 * Login to Azure Cloud Portal [https://portal.azure.com/](https://portal.azure.com/) with the provided login/password
@@ -31,8 +33,13 @@ weight: 2
     ![cloudshell7](../images/cloudshell-07.jpg)
 * Select
   * Use existing Resource Group  - it ***should*** auto populate with USERXX-k8s101-workshop (USERXX is your Username)
-  * Use existing Storage account - it ***should*** auto populate with USERXX########## (########## is a random string)
-  * Use existing File Share  - type **cloudshellshare**
+  * Use existing Storage account - it ***should*** auto populate with USERXX########## (########## is a random string) 
+
+  {{< notice warning >}} Please make sure to switch the **cloud shell region** to **East US** for the existing storage account to reflect
+  {{< /notice >}}  
+
+  * Use existing File Share  - type **cloudshellshare** 
+
 * Click "Attach Storage"
 
     ![cloudshell8](../images/cloudshell-08.png)
