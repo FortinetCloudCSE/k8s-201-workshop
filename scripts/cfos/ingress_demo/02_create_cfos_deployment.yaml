@@ -12,14 +12,30 @@ spec:
       app: cfos
   template:
     metadata:
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/cfos7210250-container: unconfined
       labels:
         app: cfos
     spec:
+      initContainers:
+      - name: init-myservice
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "nameserver 10.96.0.10" > /mnt/resolv.conf
+          echo "search default.svc.cluster.local svc.cluster.local cluster.local" >> /mnt/resolv.conf;
+        volumeMounts:
+        - name: resolv-conf
+          mountPath: /mnt
       serviceAccountName: cfos-serviceaccount
       containers:
       - name: cfos7210250-container
-        image: interbeing/fos:latest
+#        image: interbeing/fos:latest
+        image: interbeing/fos:x86v255
         securityContext:
+          privileged: false
           capabilities:
             add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
 #            add: ["CAP_NET_RAW","CAP_NET_ADMIN"]
@@ -28,13 +44,14 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: data-volume
+        - mountPath: /etc/resolv.conf
+          name: resolv-conf
+          subPath: resolv.conf
 #      imagePullSecrets:
 #      - name: dockerinterbeing
       volumes:
       - name: data-volume
         emptyDir: {}
-#        hostPath:
-#          path: /cfosdata
-#          type: DirectoryOrCreate
-#          persistentVolumeClaim:
-#            claimName: cfosdata
+      - name: resolv-conf
+        emptyDir: {}
+      dnsPolicy: ClusterFirst
