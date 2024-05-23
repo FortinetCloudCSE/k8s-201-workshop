@@ -13,31 +13,32 @@ In the previous chapter, we learned how to use RBAC to grant users permission to
 
 ### Core Concepts of Kubernetes RBAC:
 
-- **Role**: 
+- Role: 
   A Role is crucial when a Pod needs to access Kubernetes API resources such as ConfigMaps or Secrets within a specific namespace. It defines permissions that are limited to one namespace, enhancing security by restricting access scope.
 
-- **ClusterRole**: 
+- ClusterRole: 
   Defines rules that represent a set of permissions across the entire cluster. It can also be used to grant access to non-namespaced resources like nodes.
 
-- **RoleBinding**: 
+- RoleBinding: 
   Grants the permissions defined in a Role to a user or set of users within a specific namespace.
 
-- **ClusterRoleBinding**: 
+- ClusterRoleBinding: 
   Grants the permissions defined in a ClusterRole to a user or set of users cluster-wide.
 
-- **Rules**: 
+- Rules: 
   Both Roles and ClusterRoles contain rules that define a set of permissions. A rule specifies a set of actions (verbs) that can be performed on a group of resources. Verbs include actions like get, watch, create, delete, etc., and resources might be pods, services, etc.
 
-- **Subjects**: 
+- Subjects: 
   These are users, groups, or service accounts that are granted access based on their role.
 
-- **API Groups**:
+- API Groups:
   Kubernetes organizes APIs into groups to streamline extensions and upgrades, categorizing resources to help manage the API's evolution. Within these groups, verbs define permissible actions on the resources. These verbs are specified in Roles and ClusterRoles to grant precise control over resource access and manipulation.
 
-- **Service Account**: 
+- Service Account: 
   Service Accounts are used by Pods to authenticate against the Kubernetes API, ensuring that API calls are securely identified and appropriately authorized based on the assigned roles and permissions.
 
 #### Pre-defined RBAC Default Roles
+
 Kubernetes comes with some default RBAC roles and clusterroles which are required for bootstrapping the cluster. For example, the role "system:controller:bootstrap-signer" grants the permission to Kubernetes nodes to bootstrap themselves. It automatically approves and signs certain CSRs used for node bootstrapping. 
 
 
@@ -73,12 +74,13 @@ rules:
   - watch
 ```
 To see which RoleBindings are associated with this role:
+
 ```bash
 kubectl get rolebinding -n kube-system system:controller:bootstrap-signer -o yaml
 ```
 - pre-definded Clusterrole 
 
-Another example is the *cluster-admin* ClusterRole, which grants full administrative privileges across the entire cluster. This role allows nearly unrestricted access to all resources in the cluster, making it suitable for highly privileged users who need to manage and configure any aspect of the cluster. 
+Another example is the cluster-admin ClusterRole, which grants full administrative privileges across the entire cluster. This role allows nearly unrestricted access to all resources in the cluster, making it suitable for highly privileged users who need to manage and configure any aspect of the cluster. 
 
 this clusterrole is cluster wide. it can apply to entire cluster with clusterrolebinding. 
 
@@ -145,10 +147,12 @@ Take a look at what are the default role and clusterole pre-defined for a defaul
 default role/clusterrole come with a label "kubernetes.io/bootstrapping=rbac-defaults". you can use this label to filter the default role/clusterrole.
 
 - List all default ClusterRoles:
+
 ```bash
 kubectl get clusterrole -l kubernetes.io/bootstrapping=rbac-defaults
 ```
 - List all default Roles:
+
 ```bash
 kubectl get role -l kubernetes.io/bootstrapping=rbac-defaults -A
 ```

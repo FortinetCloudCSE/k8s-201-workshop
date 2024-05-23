@@ -13,29 +13,28 @@ This document provides an overview of security measures and strategies to protec
 
 Applications running on Kubernetes include Cloud, Kubernetes Clusters, Containers, and Code (4C). Each layer of the Cloud Native security model builds upon the next outermost layer. The Code layer benefits from strong base (Cloud, Cluster, Container) security layers.
 
-![4C](https://miro.medium.com/v2/resize:fit:1400/format:webp/0*8xMUJB2t1HBj_Vyx.png "4C image")
+![4C](https://www.thinktecture.com/storage/2022/02/4cs-of-cloud-native-security.png "4C image")
 
 Securing workloads in Kubernetes involves multiple layers of the technology stack, from application development to runtime enforcement.
 
-### During Application Development Phase
+### Application Development Phase
 
-- **Shift-left Approach**: Focus on software supply chain security by checking the application code and dependencies before building application containers.
+- Shift-left Approach: Focus on software supply chain security by checking the application code and dependencies before building application containers.
 
 Tools: Fortinet Product [FortiDevSec](https://www.fortinet.com/products/fortidevsec)  is build for this purpose 
+### Application Deployment Phase
 
-### During Deployment Phase
-
-- **Script Scanning**: Scan deployment scripts like Terraform and CloudFormation, Secret, IAM etc to ensure they follow the principle of least privilege and comply with enterprise compliance requirements.
-- **Configuration Checks**: Evaluate Kubernetes configurations against best practices and compliance standards, such as CIS benchmarks.
-- **Container Scanning**: Scan container images for known vulnerabilities (CVEs).
+- Script Scanning: Scan deployment scripts like Terraform and CloudFormation, Secret, IAM etc to ensure they follow the principle of least privilege and comply with enterprise compliance requirements.
+- Configuration Checks: Evaluate Kubernetes configurations against best practices and compliance standards, such as CIS benchmarks.
+- Container Scanning: Scan container images for known vulnerabilities (CVEs).
 
 Tools: 
 Fortinet Product [FortiDevSec](https://www.fortinet.com/products/fortidevsec)  , [FortiCSPM](https://www.fortinet.com/products/forticspm)  are build for this purpose 
 
-### Runtime Phase
+### Application Runtime Phase
 
-- **Configuration Drift**: Continuously monitor for shifts in Kubernetes configurations, such as changes in application permissions or policies.
-- **Workload Protection**: Implement measures to protect running workloads from threats through prevention, detection, and enforcement at both the Kubernetes API server level and at the Node/Container level or enforce via Networking Policy and container firewall.
+- Configuration Drift: Continuously monitor for shifts in Kubernetes configurations, such as changes in application permissions or policies.
+- Workload Protection: Implement measures to protect running workloads from threats through prevention, detection, and enforcement at both the Kubernetes API server level and at the Node/Container level or enforce via Networking Policy and container firewall.
 
 Tools:
 Fortinet Product [FortiCSPM](https://www.fortinet.com/products/forticspm) can provide posture managment like Config Shift.
@@ -43,24 +42,56 @@ Fortinet Product [Fortiweb](https://www.fortinet.com/products/web-application-fi
 Fortinet Product [cFOS] can provide Network Security to secure traffic enter or leaving application POD.
 Fortinet Product [FortiXDR](https://www.fortinet.com/products/fortixdr) can provide Node/Container level protection by continusly detect abnormal activites at Node/Container level.
  
-#### Runtime Workload Protection 
+##  Runtime Workload Protection 
 
-##### Prevention/Protection via Network Security 
-- Actively stop unwanted traffic from entering or leaving Pods.
-- Includes network security enhancements and Kubernetes network policies.
+- ### Prevention/Protection via Network Security 
 
-##### Prevention/Protection via Application Security
-- Actively stop API or Layer 4-7 traffic entering Application Pods. For example, malicious API traffic via Kubernetes load balancer service entering application POD, malicious TCP/UDP/SCTP traffic from external entering into application Pod etc., the attack is embedded in the traffic payload.
+Actively stop unwanted traffic from entering or leaving Pods.
+Includes network security enhancements via deploy container based firewall like **cFOS** and CNI based Kubernetes network policies.
 
-##### Prevention with Detection 
-- **Control Plane Monitoring**: Use Kubernetes API audit logs to detect unusual API access.
-- **Runtime Monitoring**: Employ Linux agents or agentless technology to detect unusual container syscalls, such as privilege escalation.
+- ### Prevention/Protection via Application Security
 
-#### Pod Security Contexts and Container SecurityContext 
+Actively stop API or Layer 4-7 traffic entering Application Pods. For example, malicious API traffic via Kubernetes load balancer service entering application POD, malicious TCP/UDP/SCTP traffic from external entering into application Pod etc., the attack is embedded in the traffic payload.
 
-- **PodSecurityContext** or **securityContext** defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
+- ### Prevention with Detection 
 
--  cFOS use case  for securityContext
+Control Plane Monitoring: Use Kubernetes API audit logs to detect unusual API access.
+
+Runtime Monitoring: Employ Linux agents or agentless technology to detect unusual container syscalls, such as privilege escalation.
+
+- ### Kubernetes API Level Security
+
+- #### RBAC
+
+RBAC Provides authorization control to Kubernetes resources by granting authenticated users minimal necessary permissions. We will talk about RBAC in next chapter.
+
+- #### Admission Control
+
+- Controls access at the Kubernetes API level. Built-in controllers include:
+  - Pod Security Policy
+  - Pod Security Admission (Pod Security Standards)
+
+- Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
+
+As of Kubernetes 1.21, PodSecurityPolicy (PSP) has been deprecated and is fully removed in Kubernetes 1.25 replaced by PSA.
+PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels."
+
+- #### Pod Security Contexts and Container SecurityContext 
+
+PodSecurityContext or securityContext defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
+
+
+- pod.spec.containers.allowPrivilegeEscalation
+
+  AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process.
+
+- pod.spec.containers.privileged
+
+  Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host.
+
+For most containers, these two options shall be set to false. Other options like runAsUser and runAsGroup can specify a user and group ID for running the container. Applications like firewalls will require running as the root user.
+
+- ##### Decide the SecurityContext for cFOS application 
 
 Containers, by default, inherit Linux capabilities from the container runtime, such as CRI-O or containerd. For instance, the CRI-O runtime typically grants most common Linux capabilities. Below are the capabilities provided by default in version cri1.25.4:
 ```
@@ -78,19 +109,32 @@ However, some network applications like cFOS may require additional privileges t
 
 Here is the brief purpose of mentioned capabilites 
 
-*NET_RAW*:
+NET_RAW:
 - Use RAW and PACKET sockets
 - Bind to any address for transparent proxying
 - This capability allows the program to craft IP packets from scratch, which includes sending and receiving ICMP packets (used in tools like ping).
 
-*NET_ADMIN*:
+NET_ADMIN:
 - Grants a process extensive capabilities over network configuration and operations, such as NAT, iptables, etc.
 
-*SYS_ADMIN*:
+SYS_ADMIN:
 - It might be necessary for some advanced operations, such as configuring system-wide logging settings or manipulating system logs.
 
-Below is a full Yaml file which include additional capabilities for deploy cFOS application 
+- #### Task: Fix cFOS boot permission issue  
+
+- deploy cfos license,imagepullsecret, serviceaccount 
+
+```
+scriptDir="$HOME"
+kubectl create namespace cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/cfos_license.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+```
+- deploy cfos  deployment
+
 ```bash
+cat << EOF | kubectl apply -n cfostest -f - 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -117,7 +161,7 @@ spec:
           allowPrivilegeEscalation: false
           privileged: false
           capabilities:
-              add: ["NET_ADMIN","NET_RAW"]
+              add: ["CAP_NET_ADMIN"]
         ports:
         - containerPort: 80
         volumeMounts:
@@ -126,41 +170,52 @@ spec:
       volumes:
       - name: data-volume
         emptyDir: {}
+EOF
+```
+- check cFOS boot log
+
+```bash
+kubectl logs -f -l app=cfos -n cfostest
 ```
 
-#### Other configuration options for securityContext
+Expected Result
 
-- pod.spec.containers.allowPrivilegeEscalation
-  - AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process.
+You will see error message like
 
-- pod.spec.containers.privileged
-  - Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host.
+```
+...
+Perhaps iptables or your kernel needs to be upgraded.
+iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
+Perhaps iptables or your kernel needs to be upgraded.
+iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
+Perhaps iptables or your kernel needs to be upgraded
+...
+```
 
-For most containers, these two options shall be set to false. Other options like `runAsUser` and `runAsGroup` can specify a user and group ID for running the container. Applications like firewalls will require running as the root user.
+- Try to solve the permission issue by adjust the securityContext Setting.
 
-In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent. 
+{{% notice style="tip" %}}
+add linux capabilites to ["CAP_NET_ADMIN","CAP_NET_RAW"] then check log again
+{{% /notice %}}
 
-#### Kubernetes API Level Security
+{{% notice style="info" %}}
+In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent.
+{{% /notice %}}
 
-##### RBAC
+- Answer
 
-- **Least Privilege**: Provides authorization control to Kubernetes resources by granting authenticated users minimal necessary permissions.
+```bash
+kubectl replace -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_Answer.yaml -n cfostest
+kubectl logs -f -l app=cfos -n cfostest
+```
+### Prevention/Protection via Network Security
 
-##### Admission Control
+Actively stop unwanted traffic from entering or leaving Pods.
+Includes network security enhancements and Kubernetes network policies.
 
-- Controls access at the Kubernetes API level. Built-in controllers include:
-  - Pod Security Policy
-  - Pod Security Admission (Pod Security Standards)
-- Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
+- #### Network Policies and Container Firewalls
 
-As of Kubernetes 1.21, PodSecurityPolicy (PSP) has been deprecated and is fully removed in Kubernetes 1.25 replaced by PSA.
-PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels." 
-
-### Network Security in Detail
-
-This workshop focuses on Network Security with container firewall technology (cFOS).
-
-#### Network Policies and Firewalls
+cFOS is the Next Generation Layer 7 Firewall which is our key foucs in this workshop. the use case of cFOS include 
 
 - Control both ingress and egress traffic within Kubernetes. Default policies allow unrestricted traffic flow, which can be restricted using network policies based on tags.
 - Kubernetes network policies support basic Layer 3-4 filtering. For Layer 7 visibility, deploying a Next-Generation Firewall (NGFW) capable of deep packet inspection alongside applications in Kubernetes can provide enhanced security.
@@ -171,10 +226,28 @@ In this workshop, We will walk through using cFOS to protect:
   - Layer 4 traffic to Pod
   - Layer 7 traffic to Pod
 
-- Egress traffic from Pod to Cluster External traffic - South Bound 
+- Egress traffic from Pod to Cluster External traffic(with Multus) - South Bound 
+  - POD traffic to Internet
+  - POD traffic to Enterprise internal application , such as Database in the same VPC 
+
+- Egress traffic from Pod to Cluster External traffic(with Multus) - South Bound 
   - POD traffic to Internet
   - POD traffic to Enterprise internal, such as Database in the same VPC 
 
-- Pod to Pod traffic - East-West 
+- Pod to Pod traffic - East-West (with Multus)
   - Pod to Pod via Pod IP address
-  - Pod to Pod via ClusterIP svc address/domain
+
+### Clean up
+
+```bash
+kubectl delete namespace cfostest
+kubectl get clusterrole configmap-reader
+kubectl get clusterrole secrets-reader
+```
+
+### Q&A 
+
+- Does cFOS require run with priviledged: true ?  
+
+
+
