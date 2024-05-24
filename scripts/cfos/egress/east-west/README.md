@@ -1,5 +1,7 @@
+
 ### Create cluster
 ./create_kubeadm_k8s_on_ubuntu22.sh
+or just use standard aks
 
 ### Install multus
 ./install_multus.sh
