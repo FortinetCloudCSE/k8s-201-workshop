@@ -24,7 +24,8 @@ You need to define a NetworkAttachmentDefinition for the network that will route
 Lets create a NAD for cFOS to have the gateway IP since we will have the sample pod use 192.168.1.100 as IP
 
 
-```cat <<EOF | kubectl create -f -
+```bash
+cat <<EOF | kubectl create -f -
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
@@ -51,7 +52,8 @@ EOF
 
 When deploying your application pods, you need to annotate them to attach to the fortios-net network. This ensures that the default route for the pod's egress traffic is through the FortiOS network interface:
 
-```cat <<EOF | kubectl create -f -
+```bash
+cat <<EOF | kubectl create -f -
 apiVersion: v1
 kind: Pod
 metadata:
@@ -71,7 +73,8 @@ spec:
 
 3. Create a cFOS deployment to use multus NAD
 
-```cat <<EOF | kubectl create -f -
+```bash
+cat <<EOF | kubectl create -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:

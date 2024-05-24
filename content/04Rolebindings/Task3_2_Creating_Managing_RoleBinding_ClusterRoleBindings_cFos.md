@@ -207,4 +207,3 @@ kubectl delete namespace cfostest
 kubectl delete clusterrole configmap-reader
 kubectl delete clusterrole secrets-reader
 ```
-
