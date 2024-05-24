@@ -27,6 +27,8 @@ az aks create \
     --nodepool-name worker \
     --nodepool-labels nested=true linux=true
 
+# --load-balancer-sku standard \
+
 #az aks nodepool add \
 #    --resource-group $resourcegroupname \
 #    --cluster-name ${clustername} \
@@ -41,9 +43,9 @@ az aks create \
 #    --name $PUBLICIPNAME \
 #    --sku Standard \
 #    --allocation-method static
-
+#
 #az network public-ip show --resource-group $resourcegroupname --name $PUBLICIPNAME --query ipAddress --output tsv
-
+#
 CLIENT_ID=$(az aks show --name $clustername --resource-group $resourcegroupname --query identity.principalId -o tsv)
 RG_SCOPE=$(az group show --name $resourcegroupname --query id -o tsv)
 az role assignment create \

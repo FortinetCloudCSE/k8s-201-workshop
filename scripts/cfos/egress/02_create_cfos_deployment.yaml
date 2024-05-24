@@ -11,8 +11,9 @@ spec:
       labels:
         app: cfos
       annotations:
-        k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni6",  "ips": [ "10.1.200.252/32" ], "mac": "CA:FE:C0:FF:00:02" } ]'
+        k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni6",  "ips": [ "10.1.200.252/32" ], "mac": "CA:FE:C0:FF:00:02"  }]'
     spec:
+      serviceAccountName: cfos-serviceaccount
       containers:
       - name: cfos
         image: interbeing/fos:latest
@@ -22,11 +23,7 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: data-volume
-      imagePullSecrets:
-      - name: dockerinterbeing
       volumes:
       - name: data-volume
-        hostPath:
-          path: /cfosdata
-          type: DirectoryOrCreate
+        emptyDir: {}
 
