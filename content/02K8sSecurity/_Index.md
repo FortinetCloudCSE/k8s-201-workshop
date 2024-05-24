@@ -1,9 +1,5 @@
 ---
 title: "Chapter 2 - K8s Security"
-weight: 2
+weight: 5
 ---
 
-
-Pre-requisites:
-
-Before starting the wo
