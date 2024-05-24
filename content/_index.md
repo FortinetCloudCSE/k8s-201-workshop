@@ -1,4 +1,3 @@
----
-title: "Chapter 6 - Networking Basics Revisited"
-weight: 20
----
+Welcome to Kubernetes 201 workshop!
+
+This is a continuation of K8s 101 workshop. 
