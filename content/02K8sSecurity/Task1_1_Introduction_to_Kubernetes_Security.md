@@ -1,5 +1,5 @@
 ---
-title: "Task 1 - Overiview of Kubernetes Security"
+title: "Introduction to Kubernetes Security"
 chapter: false
 menuTitle: "Kubernetes Security"
 weight: 1
@@ -248,6 +248,3 @@ kubectl get clusterrole secrets-reader
 ### Q&A 
 
 - Does cFOS require run with priviledged: true ?  
-
-
-

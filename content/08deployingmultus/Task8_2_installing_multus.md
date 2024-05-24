@@ -76,7 +76,8 @@ Lastly but very importantly, note under metadata the name field -- here's where 
 
 Here's the command to create this example configuration:
 
-```cat <<EOF | kubectl create -f -
+```bash
+cat <<EOF | kubectl create -f -
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
@@ -156,7 +157,7 @@ We're going to create a pod. This will look familiar as any pod you might have c
 
 Let's go ahead and create a pod (that just sleeps for a really long time) with this command:
 
-```
+```bash
 cat <<EOF | kubectl create -f -
 apiVersion: v1
 kind: Pod
@@ -206,7 +207,8 @@ sallam@sallam-master1:~$ kubectl exec -it samplepod -- ip a
 
 You can add more interfaces to a pod by creating more custom resources and then referring to them in pod's annotation. You can also reuse configurations, so for example, to attach two macvlan interfaces to a pod, you could create a pod like so:
 
-```cat <<EOF | kubectl create -f -
+```bash
+cat <<EOF | kubectl create -f -
 apiVersion: v1
 kind: Pod
 metadata:

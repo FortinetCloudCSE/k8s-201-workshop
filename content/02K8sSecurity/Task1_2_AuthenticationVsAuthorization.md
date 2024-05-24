@@ -1,7 +1,7 @@
 ---
-title: "Task 2 - Authentication, Authorization and Access control"
+title: "Authentication, Authorization, and Admission Control"
 chapter: false
-menuTitle: "Authentication vs Authorization"
+menuTitle: "AuthenticationvsAuthorization"
 weight: 5
 ---
 

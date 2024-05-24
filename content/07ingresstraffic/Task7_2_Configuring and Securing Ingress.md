@@ -26,7 +26,8 @@ Sensitive Data Protection: Services or applications often need to read sensitive
 Security Best Practices: It ensures adherence to the principle of least privilege, reducing the risk of accidental exposure or malicious modifications.
 
 
-```cat <<EOF | kubectl create -f -
+```bash
+cat <<EOF | kubectl create -f -
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -97,7 +98,8 @@ rolebinding.rbac.authorization.k8s.io/read-secrets configured
 
 3. To run the cfos deployment, copy the below code. This will create a deployment that utilizes the secret, configmap that was deployed.
 
-```cat <<EOF | kubectl create -f - 
+```bash
+cat <<EOF | kubectl create -f - 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -164,10 +166,10 @@ kubectl get service -o wide
 
 output:
 ```
-NAME           TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                                                    AGE   SELECTOR
-goweb          ClusterIP      10.107.22.193    <none>        80/TCP                                                     14d   app=goweb
-kubernetes     ClusterIP      10.96.0.1        <none>        443/TCP                                                    20d   <none>
-nginx          ClusterIP      10.107.230.40    <none>        80/TCP                                                     12d   app=nginx
+NAME           TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+goweb          ClusterIP      10.107.22.193    <none>        80/TCP     14d   app=goweb
+kubernetes     ClusterIP      10.96.0.1        <none>        443/TCP    20d   <none>
+nginx          ClusterIP      10.107.230.40    <none>        80/TCP     12d   app=nginx
 ```
 
 5. Install metalb loadbalancer to expose the cfos service. 
@@ -179,7 +181,7 @@ kubectl rollout status deployment controller -n metallb-system
 
 6. create ippool for metallb 
 
-```
+```bash
 local_ip=$(kubectl get node -o wide | grep 'control-plane' | awk '{print $6}')
 cat <<EOF | tee metallbippool.yaml
 apiVersion: metallb.io/v1beta1
@@ -337,7 +339,8 @@ end
 16. Now exit out of container to expose the cFOS service through metallb.
 
 
-```cat <<EOF | kubectl create -f - 
+```bash
+cat <<EOF | kubectl create -f - 
 apiVersion: v1
 kind: Service
 metadata:
