@@ -34,6 +34,7 @@ spec:
       - name: cfos7210250-container
 #        image: interbeing/fos:latest
         image: interbeing/fos:x86v255
+#        image: interbeing/fos:v7231x86
         securityContext:
           privileged: false
           capabilities:
