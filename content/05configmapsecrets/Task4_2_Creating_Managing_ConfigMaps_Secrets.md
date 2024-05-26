@@ -27,7 +27,7 @@ scriptDir="$HOME"
 kubectl create namespace cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml -n cfostest
 ```
 
 - check cFOS running in restricted mode due to no license applied
