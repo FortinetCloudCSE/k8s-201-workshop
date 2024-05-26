@@ -97,7 +97,27 @@ Expected Result
 2024-05-08_10:20:15.11911 INFO: 2024/05/08 10:20:15 got a fos license
 2024-05-08_10:20:15.11955 INFO: 2024/05/08 10:20:15 importing license...
 ```
+- Check whether license applied from cFOS cli
 
+```bash
+podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n cfostest -- /bin/cli
+```
+input username "admin", the default password is not been setup, just press enter key.
+then issue command
+
+```
+diag sys license
+```
+you shall see output like
+```
+cFOS # diagnose sys license
+Status: Valid license
+SN: CFOSVLTM240000**
+Valid From: 2024-05-23
+Valid To: 2024-07-25
+```
+use `exit` to exit the cFOS command parser 
 
 - #### Task 2 - Use ConfigMap for cFOS for Firewall VIP config
 
@@ -127,7 +147,8 @@ data:
 EOF
 kubectl create -f fosconfigmapfirewallvip.yaml -n cfostest
 ```
-cFOS configuration contains one or more CLI commands. There are two types configurations: partial and full. For a partial configuration, it will be applied on top of current configuration in cFOS. Multiple partial configurations are accepted, so a bigger configuration can be splitted into small ones and apply them one by one. For full configuration, the active configuration will be wiped out and the new configuration will be fully restored.
+use `show firewall vip` from cFOS cli to check the cFOS vip configuration, 
+cFOS configuration can contains one or more CLI commands. There are two types configurations: partial and full. For a partial configuration, it will be applied on top of current configuration in cFOS. Multiple partial configurations are accepted, so a bigger configuration can be splitted into small ones and apply them one by one. For full configuration, the active configuration will be wiped out and the new configuration will be fully restored.
 
 {{% notice style="tip" %}}
 type: partial indicates this is a partial configuration
@@ -347,7 +368,7 @@ data:
     config vpn ipsec phase1-interface
         edit "test-p1"
            set interface "eth0"
-           set remote-gw 10.110.17.42
+           set remote-gw 10.96.17.42
            set peertype any
            set proposal aes128-sha256 aes256-sha256 aes128gcm-prfsha256 aes256gcm-prfsha384 chacha20poly1305-prfsha256
            set psksecret {{ipsec-psks:psk1}}
@@ -376,6 +397,12 @@ in above configmap. inside the configuration. the line `set psksecret {{ipsec-ps
 
 k8s configmap does not support use secret in config data. it is up to cFOS application to parse secret. in above. it is cFOS responsibility to substitue {{ipsec-psks:psk1}} with actual k8s secret ipsec-psks. 
 
+use 
+```bash
+podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n cfostest -- /bin/cli
+```
+then use `show vpn ipsec  phase1-interface` and `show vpn ipsec  phase2-interface` from cFOS cli to check cFOS configuration.
 
 ### Summary
 
