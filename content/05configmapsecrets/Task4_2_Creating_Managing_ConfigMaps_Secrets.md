@@ -27,7 +27,7 @@ scriptDir="$HOME"
 kubectl create namespace cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml.yaml -n cfostest
 ```
 
 - check cFOS running in restricted mode due to no license applied
@@ -137,7 +137,7 @@ category: config indicates this is a configuation
 
 - Check Result
 
-Check cFOS container log. you can find 
+Check cFOS container log with `kubectl logs -f  -l app=cfos -n cfostest` . you can find 
 
 ```
 2024-05-14_10:57:18.63416 INFO: 2024/05/14 10:57:18 received a new fos configmap
@@ -148,7 +148,7 @@ Check cFOS container log. you can find
 ```
 - Delete ConfigMap 
 
-use `kubectl delete cm <configMap Name> to delete configmap, however 
+use `kubectl delete cm <configMap Name>` to delete configmap, however 
 delete a ConfigMap will not delete configuration on the running cFOS, but you can create a ConfigMap with delete command to delete the configuration. 
 
 - Create ConfigMap for cFOS to delete a Firewall Config
@@ -158,7 +158,7 @@ cat << EOF | kubectl create -n cfostest -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: foscfgvip
+  name: foscfgvip-del
   labels:
       app: fos
       category: config
@@ -167,6 +167,7 @@ data:
   config: |-
     config firewall vip
            del "test"
+    end
 EOF
 ```
 
@@ -201,7 +202,7 @@ EOF
 Expected Result
 
 ```
-kubect logs -f -l app=cfos 
+kubectl logs -f -l app=cfos -n cfostest
 
 ```
 
@@ -316,7 +317,7 @@ EOF
 ```bash
 scriptDir="$HOME"
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment.yaml -n cfostest
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml -n cfostest
 ```
 - ### Task 2 -  use secret in configMap
 

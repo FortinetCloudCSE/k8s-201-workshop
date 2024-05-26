@@ -84,6 +84,9 @@ EOF
 kubectl apply -f cm_external_resource.yaml
 ```
 
+after apply above yaml manifest, you can use `kubectl get cm cm_external_resource.yaml` to check the configuration. 
+if you have cFOS container running, cFOS will read this configmap and config itself accordingly. 
+
 
 ### clean up
 
@@ -103,3 +106,8 @@ EOF
 kubectl delete cm cm-externalresource
 kubectl delete cm cm-full-empty
 ```
+
+the `kubectl delete cm cm-externalresource` will delete cm-externalresource configmap from k8s, but this will not delete config on cFOS. so we create a empty config with type "full" to reset cFOS config to factory default. this will remove all configuration which include cm-externalresource from cFOS
+
+ 
+

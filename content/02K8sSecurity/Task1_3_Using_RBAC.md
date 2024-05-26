@@ -118,7 +118,9 @@ kubectl config set-credentials tecworkshop --client-certificate=newuser.crt --cl
 Set up a context that specifies the new user and cluster.
 
 ```bash
-  kubectl config set-context tecworkshop-context --cluster=kubernetes --user=tecworkshop
+  adminContext=$(kubectl config current-context)
+  adminCluster=$(kubectl config current-context | cut -d '@' -f 2)
+  kubectl config set-context tecworkshop-context --cluster=$adminCluster --user=tecworkshop
 ```
 
 - Switch to the New Context:
@@ -152,7 +154,7 @@ Use RBAC to grant the new user permission to list all pods across all namespaces
 You need sufficient permissions to create roles and role bindings.
 
 ```bash
-kubectl config use-context kubernetes-admin@kubernetes
+kubectl config use-context $adminContext
 ```
 
 - Define a ClusterRole:
@@ -200,7 +202,7 @@ yes
 make sure switch back to admin user for full control the k8s cluster
 
 ```bash
-kubectl config use-context kubernetes-admin@kubernetes
+kubectl config use-context $adminContext
 ```
 ### Summary
 
@@ -214,7 +216,7 @@ This ensures that not only are human users operating under the principle of leas
 ### Clean up 
 
 ```bash
-kubectl config use-context kubernetes-admin@kubernetes
+kubectl config use-context $adminContext
 kubectl config delete-context tecworkshop-context
 kubectl config delete-user tecworkshop
 ```

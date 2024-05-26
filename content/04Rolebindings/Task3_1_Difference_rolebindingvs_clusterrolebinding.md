@@ -45,7 +45,7 @@ In contrast, a ClusterRoleBinding applies a ClusterRole across all namespaces wi
 
 Below is an example of how to create a ClusterRole and bind it with a RoleBinding to apply it to a specific namespace:
 
-```bash
+```
 # Create a ClusterRole
 kubectl create clusterrole pod-reader --verb=get,list --resource=pods
 

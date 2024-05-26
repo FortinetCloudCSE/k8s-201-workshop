@@ -122,12 +122,11 @@ SYS_ADMIN:
 
 - #### Task: Fix cFOS boot permission issue  
 
-- deploy cfos license,imagepullsecret, serviceaccount 
+- deploy imagepullsecret, serviceaccount 
 
 ```
 scriptDir="$HOME"
 kubectl create namespace cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/cfos_license.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
@@ -172,24 +171,21 @@ spec:
         emptyDir: {}
 EOF
 ```
-- check cFOS boot log
+- check whether cFOS container is able to ping 1.1.1.1
 
 ```bash
-kubectl logs -f -l app=cfos -n cfostest
+podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n cfostest -- ping 1.1.1.1
 ```
 
 Expected Result
 
-You will see error message like
+You will see error message below which indicate that the container does not have permission to use ping
 
 ```
-...
-Perhaps iptables or your kernel needs to be upgraded.
-iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
-Perhaps iptables or your kernel needs to be upgraded.
-iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
-Perhaps iptables or your kernel needs to be upgraded
-...
+PING 1.1.1.1 (1.1.1.1): 56 data bytes
+ping: permission denied (are you root?)
+command terminated with exit code 1
 ```
 
 - Try to solve the permission issue by adjust the securityContext Setting.
@@ -206,8 +202,21 @@ In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=fa
 
 ```bash
 kubectl replace -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_Answer.yaml -n cfostest
-kubectl logs -f -l app=cfos -n cfostest
+kubectl rollout status deployment cfos7210250-deployment -n cfostest
 ```
+
+Check again with 
+```bash
+podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n cfostest -- ping 1.1.1.1
+```
+you shall see now ping is sucessful 
+```
+PING 1.1.1.1 (1.1.1.1): 56 data bytes
+64 bytes from 1.1.1.1: seq=0 ttl=54 time=1.242 ms
+64 bytes from 1.1.1.1: seq=1 ttl=54 time=1.264 ms
+```
+
 ### Prevention/Protection via Network Security
 
 Actively stop unwanted traffic from entering or leaving Pods.
@@ -241,8 +250,8 @@ In this workshop, We will walk through using cFOS to protect:
 
 ```bash
 kubectl delete namespace cfostest
-kubectl get clusterrole configmap-reader
-kubectl get clusterrole secrets-reader
+kubectl delete clusterrole configmap-reader
+kubectl delete clusterrole secrets-reader
 ```
 
 ### Q&A 

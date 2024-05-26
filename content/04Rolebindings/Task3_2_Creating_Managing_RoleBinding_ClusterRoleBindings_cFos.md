@@ -20,7 +20,7 @@ ServiceAccounts are namespaced resources; if no namespace is supplied, they defa
 - use kubectl  create cli
 ```bash
 kubectl create namespace cfostest
-kubectl create serviceaccount cfos-serviceaccount -n cfostest
+kubectl create serviceaccount cfos-serviceaccount -n cfostest 
 kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps 
 kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets 
 ```
@@ -31,6 +31,7 @@ Add an imagePullSecret to this service account so a POD using this service accou
 scriptDir="$HOME"
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 ```
+patch serviceaccount with imagePullSecrets
 
 ```bash
 kubectl patch serviceaccount cfos-serviceaccount -n cfostest \
@@ -155,6 +156,9 @@ Check Result
 
 ```bash
 kubectl exec -it po/kubectl -n cfostest  -- kubectl get cm
+```
+and
+```
 kubectl exec -it po/kubectl -n cfostest  -- kubectl get secret
 ```
 both command show able to list cm and secret in namespace cfostest 
