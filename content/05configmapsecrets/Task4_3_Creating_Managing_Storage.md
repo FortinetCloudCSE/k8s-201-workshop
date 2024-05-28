@@ -67,14 +67,13 @@ These volumes allow you to integrate Kubernetes Pods with cloud provider-specifi
 
 A path directly on host node. 
 
-- ###  Task 1 - config cfos deployment to use PVC 
+- ###  Example 1 - config cfos deployment to use PVC 
 
 - Create cFos license, imagePullSecret and serviceAccount
 
 ```bash
 scriptDir=$HOME
 kubectl create namespace cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/cfos_license.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
@@ -144,7 +143,7 @@ with PVC used in deployment, even you deleted cFOS deployment, the data on /data
 ```bash
 kubectl delete deployment cfos7210250-deployment -n cfostest 
 ```
-- ### Task 2 - config cfos deployment to use emptyDir
+- ### Example 2 - config cfos deployment to use emptyDir
 
 
 with this configuration, the /data lifecycle share POD lifecycle. when POD gone, the data will also gone.
