@@ -193,12 +193,13 @@ Run ```kubectl get pods -n cfosingress```
 
 output: 
 
+```bash
 NAME                                     READY   STATUS             RESTARTS   AGE
 goweb                                    1/1     Running            1          6d22h
 cfos7210250-deployment-796c859b4b-r2qjc  1/1     Running            2          11d
 nginx-748c667d99-qmtn4                   1/1     Running            2          11d
 samplepod                                1/1     Running            1          6d21h
-
+```
 
 14. copy the name of cFOS pod and run the below command
 
