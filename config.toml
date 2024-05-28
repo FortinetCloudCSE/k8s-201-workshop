@@ -28,7 +28,7 @@ uglyURLs = true     # true -> basic/index.html -> basic.html
 # use this theme ;-)
 theme = ["hugo-theme-relearn"]
 
-title = "Hugo for Fortinet TECWorkshops"
+title = "Fortinet TECWorkshop-K8s-201"
 
 # We disable this for testing the exampleSite; you must do so too
 # if you want to use the themes parameter disableGeneratorVersion=true;

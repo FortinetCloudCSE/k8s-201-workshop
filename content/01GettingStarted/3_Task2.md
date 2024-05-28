@@ -64,4 +64,4 @@ terraform apply  -var='username=se31' --auto-approve
 
 Follow the steps in the link: 
 
-[https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html#use-kubeadm-to-install-kubernetes]([https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html#use-kubeadm-to-install-kubernetes])
+[https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html#use-kubeadm-to-install-kubernetes](https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html#use-kubeadm-to-install-kubernetes)
