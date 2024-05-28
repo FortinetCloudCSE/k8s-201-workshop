@@ -13,7 +13,11 @@ weight: 5
 
 To install cFOS we have few steps. 
 
-1. Create a Secret and config map reader roles and role bindings. 
+1. Create a name space for cfos ingress.
+
+```kubectl create namespace cfosingress```
+
+2. Create a Secret and config map reader roles and role bindings. 
 
 Use of Cluster Role for ConfigMap Reading:
 
@@ -25,64 +29,9 @@ Use of Cluster Role for Secret Reading:
 Sensitive Data Protection: Services or applications often need to read sensitive data at runtime to perform necessary operations like connecting to databases or accessing external APIs. A Cluster Role that allows reading Secrets can provide necessary access without exposing the ability to edit or manage these Secrets.
 Security Best Practices: It ensures adherence to the principle of least privilege, reducing the risk of accidental exposure or malicious modifications.
 
-
 ```bash
-cat <<EOF | kubectl create -f -
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  namespace: default
-  name: configmap-reader
-rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["get", "watch", "list"]
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: read-configmaps
-  namespace: default
-subjects:
-- kind: ServiceAccount
-  name: default
-  apiGroup: ""
-roleRef:
-  kind: ClusterRole
-  name: configmap-reader
-  apiGroup: ""
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-   namespace: default
-   name: secrets-reader
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["secrets"]
-  verbs: ["get", "watch", "list"]
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: read-secrets
-  namespace: default
-subjects:
-- kind: ServiceAccount
-  name: default
-  apiGroup: ""
-roleRef:
-  kind: ClusterRole
-  name: secrets-reader
-  apiGroup: ""
-EOF
+scriptDir="$HOME"
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n cfosingress
 ```
 
 output:
@@ -94,12 +43,40 @@ clusterrole.rbac.authorization.k8s.io/secrets-reader configured
 rolebinding.rbac.authorization.k8s.io/read-secrets configured
 ```
 
-2. Use the license that is generates as configmap in chapter 5.
-
-3. To run the cfos deployment, copy the below code. This will create a deployment that utilizes the secret, configmap that was deployed.
+3. Create a configmap file for cfos license
 
 ```bash
-cat <<EOF | kubectl create -f - 
+cat <<EOF | tee cfos_license.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: cfos-license
+    labels:
+        app: cfos
+        category: license
+data:
+    license: |+
+EOF
+```
+
+4. get your license file, then append the content to yaml file, replace “cfoslicense.lic” with your actual file name
+
+```bash
+licfile="cfoslicense.lic"
+while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
+```
+
+5. Apply the resource
+
+ ```bash
+  kubectl create -f cfos_license.yaml -n cfosingress
+  ```
+
+
+6. To run the cfos deployment, copy the below code. This will create a deployment that utilizes the secret, configmap that was deployed.
+
+```bash
+cat <<EOF | kubectl create -n cfosingress -f - 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -120,10 +97,10 @@ spec:
       - name: cfos7210250-container
         image: interbeing/fos:latest
         env:
-        - name: fos-license
+        - name: cfos-license
           valueFrom:
             configMapKeyRef:
-              name: fos-license
+              name: cfos-license
               key: license
         securityContext:
           capabilities:
@@ -149,19 +126,19 @@ output:
 deployment.apps/cfos7210250-deployment created
 ```
 
-3. Lets create other services that will help to test egress traffic with cFOS.
+7. Lets create other services that will help to test egress traffic with cFOS.
 
 ```
-kubectl create deployment goweb --image=interbeing/myfmg:fileuploadserverx86
-kubectl expose  deployment goweb --target-port=80  --port=80
-kubectl create deployment nginx --image=nginx
-kubectl expose deployment nginx --target-port=80 --port=80 
+kubectl create deployment goweb --image=interbeing/myfmg:fileuploadserverx86 -n cfosingress
+kubectl expose  deployment goweb --target-port=80  --port=80 -n cfosingress
+kubectl create deployment nginx --image=nginx -n cfosingress
+kubectl expose deployment nginx --target-port=80 --port=80 -n cfosingress
 ```
 
-4. once the services are deployed, take a note of service Cluster-IP's by running 
+8. once the services are deployed, take a note of service Cluster-IP's by running 
 
 ```
-kubectl get service -o wide
+kubectl get service -n cfosingress -o wide
 ```
 
 output:
@@ -172,14 +149,14 @@ kubernetes     ClusterIP      10.96.0.1        <none>        443/TCP    20d   <n
 nginx          ClusterIP      10.107.230.40    <none>        80/TCP     12d   app=nginx
 ```
 
-5. Install metalb loadbalancer to expose the cfos service. 
+9. Install metalb loadbalancer to expose the cfos service. 
 
 ```
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
 kubectl rollout status deployment controller -n metallb-system
 ```
 
-6. create ippool for metallb 
+10. create ippool for metallb 
 
 ```bash
 local_ip=$(kubectl get node -o wide | grep 'control-plane' | awk '{print $6}')
@@ -203,16 +180,16 @@ EOF
 
 ```kubectl apply -f metallbippool.yaml```
 
-7. Verify the ip pool is created 
+11. Verify the ip pool is created 
 
 ```kubectl get ipaddresspool -n metallb-system```
 
-8. Before we expose the cFOS service, we need to create VIP, Firewall policy so we can have the inbound traffic through cFOS to get to nginx, goweb applicatios.
+12. Before we expose the cFOS service, we need to create VIP, Firewall policy so we can have the inbound traffic through cFOS to get to nginx, goweb applicatios.
 
 
-9. To run FOS commands we need to connect to the cFOS container.
+13. To run FOS commands we need to connect to the cFOS container.
 
-Run ```kubectl get pods```
+Run ```kubectl get pods -n cfosingress```
 
 output: 
 
@@ -223,38 +200,19 @@ nginx-748c667d99-qmtn4                   1/1     Running            2          1
 samplepod                                1/1     Running            1          6d21h
 
 
-10. copy the name of cFOS pod and run the below command
+14. copy the name of cFOS pod and run the below command
 
-```kubectl exec -it cfos7210250-deployment-796c859b4b-r2qjc -- dockerinit```
+```kubectl exec --stdin --tty cfos7210250-deployment-796c859b4b-r2qjc -- /bin/cli -n cfosingress```
 
 output:
 
 ```
-System is starting...
-
-Firmware version is 7.2.1.0250
-failed to mount /: Permission denied
-failed to mount /data: Permission denied
-failed to mount /tmp: Permission denied
-failed to mount /run: Permission denied
-Preparing environment...
-Verifying license...
-Starting services...
-ipset v7.14: Set cannot be created: set with the same name already exists
-ipset v7.14: Set cannot be created: set with the same name already exists
-iptables: Chain already exists.
-iptables: Chain already exists.
-iptables: Chain already exists.
-iptables: Chain already exists.
-iptables: Chain already exists.
-System is ready.
-
 User: 
 ```
 
-11. User: admin, password: none just hit enter.
+15. User: admin, password: none just hit enter.
 
-12. on cFOS run the command:
+16. on cFOS run the command:
 
 ```
 config system interface
@@ -277,66 +235,84 @@ config system interface
 end
 ```
 
-NOTE: Take note of IP address.
+NOTE: Take note of IP address and exit out of container by typing **exit**
 
-13. Configure VIP to forward the traffic to nginx. 
+17. Configure configmap to create VIP on cFOS to forward the traffic to nginx. 
 
-```
-config firewall vip
-    edit "nginx"
-        set comment "nginx"
-        set extip <eth0 IP address from step 12>
-        set mappedip <NGINX service ip from step 4>
-        set extintf "eth0"
-        set portforward enable
-        set extport "8000"
-        set mappedport "80"
-    next
-end
-```
 
-14. repeat the same for goweb to use the external interface Ip of container, Service IP of Goweb application and add a different port to for portforwarding. 
-
-```
-config firewall vip
-    edit "goweb"
-        set comment "goweb"
-        set extip <eth0 IP address from step 12>
-        set mappedip <goweb service ip from step 4>
-        set extintf "eth0"
-        set portforward enable
-        set extport "8005"
-        set mappedport "80"
-    next
-end
-```
-
-15. Create Firewall policy to allow the inbound traffic to both the VIP's. 
-
-```
-config firewall policy
-    edit 1
-        set name "nginx"
-        set srcintf "eth0"
-        set dstintf "eth0"
-        set srcaddr "all"
-        set dstaddr "nginx"
-        set nat enable
-    next
-    edit 2
-        set name "goweb"
-        set srcintf "eth0"
-        set dstintf "eth0"
-        set srcaddr "all"
-        set dstaddr "goweb"
-        set utm-status enable
-        set av-profile default
-        set nat enable
-    next
-end
+```bash
+cat << EOF | tee cfosconfigmapfirewallvip.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfosconfigvip
+  labels:
+      app: cfos
+      category: config
+data:
+  type: partial
+  config: |-
+    config firewall vip
+           edit "nginx"
+            set extip <eth0 IP address from step 12>
+            set mappedip <NGINX service ip from step 4>
+            set extintf "eth0"
+            set portforward enable
+            set extport "8000"
+            set mappedport "80"
+           next
+           edit "goweb"
+            set extip <eth0 IP address from step 12>
+            set mappedip <goweb service ip from step 4>
+            set extintf "eth0"
+            set portforward enable
+            set extport "8005"
+            set mappedport "80"
+           next
+       end
+EOF
+kubectl create -f cfosconfigmapfirewallvip.yaml -n cfosingress
 ```
 
-16. Now exit out of container to expose the cFOS service through metallb.
+18. Create Firewall policy configmap to allow the inbound traffic to both the VIP's. 
+
+```bash
+cat << EOF | tee cfosconfigmapfirewallpolicy.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfosconfigpolicy
+  labels:
+      app: cfos
+      category: config
+data:
+  type: partial
+  config: |-
+    config firewall policy
+           edit 1
+            set name "nginx"
+            set srcintf "eth0"
+            set dstintf "eth0"
+            set srcaddr "all"
+            set dstaddr "nginx"
+            set nat enable
+           next
+           edit 2
+            set name "goweb"
+            set srcintf "eth0"
+            set dstintf "eth0"
+            set srcaddr "all"
+            set dstaddr "goweb"
+            set utm-status enable
+            set av-profile default
+            set nat enable
+           next
+       end
+EOF
+kubectl create -f cfosconfigmapfirewallpolicy.yaml -n cfosingress
+```
+
+19. Now exit out of container to expose the cFOS service through metallb.
 
 
 ```bash
@@ -367,7 +343,7 @@ spec:
 EOF
 ```
 
-17. If we now curl on the Loadbalance IP we should see the following responses:
+20. If we now curl on the Loadbalance IP we should see the following responses:
 
 ```
 sallam@master1:~$ curl 10.4.0.4:8080
@@ -408,15 +384,16 @@ or on the browser, try the Master_node_publicIP:Port
 ![image3](../images/goweb.png)
 
 
-18. Try uploading the ecira file from eicar website. you should **not** see a successful upload. 
+21. Try uploading the ecira file from eicar website. you should **not** see a successful upload. 
 
-19. To Verify: 
+22. To Verify: 
 
 ```kubectl get pods```
 
-Copy the name of cfos pod 
+Copy the name of cfos pod:
 
-```kubectl exec -it <cfos pod> -- dockerinit```
+
+```kubectl exec --stdin --tty cfos7210250-deployment-796c859b4b-r2qjc -n cfosingress -- /bin/cli ```
 
 Once logged in, run the log filter:
 
@@ -439,3 +416,13 @@ date=2024-05-22 time=20:04:37 eventtime=1716408277 tz="+0000" logid="0211008192"
 
 date=2024-05-22 time=20:04:49 eventtime=1716408289 tz="+0000" logid="0211008192" type="utm" subtype="virus" eventtype="infected" level="warning" policyid=2 msg="File is infected." action="blocked" service="HTTP" sessionid=7 srcip=10.244.153.0 dstip=10.107.22.193 srcport=38707 dstport=80 srcintf="eth0" dstintf="eth0" proto=6 direction="outgoing" filename="eicar.com" checksum="6851cf3c" quarskip="No-skip" virus="EICAR_TEST_FILE" dtype="Virus" ref="http://www.fortinet.com/ve?vn=EICAR_TEST_FILE" virusid=2172 url="http://20.83.183.25/upload" profile="default" agent="Chrome/125.0.0.0" analyticscksum="275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f" analyticssubmit="false"
 ```
+
+
+23. or you can also run the below commands to see the AV log. 
+
+```bash
+kubectl exec -it po/-n cfos7210250-deployment-796c859b4b-r2qjc -n cfosingress -- sh```
+cd /var/log/log
+tail virus.0
+```
+

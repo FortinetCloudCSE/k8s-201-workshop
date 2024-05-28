@@ -1,7 +1,7 @@
 ---
 title: "Task 1 - Configuring and Securing Egress"
 chapter: false
-menuTitle: "Engress with cFOS"
+menuTitle: "Egress with cFOS"
 weight: 5
 ---
 
@@ -25,7 +25,7 @@ Lets create a NAD for cFOS to have the gateway IP since we will have the sample 
 
 
 ```bash
-cat <<EOF | kubectl create -f -
+cat <<EOF | kubectl create -n cfosegress -f -
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
@@ -53,7 +53,7 @@ EOF
 When deploying your application pods, you need to annotate them to attach to the fortios-net network. This ensures that the default route for the pod's egress traffic is through the FortiOS network interface:
 
 ```bash
-cat <<EOF | kubectl create -f -
+cat <<EOF | kubectl create -n cfosegress -f -
 apiVersion: v1
 kind: Pod
 metadata:
@@ -74,7 +74,7 @@ spec:
 3. Create a cFOS deployment to use multus NAD
 
 ```bash
-cat <<EOF | kubectl create -f -
+cat <<EOF | kubectl create -n cfosegress -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -121,12 +121,12 @@ EOF
 
 4. Verify if cfos pod is running
 
-```kubectl get pods```
+```kubectl get pods -n cfosegress```
 
 output:
 
 ```
-sallam@sallam-master1:~$ kubectl get pods
+sallam@sallam-master1:~$ kubectl get pods -n cfosegress
 NAME                                     READY   STATUS             RESTARTS   AGE
 fos-multus-deployment-5c64cf64b8-jdpb4   1/1     Running            2          13d
 goweb-846b59f567-42s97                   1/1     Running            0          6d
@@ -136,33 +136,13 @@ diagpod                                  1/1     Running            2          1
 
 5. Log in to cFos container to check the interface created by multus**
 
-```kubectl exec -it <pod name> -- dockerinit```
+```kubectl exec --stdin --tty <podname> -- /bin/cli```
 
-example: ```kubectl exec -it fos-multus-deployment-5c64cf64b8-jdpb4 -- dockerinit```
+example: ```kubectl exec --stdin --tty fos-multus-deployment-5c64cf64b8-jdpb4 -- /bin/cli```
 
 output:
 
 ```
-
-System is starting...
-
-Firmware version is 7.2.1.0250
-failed to mount /: Permission denied
-failed to mount /data: Permission denied
-failed to mount /tmp: Permission denied
-failed to mount /run: Permission denied
-Preparing environment...
-Verifying license...
-Starting services...
-ipset v7.14: Set cannot be created: set with the same name already exists
-ipset v7.14: Set cannot be created: set with the same name already exists
-iptables: Chain already exists.
-iptables: Chain already exists.
-iptables: Chain already exists.
-iptables: Chain already exists.
-iptables: Chain already exists.
-System is ready.
-
 User: admin
 Password: 
 ```
@@ -200,32 +180,44 @@ config system interface
 end
 ```
 
-6. Add a firewall policy to allow outbound connectivity from application pods**
+6. Add a configmap firewall policy to allow outbound connectivity from application pods**
 
-```
-config firewall policy
-    edit 1
-        set name "tointernet"
-        set utm-status enable
-        set srcintf "net1"
-        set dstintf "eth0"
-        set srcaddr "all"
-        set dstaddr "all"
-        set service "ALL"
-        set ips-sensor "high_security"
-        set nat enable
-    next
-end
+```bash
+cat << EOF | tee cfoscegressfirewallpolicy.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfosconfigegresspolicy
+  labels:
+      app: fos-multus
+      category: config
+data:
+  type: partial
+  config: |-
+    config firewall policy
+           edit 1
+            set name "tointernet"
+            set srcintf "net1"
+            set dstintf "eth0"
+            set srcaddr "all"
+            set dstaddr "all"
+            set service "ALL"
+            set ips-sensor "high_security"
+            set nat enable
+           next
+       end
+EOF
+kubectl create -f cfosegressfirewallpolicy.yaml -n cfosegress
 ```
 
 7. to check the outbound default route of sample pod that we have created in previous step**
 
-```kubectl exec -it diagpod -- ip route```
+```kubectl exec -it diagpod -n cfosegress -- ip route```
 
 output:
 
 ```
-sallam@sallam-master1:~$ kubectl exec -it samplepod -- ip route
+sallam@sallam-master1:~$ kubectl exec -it samplepod -n cfosegress -- ip route
 default via 192.168.1.100 dev net1 
 169.254.1.1 dev eth0  scope link 
 192.168.1.0/24 dev net1  proto kernel  scope link  src 192.168.1.205
@@ -235,13 +227,13 @@ We see that the first route in the table shows that default route is via cFOS to
 
 8. Now lets try to generate an attack.
 
-```kubectl exec -it po/diagpod -- curl  -H "User-Agent: () { :; }; /bin/ls" http://www.example.com```
+```kubectl exec -it po/diagpod -n cfosegress -- curl  -H "User-Agent: () { :; }; /bin/ls" http://www.example.com```
 
 there will be no output.
 
 9. Login to cfos: 
 
-```kubectl exec -it <cfos multus pod> -- dockerinit```
+```kubectl exec --stdin --tty <cfos multus pod> -n cfosegress -- /bin/cli ```
 
 - **user: admin**
 - **password: (press enter)**

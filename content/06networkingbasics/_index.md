@@ -1,5 +1,5 @@
 ---
-title: "Chapter 6 - Kubenretes Networking Basics"
+title: "Chapter 6 - Kubernetes Networking Basics"
 weight: 20
 ---
 
