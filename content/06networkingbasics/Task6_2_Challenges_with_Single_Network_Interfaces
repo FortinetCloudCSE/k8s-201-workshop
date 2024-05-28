@@ -1,9 +1,10 @@
 ---
-title: "Task 2 - Challenges with Single Network Interfaces"
+title: "Task 2 - Challenges of Single network interface"
 chapter: false
-menuTitle: "Single Network Interfaces"
+menuTitle: "Single netowork interface"
 weight: 5
 ---
+
 
 Using a single network interface in Kubernetes clusters can present several challenges that impact network performance, security, and scalability. Here are some key challenges:
 
@@ -40,4 +41,6 @@ Network Plugins: Utilize advanced network plugins (e.g., Calico, Cilium) that of
 Network Segmentation: Implement network segmentation to isolate traffic and enhance security.
 Load Balancers: Use external load balancers to distribute traffic effectively and provide redundancy.
 Monitoring Tools: Employ robust monitoring and observability tools to gain better insights into network performance and issues.
+
+
 By addressing these challenges through thoughtful network design and best practices, Kubernetes clusters can achieve better performance, security, and scalability.
