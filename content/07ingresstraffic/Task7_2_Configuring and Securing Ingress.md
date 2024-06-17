@@ -76,7 +76,7 @@ while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_lice
 6. To run the cfos deployment, copy the below code. This will create a deployment that utilizes the secret, configmap that was deployed.
 
 ```bash
-cat <<EOF | kubectl create -n cfosingress -f - 
+cat <<EOF | kubectl create -n cfosingress -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -135,7 +135,28 @@ kubectl create deployment nginx --image=nginx -n cfosingress
 kubectl expose deployment nginx --target-port=80 --port=80 -n cfosingress
 ```
 
-8. once the services are deployed, take a note of service Cluster-IP's by running 
+8. Since Cfos POD IP changes each time a pod is re-created. lets create a headless service.we will use the DNS of the service in VIP configuration. the DNS in kuvbernetes follows the notation: **<servicename>.<namespace>.svc.cluster.local**
+
+```bash
+cat << EOF | tee headlessservice.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cfostest-headless
+  namespace: cfosingress
+spec:
+  clusterIP: None
+  selector:
+    app: cfos
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+EOF
+kubectl apply -f headlessservice.yaml
+```
+
+9. once the services are deployed, take a note of service Cluster-IP's by running 
 
 ```
 kubectl get service -n cfosingress -o wide
@@ -149,14 +170,14 @@ kubernetes     ClusterIP      10.96.0.1        <none>        443/TCP    20d   <n
 nginx          ClusterIP      10.107.230.40    <none>        80/TCP     12d   app=nginx
 ```
 
-9. Install metalb loadbalancer to expose the cfos service. 
+10. Install metalb loadbalancer to expose the cfos service. 
 
 ```
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
 kubectl rollout status deployment controller -n metallb-system
 ```
 
-10. create ippool for metallb 
+11. create ippool for metallb 
 
 ```bash
 local_ip=$(kubectl get node -o wide | grep 'control-plane' | awk '{print $6}')
@@ -180,14 +201,14 @@ EOF
 
 ```kubectl apply -f metallbippool.yaml```
 
-11. Verify the ip pool is created 
+12. Verify the ip pool is created 
 
 ```kubectl get ipaddresspool -n metallb-system```
 
-12. Before we expose the cFOS service, we need to create VIP, Firewall policy so we can have the inbound traffic through cFOS to get to nginx, goweb applicatios.
+13. Before we expose the cFOS service, we need to create VIP, Firewall policy so we can have the inbound traffic through cFOS to get to nginx, goweb applicatios.
 
 
-13. To run FOS commands we need to connect to the cFOS container.
+14. To run FOS commands we need to connect to the cFOS container.
 
 Run ```kubectl get pods -n cfosingress```
 
@@ -201,7 +222,7 @@ nginx-748c667d99-qmtn4                   1/1     Running            2          1
 samplepod                                1/1     Running            1          6d21h
 ```
 
-14. copy the name of cFOS pod and run the below command
+15. copy the name of cFOS pod and run the below command
 
 ```kubectl exec --stdin --tty cfos7210250-deployment-796c859b4b-r2qjc -- /bin/cli -n cfosingress```
 
@@ -211,9 +232,9 @@ output:
 User: 
 ```
 
-15. User: admin, password: none just hit enter.
+16. User: admin, password: none just hit enter.
 
-16. on cFOS run the command:
+17. on cFOS run the command:
 
 ```
 config system interface
@@ -238,7 +259,7 @@ end
 
 NOTE: Take note of IP address and exit out of container by typing **exit**
 
-17. Configure configmap to create VIP on cFOS to forward the traffic to nginx. 
+18. Configure configmap to create VIP on cFOS to forward the traffic to nginx. 
 
 
 ```bash
@@ -255,7 +276,7 @@ data:
   config: |-
     config firewall vip
            edit "nginx"
-            set extip <eth0 IP address from step 12>
+            set extip "cfostest-headless.cfosingress.svc.cluster.local"
             set mappedip <NGINX service ip from step 4>
             set extintf "eth0"
             set portforward enable
@@ -263,7 +284,7 @@ data:
             set mappedport "80"
            next
            edit "goweb"
-            set extip <eth0 IP address from step 12>
+            set extip "cfostest-headless.cfosingress.svc.cluster.local"
             set mappedip <goweb service ip from step 4>
             set extintf "eth0"
             set portforward enable
