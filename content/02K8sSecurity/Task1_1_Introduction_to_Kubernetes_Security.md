@@ -61,33 +61,32 @@ Runtime Monitoring: Employ Linux agents or agentless technology to detect unusua
 
 - ### Kubernetes API Level Security
 
-- #### RBAC
+- ##### RBAC:
 
 RBAC Provides authorization control to Kubernetes resources by granting authenticated users minimal necessary permissions. We will talk about RBAC in next chapter.
 
-- #### Admission Control
+- ##### Admission Control:
 
-- Controls access at the Kubernetes API level. Built-in controllers include:
-  - Pod Security Policy
-  - Pod Security Admission (Pod Security Standards)
+  - Controls access at the Kubernetes API level. Built-in controllers include:
+    - Pod Security Policy
+    - Pod Security Admission (Pod Security Standards)
 
-- Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
+  - Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
 
 As of Kubernetes 1.21, PodSecurityPolicy (PSP) has been deprecated and is fully removed in Kubernetes 1.25 replaced by PSA.
 PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels."
 
-- #### Pod Security Contexts and Container SecurityContext 
+- ##### Pod Security Contexts and Container SecurityContext 
 
 PodSecurityContext or securityContext defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
 
+  - pod.spec.containers.allowPrivilegeEscalation
 
-- pod.spec.containers.allowPrivilegeEscalation
+    AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process.
 
-  AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process.
+  - pod.spec.containers.privileged
 
-- pod.spec.containers.privileged
-
-  Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host.
+    Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host.
 
 For most containers, these two options shall be set to false. Other options like runAsUser and runAsGroup can specify a user and group ID for running the container. Applications like firewalls will require running as the root user.
 
@@ -109,18 +108,18 @@ However, some network applications like cFOS may require additional privileges t
 
 Here is the brief purpose of mentioned capabilites 
 
-NET_RAW:
-- Use RAW and PACKET sockets
-- Bind to any address for transparent proxying
-- This capability allows the program to craft IP packets from scratch, which includes sending and receiving ICMP packets (used in tools like ping).
+  NET_RAW:
+  - Use RAW and PACKET sockets
+  - Bind to any address for transparent proxying
+  - This capability allows the program to craft IP packets from scratch, which includes sending and receiving ICMP packets (used in tools like ping).
 
-NET_ADMIN:
-- Grants a process extensive capabilities over network configuration and operations, such as NAT, iptables, etc.
+  NET_ADMIN:
+  - Grants a process extensive capabilities over network configuration and operations, such as NAT, iptables, etc.
 
-SYS_ADMIN:
-- It might be necessary for some advanced operations, such as configuring system-wide logging settings or manipulating system logs.
+  SYS_ADMIN:
+  - It might be necessary for some advanced operations, such as configuring system-wide logging settings or manipulating system logs.
 
-- #### Task: Fix cFOS boot permission issue  
+##### Task: Fix cFOS boot permission issue  
 
 - deploy imagepullsecret, serviceaccount 
 
@@ -233,7 +232,7 @@ target     prot opt source               destination
 Actively stop unwanted traffic from entering or leaving Pods.
 Includes network security enhancements and Kubernetes network policies.
 
-- #### Network Policies and Container Firewalls
+- ##### Network Policies and Container Firewalls
 
 cFOS is the Next Generation Layer 7 Firewall which is our key foucs in this workshop. the use case of cFOS include 
 

@@ -479,9 +479,9 @@ output:
 17. Check IPS log
 
 
-```k exec -it po/cfos-deployment-2-wjlg6 -n cfostest -- sh```
-```# cd /var/log/log```
-```# tail ips.0```
+- ```k exec -it po/cfos-deployment-2-wjlg6 -n cfostest -- sh```
+- ```# cd /var/log/log```
+- ```# tail ips.0```
 
 output:
 
