@@ -23,13 +23,9 @@ cFOS has build in feature can read the configMap from k8s via k8s API. when cFOS
 - create a cFOS without license 
 
 ```bash
-scriptDir="$HOME"
 kubectl create namespace cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-```
-#kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml -n cfostest
 
-```bash
 k8sdnsip=$(k get svc kube-dns -n kube-system -o jsonpath='{.spec.clusterIP}')
 cat << EOF | tee > cfos7210250-deployment.yaml
 ---
@@ -87,6 +83,7 @@ spec:
       dnsPolicy: ClusterFirst
 EOF
 kubectl apply -f cfos7210250-deployment.yaml -n cfostest
+kubectl rollout status deployment cfos7210250-deployment -n cfostest
 
 ```
 
@@ -179,6 +176,12 @@ Valid From: 2024-05-23
 Valid To: 2024-07-25
 ```
 use `exit` to exit the cFOS command parser 
+
+- Troublshooting license apply issue
+
+In case you hit license issue, shell into cFOS, run `execute update-now` to check more detail
+
+
 
 - #### Task 2 - Use ConfigMap for cFOS for Firewall VIP config
 
@@ -368,40 +371,8 @@ Secret can be part of the ConfigMap for configuration purpose. for example, we c
 
 for example, HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault . These systems can dynamically inject secrets into your applications, often using a sidecar container or a mutating webhook to provide secrets to the application securely.
 
-- ### Task 1 - create docker image pull secret 
 
-
-Use the kubectl create secret command to create a Docker registry secret. Replace <your-username>, <your-password>, and <your-registry-url> with your actual credentials and registry URL.
-```bash
-kubectl create secret docker-registry cfosimagepullsecret -n cfostest \
-  --docker-username=<your-username> \
-  --docker-password=<your-password> \
-  --docker-server=https://index.docker.io/v1/ \ 
-  --docker-email=<your-email>
-```
-
-include cfosimagepullsecret in serviceaccount
-
-```bash
-cat << EOF | kubectl apply -n cfostest -f - 
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: cfos-serviceaccount
-imagePullSecrets:
-- name: cfosimagepullsecret
-EOF
-```
-
-
-- create a cFOS yaml manifest to use imagePullSecrets
-
-```bash
-scriptDir="$HOME"
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml -n cfostest
-```
-- ### Task 2 -  use secret in configMap
+- ### Task 1 -  use secret in configMap
 
 - create secret with key to include the shared password 
 
@@ -413,7 +384,6 @@ kubectl create secret generic ipsec-psks --from-literal=psk1="12345678"
 create a clusterIP svc for cfos to get an ip for ipsec
 
 ```bash
-scriptDir="$HOME"
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_clusterip_cfos.yaml -n cfostest
 ```
 
@@ -473,7 +443,13 @@ cFOS has build-in support for read data from k8s configMaps and Secrets , which 
 ### clean up
 
 ```bash
-kubectl delete namespace cfostest
+kubectl delete -f cfos7210250-deployment.yaml -n cfostest
+kubectl delete svc ipsec -n cfostest
 kubectl delete clusterrole configmap-reader
 kubectl delete clusterrole secrets-reader
+kubectl delete cm cm-full-empty -n cfostest 
+kubectl delete cm cm-full-empty -n cfostest
+kubectl delete cm foscfgvip -n cfostest 
+kubectl delete cm foscfgvip-del -n cfostest 
+kubectl delete cm cm-ipsecvpn -n cfostest
 ```

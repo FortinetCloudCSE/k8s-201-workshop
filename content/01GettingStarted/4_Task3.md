@@ -72,7 +72,6 @@ line='if [ -f "$HOME/variable.sh" ]; then source $HOME/variable.sh ; fi'
 grep -qxF "$line" ~/.bashrc || echo "$line" >> ~/.bashrc
 source $HOME/variable.sh
 $HOME/variable.sh
-grep -qxF "$vm_name" "$HOME/.ssh/known_hosts"  && ssh-keygen -R "$vm_name"
 
 az network vnet create -g $resourceGroupName  --name  $aksVnetName --location $location  --subnet-name aksSubnet --subnet-prefix 10.224.0.0/24 --address-prefix 10.224.0.0/16
 

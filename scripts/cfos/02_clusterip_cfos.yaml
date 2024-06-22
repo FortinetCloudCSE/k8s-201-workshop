@@ -6,7 +6,7 @@ metadata:
   name: ipsec
 spec:  
   internalTrafficPolicy: Cluster
-  clusterIP: 10.110.17.42
+  clusterIP: 10.96.17.42
   ipFamilies:
   - IPv4
   ipFamilyPolicy: SingleStack

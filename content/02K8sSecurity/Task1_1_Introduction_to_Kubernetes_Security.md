@@ -124,7 +124,6 @@ Here is the brief purpose of mentioned capabilites
 - deploy imagepullsecret, serviceaccount 
 
 ```
-scriptDir="$HOME"
 kubectl create namespace cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
@@ -202,7 +201,7 @@ In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=fa
 
 ```bash
 sed -i 's/add: \["NET_RAW"\]/add: ["NET_RAW","NET_ADMIN"]/' cfos7210250-deployment.yaml
-kubectl apply -f cfos7210250-deployment.yaml -n cfostest
+kubectl replace -f cfos7210250-deployment.yaml -n cfostest
 kubectl rollout status deployment cfos7210250-deployment -n cfostest
 ```
 
@@ -258,8 +257,10 @@ In this workshop, We will walk through using cFOS to protect:
 
 ### Clean up
 
+Delete cFOS deployment, but keep cfosimagepullsecret and serivce account, we will need this later
+
 ```bash
-kubectl delete namespace cfostest
+kubectl delete -f cfos7210250-deployment.yaml -n cfostest
 kubectl delete clusterrole configmap-reader
 kubectl delete clusterrole secrets-reader
 ```
