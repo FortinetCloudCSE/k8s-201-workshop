@@ -25,10 +25,71 @@ cFOS has build in feature can read the configMap from k8s via k8s API. when cFOS
 ```bash
 scriptDir="$HOME"
 kubectl create namespace cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml -n cfostest
 ```
+#kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_create_cfos_deployment_with_dns.yaml -n cfostest
+
+```bash
+k8sdnsip=$(k get svc kube-dns -n kube-system -o jsonpath='{.spec.clusterIP}')
+cat << EOF | tee > cfos7210250-deployment.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cfos7210250-deployment
+  labels:
+    app: cfos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cfos
+  template:
+    metadata:
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/cfos7210250-container: unconfined
+      labels:
+        app: cfos
+    spec:
+      initContainers:
+      - name: init-myservice
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "nameserver $k8sdnsip" > /mnt/resolv.conf
+          echo "search default.svc.cluster.local svc.cluster.local cluster.local" >> /mnt/resolv.conf;
+        volumeMounts:
+        - name: resolv-conf
+          mountPath: /mnt
+      serviceAccountName: cfos-serviceaccount
+      containers:
+      - name: cfos7210250-container
+        image: $cfosimage
+        securityContext:
+          privileged: false
+          capabilities:
+            add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /data
+          name: data-volume
+        - mountPath: /etc/resolv.conf
+          name: resolv-conf
+          subPath: resolv.conf
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+      - name: resolv-conf
+        emptyDir: {}
+      dnsPolicy: ClusterFirst
+EOF
+kubectl apply -f cfos7210250-deployment.yaml -n cfostest
+
+```
+
 
 - check cFOS running in restricted mode due to no license applied
 

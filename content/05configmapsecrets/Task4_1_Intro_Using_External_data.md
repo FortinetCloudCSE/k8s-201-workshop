@@ -84,7 +84,7 @@ EOF
 kubectl apply -f cm_external_resource.yaml
 ```
 
-after apply above yaml manifest, you can use `kubectl get cm cm_external_resource.yaml` to check the configuration. 
+after apply above yaml manifest, you can use `kubectl describe cm cm-externalresource` to check the configuration. 
 if you have cFOS container running, cFOS will read this configmap and config itself accordingly. 
 
 

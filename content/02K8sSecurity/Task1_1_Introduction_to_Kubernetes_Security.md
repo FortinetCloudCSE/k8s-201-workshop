@@ -127,13 +127,13 @@ SYS_ADMIN:
 ```
 scriptDir="$HOME"
 kubectl create namespace cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
 - deploy cfos  deployment
 
 ```bash
-cat << EOF | kubectl apply -n cfostest -f - 
+cfosimage="fortinetwandy.azurecr.io/cfos:255"
+cat << EOF | tee > cfos7210250-deployment.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -155,12 +155,12 @@ spec:
         runAsUser: 0
       containers:
       - name: cfos7210250-container
-        image: interbeing/fos:latest
+        image: $cfosimage
         securityContext:
           allowPrivilegeEscalation: false
           privileged: false
           capabilities:
-              add: ["CAP_NET_ADMIN"]
+            add: ["NET_RAW"]
         ports:
         - containerPort: 80
         volumeMounts:
@@ -170,28 +170,29 @@ spec:
       - name: data-volume
         emptyDir: {}
 EOF
+kubectl apply -f cfos7210250-deployment.yaml -n cfostest 
+kubectl rollout status deployment cfos7210250-deployment -n cfostest
 ```
-- check whether cFOS container is able to ping 1.1.1.1
+- check whether cFOS container is able to execute some command
 
 ```bash
+cmd="iptables -t nat -L -v"
 podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
-kubectl exec -it po/$podname -n cfostest -- ping 1.1.1.1
+kubectl exec -it po/$podname -n cfostest -- $cmd
 ```
 
 Expected Result
 
-You will see error message below which indicate that the container does not have permission to use ping
+You will see error message below which indicate that the container does not have permission to run cmd
 
 ```
-PING 1.1.1.1 (1.1.1.1): 56 data bytes
-ping: permission denied (are you root?)
-command terminated with exit code 1
+iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
 ```
 
 - Try to solve the permission issue by adjust the securityContext Setting.
 
 {{% notice style="tip" %}}
-add linux capabilites to ["CAP_NET_ADMIN","CAP_NET_RAW"] then check log again
+add linux capabilites to ["NET_ADMIN","NET_RAW"] then check log again
 {{% /notice %}}
 
 {{% notice style="info" %}}
@@ -201,20 +202,30 @@ In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=fa
 - Answer
 
 ```bash
-kubectl replace -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_Answer.yaml -n cfostest
+sed -i 's/add: \["NET_RAW"\]/add: ["NET_RAW","NET_ADMIN"]/' cfos7210250-deployment.yaml
+kubectl apply -f cfos7210250-deployment.yaml -n cfostest
 kubectl rollout status deployment cfos7210250-deployment -n cfostest
 ```
 
 Check again with 
 ```bash
+cmd="iptables -t nat -L -v"
 podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
-kubectl exec -it po/$podname -n cfostest -- ping 1.1.1.1
+kubectl exec -it po/$podname -n cfostest -- $cmd
 ```
-you shall see now ping is sucessful 
+you shall see now command is sucessful 
 ```
-PING 1.1.1.1 (1.1.1.1): 56 data bytes
-64 bytes from 1.1.1.1: seq=0 ttl=54 time=1.242 ms
-64 bytes from 1.1.1.1: seq=1 ttl=54 time=1.264 ms
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain POSTROUTING (policy ACCEPT)
+target     prot opt source               destination  
 ```
 
 ### Prevention/Protection via Network Security

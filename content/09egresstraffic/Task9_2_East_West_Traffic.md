@@ -289,15 +289,10 @@ EOF
 11. Create image pull secret.
 
 ```bash
-cat <<EOF | kubectl create -n cfostest -f -
-apiVersion: v1
-data:
-  .dockerconfigjson: eyJhdXRocyI6eyJkb2NrZXIuaW8iOnsidXNlcm5hbWUiOiJpbnRlcmJlaW5nIiwicGFzc3dvcmQiOiJEYWgxMG9vMDArMSIsImVtYWlsIjoieWFnb3N5c0BnbWFpbC5jb20iLCJhdXRoIjoiYVc1MFpYSmlaV2x1WnpwRVlXZ3hNRzl2TURBck1RPT0ifX19
-kind: Secret
-metadata:
-  name: cfosimagepullsecret
-type: kubernetes.io/dockerconfigjson
-EOF
+[ -n "$accessToken" ] && $scriptDir/imagepullsecret.yaml.sh || echo "please set \$accessToken"
+kubectl apply -f cfosimagepullsecret.yaml -n cfostest
+kubectl get sa -n cfostest 
+
 ```
 
 12. License apply in cfostest.
