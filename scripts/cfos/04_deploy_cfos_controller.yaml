@@ -2,27 +2,27 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: sa-cfoscontrolleramd64alpha14
+  name: sa-cfoscontrolleramd64alpha16
   namespace: default
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cfoscontrolleramd64alpha14
+  name: cfoscontrolleramd64alpha16
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cfoscontrolleramd64alpha14
+      app: cfoscontrolleramd64alpha16
   template:
     metadata:
       labels:
-        app: cfoscontrolleramd64alpha14
+        app: cfoscontrolleramd64alpha16
     spec:
-      serviceAccountName: sa-cfoscontrolleramd64alpha14
+      serviceAccountName: sa-cfoscontrolleramd64alpha16
       containers:
-      - name: cfoscontrolleramd64alpha14
-        image: interbeing/myfmg:cfoscontrolleramd64alpha14
+      - name: cfoscontrolleramd64alpha16
+        image: interbeing/myfmg:cfoscontrolleramd64alpha16
         imagePullPolicy: Always
         env: 
           - name: LOGLEVEL
@@ -38,7 +38,7 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: cfoscontrolleramd64alpha14-role
+  name: cfoscontrolleramd64alpha16-role
 rules:
 - apiGroups: ["apps", ""]
   resources: ["deployments", "namespaces", "serviceaccounts", "services", "configmaps"]
@@ -56,14 +56,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: cfoscontrolleramd64alpha14-rolebinding
+  name: cfoscontrolleramd64alpha16-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cfoscontrolleramd64alpha14-role
+  name: cfoscontrolleramd64alpha16-role
 subjects:
 - kind: ServiceAccount
-  name: sa-cfoscontrolleramd64alpha14
+  name: sa-cfoscontrolleramd64alpha16
   namespace: default
 ---
 apiVersion: v1
@@ -71,8 +71,11 @@ kind: ConfigMap
 metadata:
   name: cfoscontrollerenv
 data:   
-   cfosContainerImage: "interbeing/fos:latest"
-   cfosPullSecret: "dockerinterbeing"
+data:   
+   cfosContainerImage: "interbeing/fos:x86v255"
+   cfosImagePullSecret: "cfosimagepullsecret"
    managedByController: "fortinetcfos"
+   apiServicePort: "8080"
    CFOSLBSERVICENAME: "cfos7210250-service"
+   cfosNameSpace: "cfostest"
 
