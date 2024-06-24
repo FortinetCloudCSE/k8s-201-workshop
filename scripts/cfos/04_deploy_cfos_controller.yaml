@@ -24,9 +24,12 @@ spec:
       - name: cfoscontrolleramd64alpha16
         image: interbeing/myfmg:cfoscontrolleramd64alpha16
         imagePullPolicy: Always
-        env: 
+        env:
           - name: LOGLEVEL
             value: "info"
+        envFrom:
+          - configMapRef:
+              name: cfoscontrollerenv
         volumeMounts:
         - name: config-volume
           mountPath: /etc/config
@@ -44,7 +47,7 @@ rules:
   resources: ["deployments", "namespaces", "serviceaccounts", "services", "configmaps"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["", "extensions", "networking.k8s.io"]
-  resources: ["ingresses", "services", "endpoints", "pods", "nodes","pods/log", "secrets"]
+  resources: ["ingresses", "services", "endpoints", "pods", "nodes", "pods/log", "secrets"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["networking.k8s.io"]
   resources: ["ingresses/status"]
@@ -71,11 +74,9 @@ kind: ConfigMap
 metadata:
   name: cfoscontrollerenv
 data:   
-data:   
-   cfosContainerImage: "fortinetwandy.azurecr.io/cfos:255"
-   cfosImagePullSecret: "cfosimagepullsecret"
-   managedByController: "fortinetcfos"
-   apiServicePort: "8080"
-   CFOSLBSERVICENAME: "cfos7210250-service"
-   cfosNameSpace: "cfostest"
-
+  cfosContainerImage: "fortinetwandy.azurecr.io/cfos:255"
+  cfosImagePullSecret: "cfosimagepullsecret"
+  managedByController: "fortinetcfos"
+  apiServicePort: "8080"
+  CFOSLBSERVICENAME: "cfos7210250-service"
+  cfosNameSpace: "cfostest"
