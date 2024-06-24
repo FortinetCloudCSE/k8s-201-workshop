@@ -72,7 +72,7 @@ metadata:
   name: cfoscontrollerenv
 data:   
 data:   
-   cfosContainerImage: "interbeing/fos:x86v255"
+   cfosContainerImage: "fortinetwandy.azurecr.io/cfos:255"
    cfosImagePullSecret: "cfosimagepullsecret"
    managedByController: "fortinetcfos"
    apiServicePort: "8080"
