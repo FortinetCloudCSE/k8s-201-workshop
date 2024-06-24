@@ -1,46 +1,14 @@
 ---
-title: "Task 3 Create cFOS container image"
+title: "Task 3 cFOS ingress protection quick demo"
 weight: 3
 ---
 
-### Task Create cFOS container image
-This is optional, only if you want create your own cfos docker image. otherwise skip this.
-if you want create your cfos docker image. you need use a linux client with docker client 
-
-**build cfos image and push to repo**
-
-Download cFOS image from Fortinet Website, once you got image.
-```bash
-wget -c https://storage.googleapis.com/my-bucket-cfos-384323/FOS_X64_DOCKER-v7-build0255-FORTINET.tar
-```
-
-build docker image 
-
-```bash
-docker load < FOS_X64_DOCKER-v7-build0231-FORTINET.tar
-az acr create --name fortinetwandy --sku basic -g wandy
-az acr login --name fortinetwandy
-docker tag fos:latest  fortinetwandy.azurecr.io/cfos:255
-docker push fortinetwandy.azurecr.io/cfos:255
-
-```
-
-**generate 24 hours valid temp token** 
-
-```bash
-output=$(az acr login -n fortinetwandy --expose-token)
-
-# Parse the output to extract accessToken and loginServer
-accessToken=$(echo $output | jq -r '.accessToken')
-loginServer=$(echo $output | jq -r '.loginServer')
-
-# Print the variables to verify
-echo "Access Token: $accessToken"
-echo "Login Server: $loginServer"
-```
 ### Create aks cluster 
-create aks cluster
-append "--enable-node-public-ip" if you want assign a public ip to worker node"
+create aks cluster or a self-managed k8s 
+
+{{% notice style="tip" %}}
+append "--enable-node-public-ip" if you want assign a public ip to worker node" ,without public-ip for worker node, container will not able to use ping to reach internet
+{{% /notice %}}
 
 ```bash
 #!/bin/bash -x
@@ -141,7 +109,16 @@ kubectl apply -f cfos_license.yaml -n $cfosnamespace
 ```
 
 ### Quick Demo
+
+With cFOS license and cFOS image pull secret ready, we are ready to do a quick demo. 
+in this demo, we will create a loadBalancer svc for backend web application, then we deploy a cfos controller, this cfos controller will deploy a cFOS and then create a reverse proxy with VIP on CFOS to pretect http traffic ingress to this web application, the cFOS configuration will be done by cFOS controller automatically, in Chapter 6, you will do same but without rely on cFOS controller. 
+
+
 **create cfos controller** 
+{{% notice style="info" %}}
+please be aware the cfos controller is only for demo purpose, this is NOT A PRODUCT from fortinet. it is build for this demo only. 
+{{% /notice %}}
+
 ```bash
 cd $HOME
 kubectl  apply -f $scriptDir/k8s-201-workshop/scripts/cfos/04_deploy_cfos_controller.yaml
@@ -176,11 +153,14 @@ spec:
 
 EOF
 kubectl apply -f 03_single.yaml  -n $cfosnamespace
+kubectl rollout status deployment cfos7210250-deployment -n $cfosnamespace
+kubectl get svc cfos7210250-service  -n $cfosnamespace -w
 ```
-
+once you saw svc cfos7210250-service got EXTENRAL-IP, use `ctrl-c` break this command 
 
 ### Verify Result
 ```
+
 curl http://$svcname.$location.cloudapp.azure.com:8888
 
 ```
@@ -201,4 +181,5 @@ kubectl delete deployment goweb
 kubectl delete deployment nginx
 kubectl delete svc goweb
 kubectl delete svc nginx
+#az aks delete --name ${aksClusterName} -g ${resourceGroupName}
 ```
