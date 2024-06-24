@@ -119,6 +119,15 @@ in this demo, we will create a loadBalancer svc for backend web application, the
 please be aware the cfos controller is only for demo purpose, this is NOT A PRODUCT from fortinet. it is build for this demo only. 
 {{% /notice %}}
 
+the cfos controller use below preconfigred variable 
+```
+  cfosContainerImage: "fortinetwandy.azurecr.io/cfos:255"
+  cfosImagePullSecret: "cfosimagepullsecret"
+  managedByController: "fortinetcfos"
+  cfosNameSpace: "cfostest"
+```
+if you use different cfosContainerImage repo or namespace etc, make sure modify 04_deploy_cfos_controller.yaml to match with actual variable before deploy cfoscontroller.
+
 ```bash
 cd $HOME
 kubectl  apply -f $scriptDir/k8s-201-workshop/scripts/cfos/04_deploy_cfos_controller.yaml
