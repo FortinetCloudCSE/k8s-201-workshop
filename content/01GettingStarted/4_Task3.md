@@ -3,6 +3,22 @@ title: "Task 3 cFOS ingress protection quick demo"
 weight: 3
 ---
 
+### Purpose
+
+In this chapter, we going to setup a end to end demo to secure traffic from internet to application deployed in aks cluster. we will use aks loadBalancer SVC to create loadbalancer svc to backend application.
+
+**traffic diagram without use cFOS**
+
+![direct](../images/direct.png)
+
+**traffic diagram after use cFOS in the middle**
+
+with cFOS in the middle, it function as a reverse proxy. 
+![proxyed](../images/trafficcfos.png)
+
+
+
+
 ### Create aks cluster 
 create aks cluster or a self-managed k8s 
 
@@ -77,7 +93,7 @@ az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-e
 use below script to create imagepullsecret, replace acessToken below with real token 
 ```bash
 loginServer="fortinetwandy.azurecr.io"
-accessToken="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IklFTVI6TTdFRzpVV1JUOllIUEs6T1BZUTpZQjZNOjVUQ1M6S1RYRjpaQUhDOlZIRUw6RVVMUTo0SU1LIn0.eyJqdGkiOiI0NGU3Y2Q1OC1iMTMwLTQyNzEtOTkyMC1iN2UwNTViYjY3OTQiLCJzdWIiOiJ3YW5keUBmb3J0aW5ldC11cy5jb20iLCJuYmYiOjE3MTkyMDkyNzYsImV4cCI6MTcxOTIyMDk3NiwiaWF0IjoxNzE5MjA5Mjc2LCJpc3MiOiJBenVyZSBDb250YWluZXIgUmVnaXN0cnkiLCJhdWQiOiJmb3J0aW5ldHdhbmR5LmF6dXJlY3IuaW8iLCJ2ZXJzaW9uIjoiMS4wIiwicmlkIjoiMzkzYzEzYTJlNjE4NDk4ZDk0NDliMWUyZjRmMmUzMGQiLCJncmFudF90eXBlIjoicmVmcmVzaF90b2tlbiIsImFwcGlkIjoiMDRiMDc3OTUtOGRkYi00NjFhLWJiZWUtMDJmOWUxYmY3YjQ2IiwidGVuYW50IjoiOTQyYjgwY2QtMWIxNC00MmExLThkY2YtNGIyMWRlY2U2MWJhIiwicGVybWlzc2lvbnMiOnsiYWN0aW9ucyI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiLCJtZXRhZGF0YS9yZWFkIiwibWV0YWRhdGEvd3JpdGUiLCJkZWxldGVkL3JlYWQiLCJkZWxldGVkL3Jlc3RvcmUvYWN0aW9uIl19LCJyb2xlcyI6W119.UtPpB3vOfI6Kv8sgevbeBnagCjp5oNkLIQyr7usYxDrUQED5PB32rW66MSFSsa_FYq6zoM-AX08m3MHNrLjmAOF0FtosQ2Ex1X61uhudkzwLZuIdlI8u8fLgJNP3qkHK0aomrhQpnqdO871yovV3Tlc8-0zbj-Y3gScwZUUR8aLzxS8h0VnkXQO-Vr7LHkSJe0dkZ79ND6E4sJCp4uT3lHmDMX_c3z7zkEQ31MZm_-mk84mGt2IMA_MC17HIhDkboVxT0j2nec7171UxW-yWRgRBmWHDPdVIryLTIDm46iAmwgIS119O88x0eDJXmsqbH2AK8TlwCFPQRIR8EITa3A"
+accessToken="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IklFTVI6TTdFRzpVV1JUOllIUEs6T1BZUTpZQjZNOjVUQ1M6S1RYRjpaQUhDOlZIRUw6RVVMUTo0SU1LIn0.eyJqdGkiOiJlZmRiNGQ5OS03OWY4LTQyMzctYmFjYi0zNDliMmE5MGQyOTIiLCJzdWIiOiJ3YW5keUBmb3J0aW5ldC11cy5jb20iLCJuYmYiOjE3MTkyMzIzMjIsImV4cCI6MTcxOTI0NDAyMiwiaWF0IjoxNzE5MjMyMzIyLCJpc3MiOiJBenVyZSBDb250YWluZXIgUmVnaXN0cnkiLCJhdWQiOiJmb3J0aW5ldHdhbmR5LmF6dXJlY3IuaW8iLCJ2ZXJzaW9uIjoiMS4wIiwicmlkIjoiMzkzYzEzYTJlNjE4NDk4ZDk0NDliMWUyZjRmMmUzMGQiLCJncmFudF90eXBlIjoicmVmcmVzaF90b2tlbiIsImFwcGlkIjoiMDRiMDc3OTUtOGRkYi00NjFhLWJiZWUtMDJmOWUxYmY3YjQ2IiwidGVuYW50IjoiOTQyYjgwY2QtMWIxNC00MmExLThkY2YtNGIyMWRlY2U2MWJhIiwicGVybWlzc2lvbnMiOnsiYWN0aW9ucyI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiLCJtZXRhZGF0YS9yZWFkIiwibWV0YWRhdGEvd3JpdGUiLCJkZWxldGVkL3JlYWQiLCJkZWxldGVkL3Jlc3RvcmUvYWN0aW9uIl19LCJyb2xlcyI6W119.dldvSnrrpnFpQXdPYcDaEgjymM46UCRrXbEv7CQ-L1iVVAkxOY0Csufm9NOBYKldmNMZwdFNJsgeSTErAb9_a7ZbKMD3Ogit8V8_A1T39tsabXa8F0Ho9_IgCzILSYc7aIIrHnL5I9xDHZKZ8DYnq2jBedTczM3sZBp4RNlxHqoWAa1aHcWbP3IqKPpPPSN6Yrl2sK8PxAoDYoG1p35AA1rs3k0-W-KnmWF1Gtplm6IEvi6HoUSi5B2hdbx2JVcDlRC_wXVvkOxBtG_25-_8DygEaSHP4QMkqJTO-ZJfptuQInr1bYhDAnrvK2oH_P0zOTAtUNSs20SULnSZrST49A"
 echo $accessToken
 echo $loginServer 
 kubectl create namespace $cfosnamespace
@@ -100,6 +116,11 @@ cd $HOME
 ```
 
 ### Create cFOS configmap license 
+upload you license via azue shell Manag files feature  to upload your cFOS license file. 
+do not change or modify license file. 
+
+![imageuploadlicensefile](../images/uploadLicense.png)
+
 assume you have downloaded cFOS license file and alread uploaded to your azure cloud shell. the cFOS license file has name "CFOSVLTM24000016.lic".  without need modify any content for your cFOS license. use below script to create a configmap file for cFOS license. once cFOS POD up , it will automatically get the configmap to apply the license. 
 
 ```bash
@@ -134,9 +155,22 @@ kubectl  apply -f $scriptDir/k8s-201-workshop/scripts/cfos/04_deploy_cfos_contro
 ```
 **create backend application and clusterip SVC**
 ```bash
-$scriptDir/k8s-201-workshop/scripts/cfos/create_nginx_and_fileupload_application.sh
+kubectl create deployment goweb --image=interbeing/myfmg:fileuploadserverx86
+kubectl expose  deployment goweb --target-port=80  --port=80
 ```
 **create loadBalancer SVC** 
+
+Below yaml file will create a loadbalancer SVC, this service will exposed TCP port 8888 to internet via azure LB,the target endpoint will be cfos container on tcp port 8888 based on selector **app: cfos** and **targetPort** field in spec , then cFOS controller will config CFOS with cFOS POD IP + 8888 as VIP and map to actual application goweb clusterIP+tcp port 80. goweb application can in any namespace like belew use namespace default. 
+
+The traffic path will be 
+client(1)---Internet--azure LB public IP/DNS(2) ---cFOS VIP+PORT(3) ---goweb cluster ip:port(4) --goweb POD IP:PORT(5)
+
+- (1) client can be azure cloud shell or your laptop browser 
+- (2) DNS name will be $svcname.$location.cloudapp.azure.com
+- (3) cFOS port1 IP + VIP PORT 8888
+- (4) goweb cluster ip for example 10.96.240.247:80 
+- (5) goweb POD IP + PORT for example 10.224.0.19:80
+
 ```bash
 cd $HOME
 svcname=$(whoami)-$owner
@@ -187,8 +221,6 @@ kubectl delete namespace $cfosnamespace
 kubectl delete -f $scriptDir/k8s-201-workshop/scripts/cfos/04_deploy_cfos_controller.yaml
 kubectl delete sa sa-cfoscontrolleramd64alpha16
 kubectl delete deployment goweb
-kubectl delete deployment nginx
 kubectl delete svc goweb
-kubectl delete svc nginx
 #az aks delete --name ${aksClusterName} -g ${resourceGroupName}
 ```
