@@ -344,5 +344,7 @@ untaint_master_node
 copy_cert_from_master "${master_vm_names[0]}"
 install_local_storage_class
 installmetallb
+echo sleep 60 for metallb get ready
+sleep 60
 createmetallbpool
 #delete_resource 
