@@ -16,11 +16,30 @@ In this chapter, we going to setup a end to end demo to secure traffic from inte
 with cFOS in the middle, it function as a reverse proxy. 
 ![proxyed](../images/trafficcfos.png)
 
+### Clone script from github
+
+```bash
+cd $HOME
+git clone https://github.com/FortinetCloudCSE/k8s-201-workshop.git
+cd $HOME/k8s-201-workshop
+git pull
+cd $HOME
+```
 
 
+### Create Self-managed k8s
 
-### Create aks cluster 
-create aks cluster or a self-managed k8s 
+```bash
+scriptDir="$HOME"
+cd $HOME/k8s-201-workshop/scripts/cfos/egress
+./create_kubeadm_k8s_on_ubuntu22.sh
+cd $scriptDir
+svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d "." -f 1 | cut -d "/" -f 3)
+echo $svcname
+```
+
+### or Create aks cluster 
+create aks cluster 
 
 {{% notice style="tip" %}}
 append "--enable-node-public-ip" if you want assign a public ip to worker node" ,without public-ip for worker node, container will not able to use ping to reach internet
@@ -34,6 +53,7 @@ currentUser=$(az account show --query user.name -o tsv)
 resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
+svcname=$(whoami)-$owner
 cfosimage="fortinetwandy.azurecr.io/cfos:255"
 cfosnamespace="cfostest"
 echo "Using resource group $resourceGroupName in location $location"
@@ -105,15 +125,6 @@ kubectl create secret -n $cfosnamespace docker-registry cfosimagepullsecret \
 ```
 
 
-### Clone script from github
-
-```bash
-cd $HOME
-git clone https://github.com/FortinetCloudCSE/k8s-201-workshop.git 
-cd $HOME/k8s-201-workshop
-git pull
-cd $HOME
-```
 
 ### Create cFOS configmap license 
 upload you license via azue shell Manag files feature  to upload your cFOS license file. 
@@ -173,7 +184,7 @@ client(1)---Internet--azure LB public IP/DNS(2) ---cFOS VIP+PORT(3) ---goweb clu
 
 ```bash
 cd $HOME
-svcname=$(whoami)-$owner
+#svcname=$(whoami)-$owner
 cat << EOF | tee > 03_single.yaml 
 apiVersion: v1
 kind: Service
