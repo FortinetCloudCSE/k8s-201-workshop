@@ -1,18 +1,23 @@
 #!/bin/bash -x
 # Configuration
-location="westus"
-rg="demofortiwebingresscontroller"
 nsg_name="myNSG"
 srcaddressprefix="'*'"
-master_prefix="k8strainingmaster"
-worker_prefix="k8strainingworker"
+master_prefix="k8strainingmaster-$(whoami)-"
+worker_prefix="k8strainingworker-$(whoami)-"
 vm_image="Ubuntu2204"
+location=$(az group show --name $rg --query location -o tsv)
+if [ -z $location ] ; then
+location="eastus"
+fi
+
 #vm_size="Standard_B2s"
 #vm_size="Standard_D4s_v4"
 vm_size="Standard_D2s_v4"
 
 admin_username="ubuntu"
-ssh_key_path="$HOME/.ssh/id_rsa.pub"
+#rsakeyname="id_rsa_tecworkshop"
+rsakeyname="id_rsa"
+[ ! -f ~/.ssh/$rsakeyname ] && ssh-keygen -t rsa -b 4096 -q -N "" -f ~/.ssh/$rsakeyname
 os_disk_size_gb="100"
 public_ip_sku="Standard"
 vnet_name="myVNet"
@@ -28,7 +33,17 @@ worker_vm_names=()
 cluster_join_script_name="./workloadtojoin.sh"
 
 create_rg() {
+currentUser=$(az account show --query user.name -o tsv)
+echo $currentUser
+rg=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv --verbose)
+
+if [ -z $rg ] ; then 
+owner="tecworkshop"
+rg=$owner-$(whoami)-"cfos-"$location-$(date -I)
 az group create --location $location --resource-group $rg
+fi
+echo $rg 
+echo $location
 }
 
 create_vnet() {
@@ -87,13 +102,13 @@ create_vm() {
       --image $vm_image \
       --size $vm_size \
       --admin-username $admin_username \
-      --ssh-key-value "$(cat $ssh_key_path)" \
+      --ssh-key-values @~/.ssh/${rsakeyname}.pub \
       --os-disk-size-gb $os_disk_size_gb \
       --location $location \
       --public-ip-sku $public_ip_sku \
       --public-ip-address-dns-name $dns_name \
       --vnet-name $vnet_name \
-      --subnet $subnet_name
+      --subnet $subnet_name --verbose
 
     # Store VM names for later use
     if [[ "$vm_role" == "master" ]]; then
@@ -138,7 +153,7 @@ run_script_on_master() {
     
     echo "Executing script on master node: $master_dns"
     scp -o "StrictHostKeyChecking=no" "$script_path" "ubuntu@${master_dns}:~/"
-    ssh -o "StrictHostKeyChecking=no" "ubuntu@${master_dns}" "bash ~/$(basename $script_path)"
+    ssh -o "StrictHostKeyChecking=no" "ubuntu@${master_dns}" "bash ~/$(basename $script_path) $(whoami) $location"
 }
 
 run_script_on_workers() {

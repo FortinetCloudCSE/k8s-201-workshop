@@ -1,5 +1,7 @@
 #!/bin/bash -xe
 
+dnsusername=$1
+location=$2
 username=$(whoami)
 nodename=$(hostname)
 
@@ -101,7 +103,7 @@ IPADDR=$local_ip
 NODENAME=`hostname | tr -d '-'`
 POD_CIDR="10.244.0.0/16"
 SERVICE_CIDR="10.96.0.0/12"
-FQDN="k8strainingmaster1.westus.cloudapp.azure.com"
+FQDN="k8strainingmaster-$dnsusername-1.$location.cloudapp.azure.com"
 EMAIL="yagosys@gmail.com"
 echo $IPADDR $NODENAME  | sudo tee -a  /etc/hosts
 
