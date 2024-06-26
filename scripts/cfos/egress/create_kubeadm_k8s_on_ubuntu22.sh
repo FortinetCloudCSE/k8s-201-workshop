@@ -35,7 +35,7 @@ cluster_join_script_name="./workloadtojoin.sh"
 create_rg() {
 currentUser=$(az account show --query user.name -o tsv)
 echo $currentUser
-rg=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv --verbose)
+rg=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv)
 
 if [ -z $rg ] ; then 
 owner="tecworkshop"
@@ -261,6 +261,42 @@ kubectl rollout status deployment local-path-provisioner -n local-path-storage
 kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 }
 
+delete_resource() {
+
+
+vmNames=$(az vm list -g $rg --query "[].name" -o tsv)
+for vmName in $vmNames; do 
+   az vm delete --name $vmName -g $rg --yes
+done
+
+diskNames=$(az disk list --resource-group "$rg" --query "[].name" -o tsv)
+  for diskName in $diskNames; do
+    az disk delete --name "$diskName" --resource-group $rg --yes
+  done
+
+nics=$(az network nic list -g $rg -o tsv)
+for nic in $nics; do
+    az network nic delete --name $nic -g $rg 
+done
+
+publicIps=$(az network public-ip list -g $rg -o tsv)
+for publicIp in $publicIps; do 
+    az network public-ip delete --name $publicIp -g $rg 
+done
+
+vnets=$(az network vnet list -g $rg -o tsv)
+for vnet in $vnets; do
+   az network vnet delete --name $vnet -g $rg
+done
+
+
+nsgs=$(az network nsg list -g $rg -o tsv)
+for nsg in $nsgs; do
+    az network nsg delete --name $nsg -g $rg 
+done
+}
+
+
 # Initial setup calls
 create_rg
 create_vnet
@@ -280,3 +316,4 @@ copy_and_modify_kubeconfig
 untaint_master_node
 copy_cert_from_master "${master_vm_names[0]}"
 install_local_storage_class
+#delete_resource 

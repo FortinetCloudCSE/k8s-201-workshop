@@ -101,7 +101,7 @@ EOF
 
 IPADDR=$local_ip
 NODENAME=`hostname | tr -d '-'`
-POD_CIDR="10.244.0.0/16"
+POD_CIDR="10.224.0.0/16"
 SERVICE_CIDR="10.96.0.0/12"
 FQDN="k8strainingmaster-$dnsusername-1.$location.cloudapp.azure.com"
 EMAIL="yagosys@gmail.com"
@@ -136,7 +136,7 @@ kubectl rollout status deployment tigera-operator -n tigera-operator
 curl --insecure --retry 3 --retry-connrefused -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/custom-resources.yaml
 sed -i -e "s?blockSize: 26?blockSize: 24?g" custom-resources.yaml
 sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
-sed -i -e "s?192.168.0.0/16?10.244.0.0/16?g" custom-resources.yaml
+sed -i -e "s?192.168.0.0/16?10.224.0.0/16?g" custom-resources.yaml
 sed -i '/calicoNetwork:/a\    containerIPForwarding: Enabled ' custom-resources.yaml
 sed -i '/calicoNetwork:/a\    bgp: Disabled ' custom-resources.yaml
 kubectl --kubeconfig /home/${username}/.kube/config create namespace calico-system
