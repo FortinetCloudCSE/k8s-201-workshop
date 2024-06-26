@@ -2,27 +2,27 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: sa-cfoscontrolleramd64alpha16
+  name: sa-cfoscontrolleramd64alpha17
   namespace: default
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cfoscontrolleramd64alpha16
+  name: cfoscontrolleramd64alpha17
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cfoscontrolleramd64alpha16
+      app: cfoscontrolleramd64alpha17
   template:
     metadata:
       labels:
-        app: cfoscontrolleramd64alpha16
+        app: cfoscontrolleramd64alpha17
     spec:
-      serviceAccountName: sa-cfoscontrolleramd64alpha16
+      serviceAccountName: sa-cfoscontrolleramd64alpha17
       containers:
-      - name: cfoscontrolleramd64alpha16
-        image: interbeing/myfmg:cfoscontrolleramd64alpha16
+      - name: cfoscontrolleramd64alpha17
+        image: interbeing/myfmg:cfoscontrolleramd64alpha17
         imagePullPolicy: Always
         env:
           - name: LOGLEVEL
@@ -41,7 +41,7 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: cfoscontrolleramd64alpha16-role
+  name: cfoscontrolleramd64alpha17-role
 rules:
 - apiGroups: ["apps", ""]
   resources: ["deployments", "namespaces", "serviceaccounts", "services", "configmaps"]
@@ -59,14 +59,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: cfoscontrolleramd64alpha16-rolebinding
+  name: cfoscontrolleramd64alpha17-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cfoscontrolleramd64alpha16-role
+  name: cfoscontrolleramd64alpha17-role
 subjects:
 - kind: ServiceAccount
-  name: sa-cfoscontrolleramd64alpha16
+  name: sa-cfoscontrolleramd64alpha17
   namespace: default
 ---
 apiVersion: v1
@@ -80,3 +80,4 @@ data:
   apiServicePort: "8080"
   CFOSLBSERVICENAME: "cfos7210250-service"
   cfosNameSpace: "cfostest"
+  cfosDnsIP: "10.96.0.10"
