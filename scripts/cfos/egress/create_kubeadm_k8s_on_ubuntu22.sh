@@ -1,12 +1,17 @@
 #!/bin/bash -x
 # Configuration
+echo $(date)
 nsg_name="myNSG"
 srcaddressprefix="'*'"
 master_prefix="k8strainingmaster-$(whoami)-"
 worker_prefix="k8strainingworker-$(whoami)-"
 vm_image="Ubuntu2204"
 EMAIL=$(az account show --query user.name)
-location=$(az group show --name $rg --query location -o tsv)
+rg=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv)
+if [ -z $rg ] ; then 
+exit 1 
+fi
+
 if [ -z $location ] ; then
 location="eastus"
 fi
@@ -264,7 +269,7 @@ kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storagec
 
 delete_resource() {
 
-
+rg=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv) 
 vmNames=$(az vm list -g $rg --query "[].name" -o tsv)
 for vmName in $vmNames; do 
    az vm delete --name $vmName -g $rg --yes
@@ -344,8 +349,8 @@ copy_and_modify_kubeconfig
 untaint_master_node
 copy_cert_from_master "${master_vm_names[0]}"
 install_local_storage_class
-installmetallb
-echo sleep 60 for metallb get ready
-sleep 60
-createmetallbpool
+
+#installmetallb
+#createmetallbpool
 #delete_resource 
+echo $(date)
