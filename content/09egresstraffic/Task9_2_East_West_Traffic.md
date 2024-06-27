@@ -14,14 +14,20 @@ Microservices break down applications into smaller, independent services, which 
 
 Since multus is already installed, let confogure and secure pod to pod traffic with CFOS.
 
-1. Create a namespace. 
+Configuration Details:
 
-```kubectl create namespace app-1```
-
-2. Create NAD for Pod1
+- Create namespace for application 
 
 ```bash
-cat <<EOF | kubectl create -n app1 -f -
+kubectl create namespace app-1
+```
+- Create NAD - Net-Attach-DE for app-1
+
+this nad config will insert a NIC to application pod.
+it also config a few static route point to cFOS 
+
+```bash
+cat << EOF | tee > nad_10_1_200_1_1_1_1.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
@@ -46,12 +52,13 @@ spec:
       }
     }'
 EOF
+kubectl apply -f nad_10_1_200_1_1_1_1.yaml -n app-1
 ```
+- create application deployment
 
-3. Deploy pod1 with NAD 
 
 ```bash
-cat <<EOF | kubectl create -n app1 -f -
+cat << EOF | tee > demo_application_nad_200.yaml 
 apiVersion: v1
 kind: Pod
 metadata:
@@ -80,16 +87,18 @@ spec:
       path: /
       type: Directory
 EOF
+kubectl apply -f demo_application_nad_200.yaml -n app-1
 ```
-
-4. Repeat the same for Pod2 by creating namespace app2
-
-```kubectl create namespace app-2```
-
-5. Create NAD for pod2
+- create another namespace 
 
 ```bash
-cat <<EOF | kubectl create -n app2 -f -
+kubectl create namespace app-2
+```
+
+- create nad for app-2
+
+```bash
+cat << EOF | tee > nad_10_1_100_1_1_1_1.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
@@ -114,12 +123,12 @@ spec:
       }
     }'
 EOF
+kubectl apply -f nad_10_1_100_1_1_1_1.yaml  -n app-2
 ```
-
-6. Create Pod2 using NAD above. 
+- create application deployment in app-2 namespace
 
 ```bash
-cat <<EOF | kubectl create -n app2 -f -
+cat << EOF | tee demo_application_nad_100.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -148,58 +157,18 @@ spec:
       path: /
       type: Directory
 EOF
+kubectl apply -f demo_application_nad_100.yaml -n app-2
 ```
 
-7. Get IP from application.
 
-```k exec -it po/diag200 -n app-1 -- ip address show dev net1 | grep 'inet 10.1'```
+- Create NAD for cFOS 
 
-output:
+this will create two subnets with single ip address 10.1.200.252/32  and 10.1.100.252/32 for cFOS 
 
-```
-inet 10.1.200.20/24 brd 10.1.200.255 scope global net1
-```
-
-```k exec -it po/diag100 -n app-2 -- ip address show dev net1 | grep 'inet 10.1'```
-
-output:
-
-```
-inet 10.1.100.20/24 brd 10.1.100.255 scope global net1
-```
-
-8. Lets deploy CFOS by creating a name space for CFOS.
-
-```kubectl create namespace cfostest```
-
-9. create NAD for pod1 network and another NAD for pod2 network.
-
-
+**subnet 10.1.200.0/24**
 ```bash
-cat <<EOF | kubectl create -n cfostest -f -
-apiVersion: "k8s.cni.cncf.io/v1"
-kind: NetworkAttachmentDefinition
-metadata:
-  name: cfosdefaultcni6100
-spec:
-  config: '{
-      "cniVersion": "0.3.0",
-      "type": "macvlan",
-      "master": "eth0",
-      "mode": "bridge",
-      "ipam": {
-        "type": "host-local",
-        "subnet": "10.1.100.0/24",
-        "rangeStart": "10.1.100.252",
-        "rangeEnd": "10.1.100.252",
-        "gateway": "10.1.100.1"
-      }
-    }'
-EOF
-```
-
-```bash
-cat <<EOF | kubectl create -n cfostest -f -
+kubectl create namespace $cfosnamespace
+cat << EOF | tee > nad_10_1_200_252_cfos.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
@@ -219,186 +188,121 @@ spec:
       }
     }'
 EOF
-```
+kubectl apply -f nad_10_1_200_252_cfos.yaml -n cfosegress
 
-10. Create Role and Clusterrole bindings in cfostest namespace.
+```
+**subne 10.1.100.0/24**
 
 ```bash
-cat <<EOF | kubectl create -n cfostest -f -
----
-apiVersion: v1
-kind: ServiceAccount
+cat << EOF | tee > nad_10_1_100_252_cfos.yaml  
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
 metadata:
-  name: cfos-serviceaccount
-imagePullSecrets:
-- name: cfosimagepullsecret
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: configmap-reader
-rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["get", "watch", "list"]
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: read-configmaps
-subjects:
-- kind: ServiceAccount
-  name: cfos-serviceaccount
-  apiGroup: ""
-roleRef:
-  kind: ClusterRole
-  name: configmap-reader
-  apiGroup: ""
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-   name: secrets-reader
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["secrets"]
-  verbs: ["get", "watch", "list"]
-
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: read-secrets
-subjects:
-- kind: ServiceAccount
-  name: cfos-serviceaccount
-  apiGroup: ""
-roleRef:
-  kind: ClusterRole
-  name: secrets-reader
-  apiGroup: ""
+  name: cfosdefaultcni6100
+spec:
+  config: '{
+      "cniVersion": "0.3.0",
+      "type": "macvlan",
+      "master": "eth0",
+      "mode": "bridge",
+      "ipam": {
+        "type": "host-local",
+        "subnet": "10.1.100.0/24",
+        "rangeStart": "10.1.100.252",
+        "rangeEnd": "10.1.100.252",
+        "gateway": "10.1.100.1"
+      }
+    }'
 EOF
+kubectl apply -f nad_10_1_100_252_cfos.yaml -n cfosegress
 ```
 
-11. Create image pull secret.
+- create CFOS daemonSet 
 
+We are creating DaemonSet instead deployment as each worker node require deployment one cfos container.
+application which has route point to cFOS will always use cFOS on same worker node.
+
+**create cfosimagepull secret**
 ```bash
-[ -n "$accessToken" ] && $scriptDir/imagepullsecret.yaml.sh || echo "please set \$accessToken"
-kubectl apply -f cfosimagepullsecret.yaml -n cfostest
-kubectl get sa -n cfostest 
 
 ```
+**create cfos license**
+```bash
 
-12. License apply in cfostest.
-
-```kubectl apply -f cfos_license.yaml -n cfostest```
-
-
-13. Create CFOS deployment using NAD100 and NAD200 network.
+```
+**create serviceaccount for cFOS**
+```bash
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n $cfosnamespace
+```
+**deploy cfos DS**
 
 ```bash
-cat <<EOF | kubectl create -n cfostest -f -
+k8sdnsip=$(k get svc kube-dns -n kube-system -o jsonpath='{.spec.clusterIP}')
+cat << EOF | tee > 02_create_cfos_ds.yaml
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: cfos-deployment-2
+  name: fos-multus-deployment
+  labels:
+    app: cfos
 spec:
   selector:
     matchLabels:
       app: cfos
   template:
     metadata:
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/cfos7210250-container: unconfined
+        k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni6",  "ips": [ "10.1.200.252/32" ], "mac": "CA:FE:C0:FF:00:02"  }, { "name": "cfosdefaultcni6100",  "ips": [ "10.1.100.252/32" ], "mac": "CA:FE:C0:FF:01:00" } ]'
       labels:
         app: cfos
-      annotations:
-        k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni6",  "ips": [ "10.1.200.252/32" ], "mac": "CA:FE:C0:FF:00:02"  }, { "name": "cfosdefaultcni6100",  "ips": [ "10.1.100.252/32" ], "mac": "CA:FE:C0:FF:01:00" } ]'
     spec:
+      initContainers:
+      - name: init-myservice
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "nameserver $k8sdnsip" > /mnt/resolv.conf
+          echo "search default.svc.cluster.local svc.cluster.local cluster.local" >> /mnt/resolv.conf;
+        volumeMounts:
+        - name: resolv-conf
+          mountPath: /mnt
       serviceAccountName: cfos-serviceaccount
       containers:
-      - name: cfos
-        image: interbeing/fos:latest
+      - name: cfos7210250-container
+        image: $cfosimage
         securityContext:
+          privileged: false
           capabilities:
-            add: ["NET_ADMIN", "SYS_ADMIN", "NET_RAW"]
+            add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
+        ports:
+        - containerPort: 443
         volumeMounts:
         - mountPath: /data
           name: data-volume
+        - mountPath: /etc/resolv.conf
+          name: resolv-conf
+          subPath: resolv.conf
       volumes:
       - name: data-volume
         emptyDir: {}
+      - name: resolv-conf
+        emptyDir: {}
+      dnsPolicy: ClusterFirst
 EOF
-```
-
-14. Check CFOS IP.
-
-```k exec -it po/cfos-deployment-2-wjlg6 -n cfostest -- sh```
-```# ip a```
-
-output:
+kubectl apply -f 02_create_cfos_ds.yaml -n cfosegress
+kubectl rollout status daemonset fos-multus-deployment -n cfosegress
 
 ```
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host 
-       valid_lft forever preferred_lft forever
-3: eth0@if11: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default 
-    link/ether f2:0f:1a:16:b0:a1 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.244.48.4/32 scope global eth0
-       valid_lft forever preferred_lft forever
-    inet6 fe80::f00f:1aff:fe16:b0a1/64 scope link 
-       valid_lft forever preferred_lft forever
-4: net1@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
-    link/ether ca:fe:c0:ff:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.1.200.252/24 brd 10.1.200.255 scope global net1
-       valid_lft forever preferred_lft forever
-    inet6 fe80::c8fe:c0ff:feff:2/64 scope link 
-       valid_lft forever preferred_lft forever
-5: net2@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
-    link/ether ca:fe:c0:ff:01:00 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.1.100.252/24 brd 10.1.100.255 scope global net2
-       valid_lft forever preferred_lft forever
-    inet6 fe80::c8fe:c0ff:feff:100/64 scope link 
-       valid_lft forever preferred_lft forever
-# 
-```
+- create firewall policy
 
-15. Check the connectivity between pod1 application to pod2 application
-
-```k exec -it po/diag200 -n app-1 -- ping 10.1.100.20```
-
-output:
-
-```
-PING 10.1.100.20 (10.1.100.20) 56(84) bytes of data.
-64 bytes from 10.1.100.20: icmp_seq=1 ttl=63 time=0.110 ms
-64 bytes from 10.1.100.20: icmp_seq=2 ttl=63 time=0.073 ms
-64 bytes from 10.1.100.20: icmp_seq=3 ttl=63 time=0.077 ms
-```
-
-and 
-
-```k exec -it po/diag100 -n app-2 -- ping 10.1.200.20```
-
-output:
-
-```
-PING 10.1.200.20 (10.1.200.20) 56(84) bytes of data.
-64 bytes from 10.1.200.20: icmp_seq=1 ttl=63 time=0.069 ms
-64 bytes from 10.1.200.20: icmp_seq=2 ttl=63 time=0.068 ms
-```
-
-15. Config firewall policy on CFOS with configmap
+The firewall policy allow traffic from net1 to net2 inspected by firewall policy
 
 ```bash
-cat <<EOF | kubectl create -n cfostest -f -
+cat << EOF  | tee > net1net2cmfirewallpolicy.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -410,81 +314,76 @@ data:
   type: partial
   config: |-
     config firewall policy
-        edit 100
-            set utm-status enable
-            set name "net1tointernet"
-            set srcintf "net1"
-            set dstintf "eth0"
-            set srcaddr "all"
-            set dstaddr "all"
-            set service "ALL"
-            set ssl-ssh-profile "deep-inspection"
-            set av-profile "default"
-            set ips-sensor "high_security"
-            set application-list "default"
-            set nat enable
-            set logtraffic all
-        next
+      edit 10
+        set utm-status enable
+        set srcintf "net1"
+        set dstintf "net2"
+        set srcaddr "all"
+        set dstaddr "all"
+        set service "ALL"
+        set ssl-ssh-profile "deep-inspection"
+        set av-profile "default"
+        set webfilter-profile "default"
+        set ips-sensor "high_security"
+        set logtraffic all
+       next
     end
     config firewall policy
-        edit 101
-            set utm-status enable
-            set name "net2tointernet"
-            set srcintf "net2"
-            set dstintf "eth0"
-            set srcaddr "all"
-            set dstaddr "all"
-            set service "ALL"
-            set ssl-ssh-profile "deep-inspection"
-            set av-profile "default"
-            set ips-sensor "high_security"
-            set application-list "default"
-            set nat enable
-            set logtraffic all
-        next
+      edit 11
+        set utm-status enable
+        set srcintf "net2"
+        set dstintf "net1"
+        set srcaddr "all"
+        set dstaddr "all"
+        set service "ALL"
+        set ssl-ssh-profile "deep-inspection"
+        set av-profile "default"
+        set webfilter-profile "default"
+        set ips-sensor "high_security"
+        set logtraffic all
+       next
     end
 EOF
+kubectl apply -f net1net2cmfirewallpolicy.yaml  -n cfosegress
 ```
 
-16. test IPS feature: 
+- get ip from diag100 and diag200
 
-- without IPS signature
-
-```$ k exec -it po/diag100 -n app-2 -- curl  -I  http://10.1.200.20```
-
-output:
-
-```
-HTTP/1.1 200 OK
-Server: nginx/1.18.0
-Date: Fri, 17 May 2024 02:20:05 GMT
-Content-Type: text/html
-Content-Length: 1558
-Last-Modified: Fri, 17 May 2024 01:57:20 GMT
-Connection: keep-alive
-ETag: "6646b980-616"
-Accept-Ranges: bytes
-```
-
-- with IPS signature
-
-```k exec -it po/diag100 -n app-2  -- curl  -H "User-Agent: () { :; }; /bin/ls" http://10.1.200.20```
-
-
-output:
-
-**No reply or timeout**
-
-
-17. Check IPS log
-
-
-- ```k exec -it po/cfos-deployment-2-wjlg6 -n cfostest -- sh```
-- ```# cd /var/log/log```
-- ```# tail ips.0```
-
-output:
+```bash
+diag200ip=$(k get po/diag200 -n app-1 -o jsonpath='{.metadata.annotations}' | jq -r '.["k8s.v1.cni.cncf.io/network-status"]' | jq -r '.[1].ips[0]')
+echo $diag200ip
+diag100ip=$(k get po/diag100 -n app-2 -o jsonpath='{.metadata.annotations}' | jq -r '.["k8s.v1.cni.cncf.io/network-status"]' | jq -r '.[1].ips[0]')
+echo $diag100ip
 
 ```
-date=2024-05-17 time=02:23:35 eventtime=1715912615 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.100.20 dstip=10.1.200.20 srcintf="net2" dstintf="net1" sessionid=1 action="dropped" proto=6 service="HTTP" policyid=11 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=39810 dstport=80 hostname="10.1.200.20" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=134217729 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
+- check connectivity between diag100 to diag200
+```bash
+k exec -it po/diag100 -n app-2 -- ping $diag200ip
+k exec -it po/diag200 -n app-1 -- ping $diag100ip
 ```
+- Send malicious traffic
+
+```bash
+k exec -it po/diag100 -n app-2 -- curl -H "User-Agent: () { :; }; /bin/ls" http://$diag200ip
+k exec -it po/diag200 -n app-1 -- curl -H "User-Agent: () { :; }; /bin/ls" http://$diag100ip
+
+
+```
+- Check Result
+
+```bash
+podname=$(kubectl get pod -n cfosegress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n cfosegress -- tail -f /data/var/log/log/ips.0
+
+
+```
+expected output
+
+```
+kubectl exec -it po/$podname -n cfosegress -- tail -f /data/var/log/log/ips.0
+Defaulted container "cfos7210250-container" out of: cfos7210250-container, init-myservice (init)
+date=2024-06-27 time=09:18:00 eventtime=1719479880 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.200.22 dstip=34.117.186.192 srcintf="net1" dstintf="eth0" sessionid=2 action="dropped" proto=6 service="HTTP" policyid=100 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=33352 dstport=80 hostname="ipinfo.io" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=265289730 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
+date=2024-06-27 time=09:37:35 eventtime=1719481055 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.100.22 dstip=10.1.200.22 srcintf="net2" dstintf="net1" sessionid=10 action="dropped" proto=6 service="HTTP" policyid=11 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=46952 dstport=80 hostname="10.1.200.22" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=265289733 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
+date=2024-06-27 time=09:37:41 eventtime=1719481061 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.200.22 dstip=10.1.100.22 srcintf="net1" dstintf="net2" sessionid=11 action="dropped" proto=6 service="HTTP" policyid=10 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=40358 dstport=80 hostname="10.1.100.22" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=265289734 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
+```
+
