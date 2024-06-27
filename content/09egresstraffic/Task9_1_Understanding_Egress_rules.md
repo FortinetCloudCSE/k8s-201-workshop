@@ -165,10 +165,11 @@ kubectl apply -f demo_application_nad_100.yaml -n app-2
 
 - Create NAD for cFOS 
 
-this will create two subnets with single ip address 10.1.200.252 for cFOS 
+this will create two subnets with single ip address 10.1.200.252/32  and 10.1.100.252/32 for cFOS 
 
 **subnet 10.1.200.0/24**
 ```bash
+kubectl create namespace $cfosnamespace
 cat << EOF | tee > nad_10_1_200_252_cfos.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
@@ -189,7 +190,7 @@ spec:
       }
     }'
 EOF
-kubectl apply -f nad_10_1_200_252_cfos.yaml -n cfosegress 
+kubectl apply -f nad_10_1_200_252_cfos.yaml -n cfosegress
 
 ```
 **subne 10.1.100.0/24**
@@ -219,6 +220,23 @@ kubectl apply -f nad_10_1_100_252_cfos.yaml -n cfosegress
 ```
 
 - create CFOS daemonSet 
+
+We are creating DaemonSet instead deployment as each worker node require deployment one cfos container.
+application which has route point to cFOS will always use cFOS on same worker node.
+
+**create cfosimagepull secret**
+```bash
+
+```
+**create cfos license**
+```bash
+
+```
+**create serviceaccount for cFOS**
+```bash
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n $cfosnamespace
+```
+**deploy cfos DS**
 
 ```bash
 k8sdnsip=$(k get svc kube-dns -n kube-system -o jsonpath='{.spec.clusterIP}')
@@ -282,6 +300,8 @@ kubectl rollout status daemonset fos-multus-deployment -n cfosegress
 
 ```
 - create firewall policy
+
+The firewall policy allow traffic from net1 and net2 with destination to internet and inspected with utm profiles.
 
 ```bash
 cat << EOF | tee > net1net2cmtointernetfirewallpolicy.yaml
