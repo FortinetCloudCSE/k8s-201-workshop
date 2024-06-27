@@ -2,6 +2,8 @@
 
 dnsusername=$1
 location=$2
+EMAIL=$3
+
 username=$(whoami)
 nodename=$(hostname)
 
@@ -104,7 +106,8 @@ NODENAME=`hostname | tr -d '-'`
 POD_CIDR="10.224.0.0/16"
 SERVICE_CIDR="10.96.0.0/12"
 FQDN="k8strainingmaster-$dnsusername-1.$location.cloudapp.azure.com"
-EMAIL="yagosys@gmail.com"
+#EMAIL="yagosys@gmail.com"
+#EMAIL="wandy@fortinet-us.com"
 echo $IPADDR $NODENAME  | sudo tee -a  /etc/hosts
 
 sudo kubeadm reset -f

@@ -5,6 +5,7 @@ srcaddressprefix="'*'"
 master_prefix="k8strainingmaster-$(whoami)-"
 worker_prefix="k8strainingworker-$(whoami)-"
 vm_image="Ubuntu2204"
+EMAIL=$(az account show --query user.name)
 location=$(az group show --name $rg --query location -o tsv)
 if [ -z $location ] ; then
 location="eastus"
@@ -153,7 +154,7 @@ run_script_on_master() {
     
     echo "Executing script on master node: $master_dns"
     scp -o "StrictHostKeyChecking=no" "$script_path" "ubuntu@${master_dns}:~/"
-    ssh -o "StrictHostKeyChecking=no" "ubuntu@${master_dns}" "bash ~/$(basename $script_path) $(whoami) $location"
+    ssh -o "StrictHostKeyChecking=no" "ubuntu@${master_dns}" "bash ~/$(basename $script_path) $(whoami) $location $EMAIL"
 }
 
 run_script_on_workers() {
