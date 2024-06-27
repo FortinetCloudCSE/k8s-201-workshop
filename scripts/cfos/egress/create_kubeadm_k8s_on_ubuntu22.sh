@@ -9,7 +9,7 @@ vm_image="Ubuntu2204"
 EMAIL=$(az account show --query user.name)
 rg=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv)
 if [ -z $rg ] ; then 
-exit 1 
+echo no rg exist, will create it
 fi
 
 if [ -z $location ] ; then
@@ -330,6 +330,16 @@ EOF
 kubectl apply -f metallbippool.yaml
 }
 
+restart_allpod_allnamespace () {
+kubectl get deployments --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' | tail -n +2 | while read namespace name; do kubectl rollout restart deployment $name -n $namespace; done
+
+kubectl get deployments --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' | tail -n +2 | while read namespace name; do kubectl rollout status deployment $name -n $namespace; done
+
+kubectl get daemonsets --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' | tail -n +2 | while read namespace name; do kubectl rollout restart daemonset $name -n $namespace; done
+
+kubectl get daemonsets --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' | tail -n +2 | while read namespace name; do kubectl rollout status daemonset $name -n $namespace; done
+
+}
 # Initial setup calls
 create_rg
 create_vnet
@@ -348,9 +358,9 @@ run_script_on_workers "${cluster_join_script_name}"
 copy_and_modify_kubeconfig
 untaint_master_node
 copy_cert_from_master "${master_vm_names[0]}"
+restart_allpod_allnamespace 
 install_local_storage_class
-
-#installmetallb
-#createmetallbpool
+installmetallb
+createmetallbpool
 #delete_resource 
 echo $(date)
