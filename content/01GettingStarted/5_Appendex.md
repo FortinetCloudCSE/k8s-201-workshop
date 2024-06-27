@@ -37,3 +37,38 @@ loginServer=$(echo $output | jq -r '.loginServer')
 echo "Access Token: $accessToken"
 echo "Login Server: $loginServer"
 ```
+## Delete all resource
+
+```bash
+rg=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv) 
+vmNames=$(az vm list -g $rg --query "[].name" -o tsv)
+for vmName in $vmNames; do 
+   az vm delete --name $vmName -g $rg --yes
+done
+
+diskNames=$(az disk list --resource-group "$rg" --query "[].name" -o tsv)
+  for diskName in $diskNames; do
+    az disk delete --name "$diskName" --resource-group $rg --yes
+  done
+
+nics=$(az network nic list -g $rg -o tsv)
+for nic in $nics; do
+    az network nic delete --name $nic -g $rg 
+done
+
+publicIps=$(az network public-ip list -g $rg -o tsv)
+for publicIp in $publicIps; do 
+    az network public-ip delete --name $publicIp -g $rg 
+done
+
+vnets=$(az network vnet list -g $rg -o tsv)
+for vnet in $vnets; do
+   az network vnet delete --name $vnet -g $rg
+done
+
+
+nsgs=$(az network nsg list -g $rg -o tsv)
+for nsg in $nsgs; do
+    az network nsg delete --name $nsg -g $rg 
+done
+```

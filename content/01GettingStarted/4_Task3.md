@@ -25,12 +25,48 @@ cd $HOME/k8s-201-workshop
 git pull
 cd $HOME
 ```
-### Check your existing kubernetes
+### Continue from K8S 101 workshop
 
-if you are continue from k8s-101 session, you might already have kubernetes ready. then you can continue to use that k8s, if prefer to start with a new k8s installation, follow below to create either self-managed k8s or use AKS. 
+if you are continue from k8s-101 session, you shall already have k8s installed. 
 
+**setup some variable** 
 ```bash
 kubectl get node
+owner="tecworkshop"
+alias k="kubectl"
+currentUser=$(az account show --query user.name -o tsv)
+resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv)
+location=$(az group show --name $resourceGroupName --query location -o tsv)
+scriptDir="$HOME"
+svcname=$(whoami)-$owner
+cfosimage="fortinetwandy.azurecr.io/cfos:255"
+cfosnamespace="cfostest"
+```
+The k8s from ks8-101 might not have metallb installed, if so, install it. 
+
+**install metallb**
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
+kubectl rollout status deployment controller -n metallb-system
+
+local_ip=$(kubectl get node -o wide | grep 'control-plane' | awk '{print $6}')
+cat <<EOF | tee metallbippool.yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: first-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - $local_ip/32
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: example
+  namespace: metallb-system
+EOF
+kubectl apply -f metallbippool.yaml 
 ```
 
 ### Create Self-managed k8s

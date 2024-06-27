@@ -15,7 +15,9 @@ To install cFOS we have few steps.
 
 1. Create a name space for cfos ingress.
 
-```kubectl create namespace cfosingress```
+```bash
+kubectl create namespace cfosingress
+```
 
 2. Create a Secret and config map reader roles and role bindings. 
 
@@ -44,7 +46,7 @@ rolebinding.rbac.authorization.k8s.io/read-secrets configured
 
 create cfosimagepullsecret
 ```bash
-[ -n "$accessToken" ] && $scriptDir/imagepullsecret.yaml.sh || echo "please set \$accessToken"
+[ -n "$accessToken" ] && $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml.sh || echo "please set \$accessToken"
 kubectl apply -f cfosimagepullsecret.yaml -n cfosingress
 kubectl get sa -n cfosingress
 ```
@@ -67,7 +69,7 @@ EOF
 4. get your license file, then append the content to yaml file, replace “cfoslicense.lic” with your actual file name
 
 ```bash
-licfile="cfoslicense.lic"
+licfile="$scriptDir/CFOSVLTM24000016.lic"
 while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
 ```
 
@@ -124,7 +126,7 @@ spec:
           capabilities:
             add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
         ports:
-        - containerPort: 80
+        - containerPort: 443
         volumeMounts:
         - mountPath: /data
           name: data-volume
@@ -242,10 +244,13 @@ NAME                                      READY   STATUS    RESTARTS   AGE
 cfos7210250-deployment-76c8d56d75-7npvf   1/1     Running   0          3m41s
 ```
 
-15. copy the name of cFOS pod and run the below command
+15. get the name of cFOS pod and run the below command
 
-```kubectl exec --stdin --tty cfos7210250-deployment-796c859b4b-7npvf -- /bin/cli -n cfosingress```
-
+```bash
+podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+echo $podname 
+kubectl exec -it po/$podname -n cfosingress -- /bin/cli 
+```
 output:
 
 ```
@@ -257,8 +262,7 @@ User:
 17. on cFOS run the command:
 
 ```
-config system interface
-show
+show system interface
 ```
 
 output:
@@ -277,10 +281,21 @@ config system interface
 end
 ```
 
+you can config an cFOS API access port at 8080
+
+```
+config system global
+    set admin-port 8080
+    set admin-server-cert "Device"
+end
+```
+
 NOTE: Take note of IP address and exit out of container by typing **exit**
 
 18. Configure configmap to create VIP on cFOS to forward the traffic to nginx. 
 
+the `extip` on firewall vip config can use cFOS pod ip or use headless svc dns name.
+since the cFOS POD IP is not persistent, it will change if cFOS container restarted, so it's better to use dns name instead , which is headless svc created for cFOS, when use headless svc dns name, it will be resolved to actual interface ip. 
 
 ```bash
 nginxclusterip=$(kubectl get svc -l app=nginx  -o jsonpath='{.items[*].spec.clusterIP}')
@@ -384,20 +399,23 @@ Chain fcn_prenat (1 references)
 
 
 ```bash
-cat <<EOF | tee > cfoslbsvc.yaml
+cd $HOME
+svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d "." -f 1 | cut -d "/" -f 3)
+cat << EOF | tee > 03_single.yaml 
 apiVersion: v1
 kind: Service
 metadata:
-  name: cfos-service
+  name: cfos7210250-service
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 10.4.0.4
-    service.beta.kubernetes.io/azure-dns-label-name: k8straining-$(whoami)
+    managedByController: fortinetcfos
+    metallb.universe.tf/loadBalancerIPs: 10.0.0.4
+    service.beta.kubernetes.io/azure-dns-label-name: $svcname
 spec:
   sessionAffinity: ClientIP
   ports:
   - port: 8080
     name: cfos-restapi
-    targetPort: 443
+    targetPort: 8080
   - port: 8000
     name: cfos-goweb-default-1
     targetPort: 8000
@@ -409,43 +427,41 @@ spec:
   selector:
     app: cfos
   type: LoadBalancer
+
 EOF
-kubectl apply -f cfoslbsvc.yaml -n cfosingress
+kubectl apply -f 03_single.yaml  -n cfosingress
+kubectl rollout status deployment cfos7210250-deployment -n cfosingress
+sleep 5
+kubectl get svc cfos7210250-service  -n cfosingress
+
 ```
 
 20. If we now curl on the Loadbalance IP we should see the following responses:
 
+```bash
+curl  http://$svcname.$location.cloudapp.azure.com:8080
 ```
-sallam@master1:~$ curl 10.4.0.4:8080
+you shall got
+```
 welcome to the REST API server
-
-sallam@master1:~$ curl 10.4.0.4:8000
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-html { color-scheme: light dark; }
-body { width: 35em; margin: 0 auto;
-font-family: Tahoma, Verdana, Arial, sans-serif; }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
-
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
+```
+and 
+```bash
+curl http://$svcname.$location.cloudapp.azure.com:8000
+```
+you shall see output 
+```
+<html><body><form enctype="multipart/form-data" action="/upload" method="post">
+<input type="file" name="myFile" />
+<input type="submit" value="Upload" />
+</form></body></html>
+```
+and 
+```bash
+curl http://$svcname.$location.cloudapp.azure.com:8005
 ```
 
-or on the browser, try the Master_node_publicIP:Port
+or on the browser, try http://$svcname.$location.cloudapp.azure.com:8000 or http://$svcname.$location.cloudapp.azure.com:8005
 
 ![image1](../images/api.png)
 
@@ -490,6 +506,11 @@ Chain fcn_prenat (1 references)
 
 21. Try uploading the ecira file from eicar website. you should **not** see a successful upload. 
 
+```bash
+
+curl -F "file=@$scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/eicar_com.zip" http://$svcname.$location.cloudapp.azure.com:8000/upload
+cd $HOME
+```
 22. To Verify: 
 
 ```kubectl get pods```
@@ -497,7 +518,11 @@ Chain fcn_prenat (1 references)
 Copy the name of cfos pod:
 
 
-```kubectl exec --stdin --tty cfos7210250-deployment-796c859b4b-r2qjc -n cfosingress -- /bin/cli ```
+```bash
+podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+echo $podname 
+kubectl exec -it po/$podname -n cfosingress -- /bin/cli
+```
 
 Once logged in, run the log filter:
 
@@ -525,7 +550,9 @@ date=2024-05-22 time=20:04:49 eventtime=1716408289 tz="+0000" logid="0211008192"
 23. or you can also run the below commands to see the AV log. 
 
 ```bash
-kubectl exec -it po/-n cfos7210250-deployment-796c859b4b-r2qjc -n cfosingress -- sh```
+podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+echo $podname 
+kubectl exec -it po/$podname -n cfosingress -- sh
 cd /var/log/log
 tail virus.0
 ```
