@@ -1,5 +1,5 @@
 ---
-title: "Task 3 cFOS ingress protection quick demo"
+title: "Task 3 Create Kubernetes Cluster and do a quick cFOS ingress protection demo"
 weight: 3
 ---
 
@@ -25,9 +25,17 @@ cd $HOME/k8s-201-workshop
 git pull
 cd $HOME
 ```
+### Check your existing kubernetes
 
+if you are continue from k8s-101 session, you might already have kubernetes ready. then you can continue to use that k8s, if prefer to start with a new k8s installation, follow below to create either self-managed k8s or use AKS. 
+
+```bash
+kubectl get node
+```
 
 ### Create Self-managed k8s
+
+This task is going take around 10 minutes. 
 
 ```bash
 scriptDir="$HOME"
@@ -50,7 +58,8 @@ append "--enable-node-public-ip" if you want assign a public ip to worker node" 
 owner="tecworkshop"
 alias k="kubectl"
 currentUser=$(az account show --query user.name -o tsv)
-resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
+#resourceGroupName=$(az group list --query "[?tags.UserPrincipalName=='$currentUser'].name" -o tsv)
+resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv)
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
 svcname=$(whoami)-$owner
@@ -113,7 +122,7 @@ az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-e
 use below script to create imagepullsecret, replace acessToken below with real token 
 ```bash
 loginServer="fortinetwandy.azurecr.io"
-accessToken="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IklFTVI6TTdFRzpVV1JUOllIUEs6T1BZUTpZQjZNOjVUQ1M6S1RYRjpaQUhDOlZIRUw6RVVMUTo0SU1LIn0.eyJqdGkiOiI5NmY1NjZlOS1kNDU4LTQ4OWUtYmM1OC1jNTNhYjM5MTIzMjgiLCJzdWIiOiJ3YW5keUBmb3J0aW5ldC11cy5jb20iLCJuYmYiOjE3MTkzODU4MDksImV4cCI6MTcxOTM5NzUwOSwiaWF0IjoxNzE5Mzg1ODA5LCJpc3MiOiJBenVyZSBDb250YWluZXIgUmVnaXN0cnkiLCJhdWQiOiJmb3J0aW5ldHdhbmR5LmF6dXJlY3IuaW8iLCJ2ZXJzaW9uIjoiMS4wIiwicmlkIjoiMzkzYzEzYTJlNjE4NDk4ZDk0NDliMWUyZjRmMmUzMGQiLCJncmFudF90eXBlIjoicmVmcmVzaF90b2tlbiIsImFwcGlkIjoiMDRiMDc3OTUtOGRkYi00NjFhLWJiZWUtMDJmOWUxYmY3YjQ2IiwidGVuYW50IjoiOTQyYjgwY2QtMWIxNC00MmExLThkY2YtNGIyMWRlY2U2MWJhIiwicGVybWlzc2lvbnMiOnsiYWN0aW9ucyI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiLCJtZXRhZGF0YS9yZWFkIiwibWV0YWRhdGEvd3JpdGUiLCJkZWxldGVkL3JlYWQiLCJkZWxldGVkL3Jlc3RvcmUvYWN0aW9uIl19LCJyb2xlcyI6W119.xr0COT3yBRlzd3rJao_Oq0daHTmHE-6Abkl-cV87FVsbMkQApwTcMF4oV2yLruHF0XZhOnGIvAHtHKPPNxv9PcJE-piUJZmtvvta88U_U3wiqlFThkzpPIauOhx3tMcQNlsThFxjj1NKf_ZMiYkdg6qJWotTIxwy85vN3--NJ22ZEWmMBmQycdvGxH9S8i6kTqyqvw5F2ABTChbwA6nEIKJONGAHnA70tgXJHwkyvp7aNqIr2QQpDFM0_43as08LEzhwwheYYROkVAYiUmE8u7PV1q-ofq5VbC_4TkIaWguP7Id2bPNwn-ZD27GmGCiPrB2urI07KBbfQlUhPymylQ"
+accessToken="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IklFTVI6TTdFRzpVV1JUOllIUEs6T1BZUTpZQjZNOjVUQ1M6S1RYRjpaQUhDOlZIRUw6RVVMUTo0SU1LIn0.eyJqdGkiOiIzMmZkYWY5ZS04ZTFlLTRhODUtYmQ0My02NjBiYWI4NDM0YjIiLCJzdWIiOiJ3YW5keUBmb3J0aW5ldC11cy5jb20iLCJuYmYiOjE3MTk0NjY4MDgsImV4cCI6MTcxOTQ3ODUwOCwiaWF0IjoxNzE5NDY2ODA4LCJpc3MiOiJBenVyZSBDb250YWluZXIgUmVnaXN0cnkiLCJhdWQiOiJmb3J0aW5ldHdhbmR5LmF6dXJlY3IuaW8iLCJ2ZXJzaW9uIjoiMS4wIiwicmlkIjoiMzkzYzEzYTJlNjE4NDk4ZDk0NDliMWUyZjRmMmUzMGQiLCJncmFudF90eXBlIjoicmVmcmVzaF90b2tlbiIsImFwcGlkIjoiMDRiMDc3OTUtOGRkYi00NjFhLWJiZWUtMDJmOWUxYmY3YjQ2IiwidGVuYW50IjoiOTQyYjgwY2QtMWIxNC00MmExLThkY2YtNGIyMWRlY2U2MWJhIiwicGVybWlzc2lvbnMiOnsiYWN0aW9ucyI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiLCJtZXRhZGF0YS9yZWFkIiwibWV0YWRhdGEvd3JpdGUiLCJkZWxldGVkL3JlYWQiLCJkZWxldGVkL3Jlc3RvcmUvYWN0aW9uIl19LCJyb2xlcyI6W119.cibhsDcRt0Jw9L55u66sLByl1blVxlzGIGC_rJxiDWFsjcIzjLHVYriGXgRBT5TE1pqxyJ4dSV35X9ADEbpAIA8rwSdlNyAQIL0DQ58DFz5MjG8FvTjdu3A2xfW4wdIF9n-jPONp9hZWXixXbsU5BNgbAUxcs_thXetjBrxqFHuRQuUqPm08ScaI2kZFPAVe3jzLm4a4vMZJyC70H2hO16poei4ac6AK1Ho1JcKzPHPa8K6e9HT4LcXT6NI7RibkkVwEd5zipE46xT7VZgICFtgFKd0IvYEQsPY4CfB8KeYp4qXXBUZq6TLBYkbEcvTo5XnVWcwOizg2tIQrHHT1OA"
 echo $accessToken
 echo $loginServer 
 kubectl create namespace $cfosnamespace
@@ -184,7 +193,7 @@ client(1)---Internet--azure LB public IP/DNS(2) ---cFOS VIP+PORT(3) ---goweb clu
 
 ```bash
 cd $HOME
-#svcname=$(whoami)-$owner
+svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d "." -f 1 | cut -d "/" -f 3)
 cat << EOF | tee > 03_single.yaml 
 apiVersion: v1
 kind: Service
@@ -208,9 +217,9 @@ spec:
 EOF
 kubectl apply -f 03_single.yaml  -n $cfosnamespace
 kubectl rollout status deployment cfos7210250-deployment -n $cfosnamespace
-kubectl get svc cfos7210250-service  -n $cfosnamespace -w
+sleep 5
+kubectl get svc cfos7210250-service  -n $cfosnamespace 
 ```
-once you saw svc cfos7210250-service got EXTENRAL-IP, use `ctrl-c` break this command 
 
 ### Verify Result
 ```
