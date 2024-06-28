@@ -28,10 +28,12 @@ kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secre
 Add an imagePullSecret to this service account so a POD using this service account also include a image pull secret to pull container images:
 
 ```bash
-[ -n "$accessToken" ] && $scriptDir/imagepullsecret.yaml.sh || echo "please set \$accessToken"
-kubectl apply -f cfosimagepullsecret.yaml -n cfostest
+scriptDir=$HOME
+[ -n "$accessToken" ] && $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml.sh || echo "please set \$accessToken"
+kubectl replace -f cfosimagepullsecret.yaml -n cfostest
 kubectl get sa -n cfostest 
 ```
+
 patch serviceaccount with imagePullSecrets
 
 ```bash

@@ -16,6 +16,7 @@ Since multus is already installed, let confogure and secure pod to pod traffic w
 
 Configuration Details:
 
+
 - Create namespace for application 
 
 ```bash
@@ -167,7 +168,7 @@ this will create two subnets with single ip address 10.1.200.252/32  and 10.1.10
 
 **subnet 10.1.200.0/24**
 ```bash
-kubectl create namespace $cfosnamespace
+kubectl create namespace cfosegress
 cat << EOF | tee > nad_10_1_200_252_cfos.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
@@ -224,15 +225,19 @@ application which has route point to cFOS will always use cFOS on same worker no
 
 **create cfosimagepull secret**
 ```bash
-
+[ -n "$accessToken" ] && $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml.sh || echo "please set \$accessToken"
+kubectl apply -f cfosimagepullsecret.yaml -n cfosegress
+kubectl get sa -n cfosingress
 ```
 **create cfos license**
 ```bash
-
+licfile="$scriptDir/CFOSVLTM24000016.lic"
+while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
+kubectl create -f cfos_license.yaml -n cfosegress
 ```
 **create serviceaccount for cFOS**
 ```bash
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n $cfosnamespace
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n cfosegress
 ```
 **deploy cfos DS**
 
@@ -297,7 +302,8 @@ kubectl apply -f 02_create_cfos_ds.yaml -n cfosegress
 kubectl rollout status daemonset fos-multus-deployment -n cfosegress
 
 ```
-- create firewall policy
+- create firewall policy for east-west traffic 
+
 
 The firewall policy allow traffic from net1 to net2 inspected by firewall policy
 
@@ -385,5 +391,14 @@ Defaulted container "cfos7210250-container" out of: cfos7210250-container, init-
 date=2024-06-27 time=09:18:00 eventtime=1719479880 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.200.22 dstip=34.117.186.192 srcintf="net1" dstintf="eth0" sessionid=2 action="dropped" proto=6 service="HTTP" policyid=100 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=33352 dstport=80 hostname="ipinfo.io" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=265289730 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
 date=2024-06-27 time=09:37:35 eventtime=1719481055 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.100.22 dstip=10.1.200.22 srcintf="net2" dstintf="net1" sessionid=10 action="dropped" proto=6 service="HTTP" policyid=11 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=46952 dstport=80 hostname="10.1.200.22" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=265289733 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
 date=2024-06-27 time=09:37:41 eventtime=1719481061 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.200.22 dstip=10.1.100.22 srcintf="net1" dstintf="net2" sessionid=11 action="dropped" proto=6 service="HTTP" policyid=10 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=40358 dstport=80 hostname="10.1.100.22" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=265289734 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
+```
+
+
+- clean up
+
+```bash
+kubectl delete namespace app-1
+kubectl delete namespace app-2
+kubectl delete namespace cfosegress
 ```
 

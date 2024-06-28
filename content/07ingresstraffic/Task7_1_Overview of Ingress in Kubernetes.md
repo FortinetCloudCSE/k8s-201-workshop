@@ -6,6 +6,7 @@ weight: 1
 ---
 
 
+### cFOS overview 
 
 Container FortiOS, the operating system that powers Fortinet's security appliance as a container, can be integrated with Kubernetes to enhance the security of inbound traffic to your containers. This integration helps ensure that only legitimate and authorized traffic reaches your Kubernetes services while providing robust security features such as intrusion prevention, application control, and advanced threat protection.
 

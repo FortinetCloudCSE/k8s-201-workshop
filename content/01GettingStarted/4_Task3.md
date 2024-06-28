@@ -8,8 +8,6 @@ In this chapter, we will do
 - Get the script from github 
 - Get K8S ready
 - Set some Variable 
-- Create cFOS image pulling secret 
-- Creaet CFOS license
 
 
 
@@ -241,8 +239,9 @@ use below script to create a k8s secret for pulling cfos image from acr. you wil
 if you have your own cfos iamge hosted on other register. you can use that. but name secret with "cfosimagepullsecret". 
 {{% /notice %}}
 
+get your acr accessToken. paste to variable accessToken with below command
+
 ```bash
-got your acr accessToken. paste to variable accessToken with below command
 
 read -p "Paste your accessToken:|  " accessToken
 

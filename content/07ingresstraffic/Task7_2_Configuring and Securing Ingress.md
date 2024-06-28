@@ -5,9 +5,30 @@ menuTitle: "Ingress with cFOS"
 weight: 5
 ---
 
-## Ingress
+### Purpose
 
-![imageingress](../images/ingress.png)
+In this chapter, we are going to use cFOS to do an ingress Protection for target application.
+the target application is a web server which allow you to upload files. without use cFOS to pretect it,user can upload malicious file.
+but cFOS providing protection, cFOS can scan uploaded file , block it if its malicious.
+
+
+We use loadbalancer with public ip to get ingress traffic to target application. without use cFOS, the incoming traffic will go directly to backend application, with cFOS sitting in the middle, the loadbalancer will take the traffic to cFOS, then cFOS will use Firewall VIP redirect traffic to backend application with deep inspection.   
+
+
+**traffic diagram without use cFOS**
+
+![direct](../images/direct.png)
+
+**traffic diagram after use cFOS in the middle**
+
+with cFOS in the middle, it function as a reverse proxy.
+![proxyed](../images/trafficcfos.png)
+
+
+###  get cFOS license and imagepullsecret ready
+
+you shall already have cFOS license and cFOS image pull secret ready. if not. complete the task in Chapater 1 ,task 3. 
+
 
 **cFOS installation:**
 
@@ -21,18 +42,12 @@ kubectl create namespace cfosingress
 
 2. Create a Secret and config map reader roles and role bindings. 
 
-Use of Cluster Role for ConfigMap Reading:
+cFOS container will require priviledge to read configmap and secret from k8s, we will need create role for this. 
+if you interested to know more about role and role/binding. 
 
-Configuration Access: Applications or services may need to read configurations stored in ConfigMaps to adjust their operation according to the cluster environment.
-Reduced Permissions: By creating a Cluster Role that only allows reading ConfigMaps, you ensure that services or users can't alter the configuration, which helps in maintaining stability and predictability of services.
-
-Use of Cluster Role for Secret Reading:
-
-Sensitive Data Protection: Services or applications often need to read sensitive data at runtime to perform necessary operations like connecting to databases or accessing external APIs. A Cluster Role that allows reading Secrets can provide necessary access without exposing the ability to edit or manage these Secrets.
-Security Best Practices: It ensures adherence to the principle of least privilege, reducing the risk of accidental exposure or malicious modifications.
 
 ```bash
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n cfosingress
+kubectl create -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n cfosingress
 ```
 
 output:
@@ -44,41 +59,50 @@ clusterrole.rbac.authorization.k8s.io/secrets-reader configured
 rolebinding.rbac.authorization.k8s.io/read-secrets configured
 ```
 
-create cfosimagepullsecret
+3. create cfosimagepullsecret
+you shall already created cfosimagepullsecret in Chapter 1 task 3. but if you have not . you can use below script to create it.
+
 ```bash
+read -p "Paste your accessToken:|  " accessToken
+echo $accessToken 
 [ -n "$accessToken" ] && $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml.sh || echo "please set \$accessToken"
 kubectl apply -f cfosimagepullsecret.yaml -n cfosingress
-kubectl get sa -n cfosingress
+
 ```
-3. Create a configmap file for cfos license
+
+4. Create a configmap file for cfos license
+
+you shall already created configmap in Chapter 1 task 3. but if you have not . you can use below script to create it.
+get your license file, then append the content to yaml file, replace “cfoslicense.lic” with your actual file name
 
 ```bash
 cat <<EOF | tee cfos_license.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-    name: cfos-license
+    name: fos-license
     labels:
         app: fos
         category: license
 data:
     license: |+
 EOF
+
+cd $HOME
+cfoslicfilename="CFOSVLTM24000016.lic"
+[ ! -f $cfoslicfilename ] && read -p "Input your cfos license file name :|  " cfoslicfilename 
+while read -r line; do printf "      %s\n" "$line"; done < $cfoslicfilename >> cfos_license.yaml
+kubectl create -f cfos_license.yaml -n cfosingress
+
 ```
 
-4. get your license file, then append the content to yaml file, replace “cfoslicense.lic” with your actual file name
+5. check license configmap
+
+use `kubectl get cm fos-license -o yaml -n cfosingress` to check whether license is correct. or use script below to check
 
 ```bash
-licfile="$scriptDir/CFOSVLTM24000016.lic"
-while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
+diff -s -b <(k get cm fos-license -n cfosingress -o jsonpath='{.data}' | jq -r .license |  sed '${/^$/d}' ) $cfoslicfilename
 ```
-
-5. Apply the resource
-
- ```bash
-  kubectl create -f cfos_license.yaml -n cfosingress
-  ```
-
 
 6. To run the cfos deployment, copy the below code. This will create a deployment that utilizes the secret, configmap that was deployed.
 
@@ -141,16 +165,23 @@ spec:
       dnsPolicy: ClusterFirst
 EOF
 kubectl apply -f cfos7210250-deployment.yaml -n cfosingress
-kubectl rollout status deployment cfos7210250-deployment -n cfosingress
 ```
 
-output:
-
+check result with
+```bash
+kubectl get pod -n cfosingress
+``` 
+result
 ```
-deployment.apps/cfos7210250-deployment created
+NAME                                    READY   STATUS    RESTARTS   AGE
+cfos7210250-deployment-8b6d4b8b-ljjf5   1/1     Running   0          3m13s
 ```
+if you see POD is in "ErrImagePull" instead Running, check your imagepullsecret. 
 
-7. Lets create other services that will help to test egress traffic with cFOS.
+7. Create backend application and service
+
+Lets create file upload server application and nginx applicaiton, also expose them with clusterIP svc. 
+goweb and nginx application can be int any namespace. here we just use default namespace . 
 
 ```
 kubectl create deployment goweb --image=interbeing/myfmg:fileuploadserverx86 
@@ -158,6 +189,25 @@ kubectl expose  deployment goweb --target-port=80  --port=80
 kubectl create deployment nginx --image=nginx 
 kubectl expose deployment nginx --target-port=80 --port=80 
 ```
+check result with 
+`kubectl get svc goweb`, `kubectl get svc nginx`, `kubectl get ep goweb`, `kubectl get ep nginx`
+
+result 
+```
+kubectl get svc
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+goweb        ClusterIP   10.96.131.201   <none>        80/TCP    13m
+nginx        ClusterIP   10.96.200.35    <none>        80/TCP    13m
+```
+and
+```
+kubectl get ep
+NAME         ENDPOINTS           AGE
+goweb        10.224.0.13:80      15m
+kubernetes   20.121.91.175:443   153m
+nginx        10.224.0.28:80      15m
+```
+
 
 8. Since Cfos POD IP changes each time a pod is re-created. lets create a headless service.we will use the DNS of the service in VIP configuration. the DNS in kuvbernetes follows the notation: **<servicename>.<namespace>.svc.cluster.local**
 
@@ -177,8 +227,39 @@ spec:
       targetPort: 443
 EOF
 kubectl apply -f headlessservice.yaml -n cfosingress
-kubectl get svc -n cfosingress
+
 ```
+check result
+
+```bash
+kubectl get svc cfostest-headless -n cfosingress
+```
+result 
+```
+kubectl get svc cfostest-headless -n cfosingress
+NAME                TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+cfostest-headless   ClusterIP   None         <none>        443/TCP   46s
+```
+
+the cfostest-headless is a headless server, so there is no CLUSTER-IP assigned. when we use dns name to reach it 
+it will use dns to resolve it to it's backend application ip. for example
+
+
+```bash
+podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n cfosingress -- ip address 
+kubectl exec -it po/$podname -n cfosingress -- ping cfostest-headless.cfosingress.svc.cluster.local
+```
+result
+
+```
+Defaulted container "cfos7210250-container" out of: cfos7210250-container, init-myservice (init)
+PING cfostest-headless.cfosingress.svc.cluster.local (10.224.0.26): 56 data bytes
+64 bytes from 10.224.0.26: seq=0 ttl=64 time=0.050 ms
+64 bytes from 10.224.0.26: seq=1 ttl=64 time=0.066 ms
+```
+you will found the ip address 10.224.0.26 actually is cFOS interface ip. so we can use cfostest-headless.cfosingress.svc.cluster.local instead 10.224.0.26 in cFOS VIP configuratin. 
+
 
 9. once the services are deployed, take a note of service Cluster-IP's by running 
 
@@ -195,99 +276,26 @@ kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP   3h12m   <none>
 nginx        ClusterIP   10.96.166.251   <none>        80/TCP    31m     app=nginx
 ```
 
-10. Install metalb loadbalancer to expose the cfos service. 
+14. Create configmap to enable cFOS rest api on port 8080
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
-kubectl rollout status deployment controller -n metallb-system
-```
-
-11. create ippool for metallb 
-
-```bash
-local_ip=$(kubectl get node -o wide | grep 'control-plane' | awk '{print $6}')
-cat <<EOF | tee metallbippool.yaml
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
+cat << EOF | tee rest8080.yaml
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: first-pool
-  namespace: metallb-system
-spec:
-  addresses:
-  - $local_ip/32
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: example
-  namespace: metallb-system
+  name: restapi
+  labels:
+      app: fos
+      category: config
+data:
+  type: partial
+  config: |- 
+     config system global
+       set admin-port 8080
+       set admin-server-cert "Device"
+     end
 EOF
-```
-
-```kubectl apply -f metallbippool.yaml```
-
-12. Verify the ip pool is created 
-
-```kubectl get ipaddresspool -n metallb-system```
-
-13. Before we expose the cFOS service, we need to create VIP, Firewall policy so we can have the inbound traffic through cFOS to get to nginx, goweb applicatios.
-
-
-14. To run FOS commands we need to connect to the cFOS container.
-
-Run ```kubectl get pods -n cfosingress```
-
-output: 
-
-```bash
-NAME                                      READY   STATUS    RESTARTS   AGE
-cfos7210250-deployment-76c8d56d75-7npvf   1/1     Running   0          3m41s
-```
-
-15. get the name of cFOS pod and run the below command
-
-```bash
-podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
-echo $podname 
-kubectl exec -it po/$podname -n cfosingress -- /bin/cli 
-```
-output:
-
-```
-User: 
-```
-
-16. User: admin, password: none just hit enter.
-
-17. on cFOS run the command:
-
-```
-show system interface
-```
-
-output:
-
-```
-config system interface
-    edit "eth0"
-        set ip 10.224.0.12 255.255.255.0
-        set macaddr ca:4f:53:54:d3:d9
-        config ipv6
-            set ip6-address fe80::c84f:53ff:fe54:d3d9/64
-        end
-    next
-    edit "any"
-    next
-end
-```
-
-you can config an cFOS API access port at 8080
-
-```
-config system global
-    set admin-port 8080
-    set admin-server-cert "Device"
-end
+kubectl apply -f rest8080.yaml -n cfosingress
 ```
 
 NOTE: Take note of IP address and exit out of container by typing **exit**
@@ -336,6 +344,11 @@ kubectl create -f cfosconfigmapfirewallvip.yaml -n cfosingress
 ```
 
 once configured, from cFOS shell , you shall able to find  from "iptables -t nat -L -v"
+```bash
+podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+echo $podname 
+kubectl exec -it po/$podname -n cfosingress -- iptables -t nat -L -v
+```
 
 ```
 Chain fcn_dnat (1 references)
@@ -343,8 +356,8 @@ Chain fcn_dnat (1 references)
     0     0 DNAT       tcp  --  eth0   any     anywhere             cfos7210250-deployment-76c8d56d75-7npvf  tcp dpt:8005 to:10.96.166.251:80
     0     0 DNAT       tcp  --  eth0   any     anywhere             cfos7210250-deployment-76c8d56d75-7npvf  tcp dpt:8000 to:10.96.20.122:80
 
-# 
 ```
+
 18. Create Firewall policy configmap to allow the inbound traffic to both the VIP's. 
 
 ```bash
@@ -383,8 +396,14 @@ EOF
 kubectl create -f cfosconfigmapfirewallpolicy.yaml -n cfosingress
 ```
 once configured. you can find additional nat rule  from `iptables -t nat -L -v`
+```bash
+podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+echo $podname 
+kubectl exec -it po/$podname -n cfosingress -- iptables -t nat -L -v
 ```
+you shall see 
 
+```
 Chain fcn_nat (1 references)
  pkts bytes target     prot opt in     out     source               destination         
     0     0 MASQUERADE  tcp  --  any    any     anywhere             nginx.default.svc.cluster.local  ctorigdst cfos7210250-deployment-76c8d56d75-7npvf ctorigdstport 8005 connmark match  0x10000/0xff0000
@@ -395,12 +414,15 @@ Chain fcn_prenat (1 references)
     0     0 CONNMARK   all  --  eth0   any     anywhere             anywhere             state NEW CONNMARK xset 0x10000/0xff0000
 ```
 
-19. Now exit out of container to expose the cFOS service through metallb.
+19. Now exit out of container to expose the cFOS service through azure LB or metalla if you on self-managed k8s
 
 
 ```bash
 cd $HOME
 svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d "." -f 1 | cut -d "/" -f 3)
+metallbip=$(kubectl get ipaddresspool -n metallb-system -o jsonpath='{.items[*].spec.addresses[0]}' | cut -d '/' -f 1)
+echo use pool ipaddress $metallbip for svc 
+
 cat << EOF | tee > 03_single.yaml 
 apiVersion: v1
 kind: Service
@@ -408,7 +430,7 @@ metadata:
   name: cfos7210250-service
   annotations:
     managedByController: fortinetcfos
-    metallb.universe.tf/loadBalancerIPs: 10.0.0.4
+    metallb.universe.tf/loadBalancerIPs: $metallbip
     service.beta.kubernetes.io/azure-dns-label-name: $svcname
 spec:
   sessionAffinity: ClientIP
@@ -552,8 +574,11 @@ date=2024-05-22 time=20:04:49 eventtime=1716408289 tz="+0000" logid="0211008192"
 ```bash
 podname=$(kubectl get pod -n cfosingress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
 echo $podname 
-kubectl exec -it po/$podname -n cfosingress -- sh
-cd /var/log/log
-tail virus.0
+kubectl exec -it po/$podname -n cfosingress -- tail /var/log/log/virus.0
 ```
 
+- clean up
+
+```bash
+kubectl delete namespace cfosingress
+```

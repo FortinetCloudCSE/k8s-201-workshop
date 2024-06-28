@@ -125,7 +125,7 @@ Here is the brief purpose of mentioned capabilites
 
 ```
 kubectl create namespace cfostest
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+kubectl create -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
 - deploy cfos  deployment
 

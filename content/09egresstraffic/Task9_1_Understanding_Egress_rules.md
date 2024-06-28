@@ -169,7 +169,7 @@ this will create two subnets with single ip address 10.1.200.252/32  and 10.1.10
 
 **subnet 10.1.200.0/24**
 ```bash
-kubectl create namespace $cfosnamespace
+kubectl create namespace cfosegress
 cat << EOF | tee > nad_10_1_200_252_cfos.yaml 
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
@@ -226,15 +226,19 @@ application which has route point to cFOS will always use cFOS on same worker no
 
 **create cfosimagepull secret**
 ```bash
-
+[ -n "$accessToken" ] && $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml.sh || echo "please set \$accessToken"
+kubectl apply -f cfosimagepullsecret.yaml -n cfosegress
+kubectl get sa -n cfosingress
 ```
 **create cfos license**
 ```bash
-
+licfile="$scriptDir/CFOSVLTM24000016.lic"
+while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
+kubectl create -f cfos_license.yaml -n cfosegress
 ```
 **create serviceaccount for cFOS**
 ```bash
-kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n $cfosnamespace
+kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n cfosegress
 ```
 **deploy cfos DS**
 
@@ -353,15 +357,41 @@ EOF
 kubectl apply -f net1net2cmtointernetfirewallpolicy.yaml -n cfosegress
 ```
 
-- Send malicious traffic
+- Send Normal traffic from app-1 namespace pod
+
+this traffic will be send to cFOS to reach internet 
 
 ```bash
 k exec -it po/diag200 -n app-1 -- curl ipinfo.io
-k exec -it po/diag200 -n app-1 -- curl -H "User-Agent: () { :; }; /bin/ls" http://ipinfo.io
+```
+you shall see output 
+```
+{
+  "ip": "52.179.92.240",
+  "city": "Ashburn",
+  "region": "Virginia",
+  "country": "US",
+  "loc": "39.0437,-77.4875",
+  "org": "AS8075 Microsoft Corporation",
+  "postal": "20147",
+  "timezone": "America/New_York",
+  "readme": "https://ipinfo.io/missingauth"
+}
+```
 
+- Send malicous traffic 
+
+```bash
+kubectl exec -it po/diag200 -n app-1 -- curl -H "User-Agent: () { :; }; /bin/ls" http://ipinfo.io
+```
+it's expected that you wont get response as it droped by cFOS.
+
+
+- do same on app-2
+
+```bash
 k exec -it po/diag100 -n app-2 -- curl ipinfo.io
 k exec -it po/diag100 -n app-2 -- curl -H "User-Agent: () { :; }; /bin/ls" http://ipinfo.io
-
 
 ```
 - Check Result
@@ -377,5 +407,13 @@ expected output
 date=2024-06-27 time=08:09:14 eventtime=1719475754 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.200.20 dstip=34.117.186.192 srcintf="net1" dstintf="eth0" sessionid=3 action="dropped" proto=6 service="HTTP" policyid=100 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=60598 dstport=80 hostname="ipinfo.io" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=157286403 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
 date=2024-06-27 time=08:15:50 eventtime=1719476150 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.200.20 dstip=34.117.186.192 srcintf="net1" dstintf="eth0" sessionid=5 action="dropped" proto=6 service="HTTP" policyid=100 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=41864 dstport=80 hostname="ipinfo.io" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=157286406 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
 date=2024-06-27 time=08:16:09 eventtime=1719476169 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.100.20 dstip=34.117.186.192 srcintf="net1" dstintf="eth0" sessionid=7 action="dropped" proto=6 service="HTTP" policyid=100 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=39216 dstport=80 hostname="ipinfo.io" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=157286409 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
+```
+
+- clean up
+
+```bash
+kubectl delete namespace app-1
+kubectl delete namespace app-2
+kubectl delete namespace cfosegress
 ```
 
