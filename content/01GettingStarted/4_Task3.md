@@ -1,20 +1,18 @@
 ---
-title: "Task 3 Create Kubernetes Cluster and do a quick cFOS ingress protection demo"
+title: "Task 3  Get Kubernetes Ready"
 weight: 3
 ---
 
-### Purpose
+In this chapter, we will do 
 
-In this chapter, we going to setup a end to end demo to secure traffic from internet to application deployed in aks cluster. we will use aks loadBalancer SVC to create loadbalancer svc to backend application.
+- Get the script from github 
+- Get K8S ready
+- Set some Variable 
+- Create cFOS image pulling secret 
+- Creaet CFOS license
 
-**traffic diagram without use cFOS**
 
-![direct](../images/direct.png)
 
-**traffic diagram after use cFOS in the middle**
-
-with cFOS in the middle, it function as a reverse proxy. 
-![proxyed](../images/trafficcfos.png)
 
 ### Clone script from github
 
@@ -25,13 +23,22 @@ cd $HOME/k8s-201-workshop
 git pull
 cd $HOME
 ```
-### Continue from K8S 101 workshop
+### Get K8S ready
+
+#### Option 1 : Continue from K8S-101 session 
 
 if you are continue from k8s-101 session, you shall already have k8s installed. 
 
+**check your k8s**
+
+```bash
+kubectl get node -o wide
+
+```
+you shall have a K8S ready 
+
 **setup some variable** 
 ```bash
-kubectl get node
 owner="tecworkshop"
 alias k="kubectl"
 currentUser=$(az account show --query user.name -o tsv)
@@ -41,8 +48,35 @@ scriptDir="$HOME"
 svcname=$(whoami)-$owner
 cfosimage="fortinetwandy.azurecr.io/cfos:255"
 cfosnamespace="cfostest"
+
+cat << EOF | tee > $HOME/variable.sh
+#!/bin/bash -x
+owner="tecworkshop"
+alias k="kubectl"
+currentUser=$(az account show --query user.name -o tsv)
+resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && contains(name, 'workshop')].name" -o tsv)
+location=$(az group show --name $resourceGroupName --query location -o tsv)
+scriptDir="$HOME"
+svcname=$(whoami)-$owner
+cfosimage="fortinetwandy.azurecr.io/cfos:255"
+cfosnamespace="cfostest"
+EOF
+echo location=$location >> $HOME/variable.sh
+echo owner=$owner >> $HOME/variable.sh
+echo scriptDir=$scriptDir >> $HOME/variable.sh
+echo cfosimage=$cfosimage >> $HOME/variable.sh
+echo resourceGroupName=$resourceGroupName >> $HOME/variable.sh
+chmod +x $HOME/variable.sh
+line='if [ -f "$HOME/variable.sh" ]; then source $HOME/variable.sh ; fi'
+grep -qxF "$line" ~/.bashrc || echo "$line" >> ~/.bashrc
+source $HOME/variable.sh
+$HOME/variable.sh
+if [ -f $HOME/.ssh/known_hosts ]; then
+grep -qxF "$vm_name" "$HOME/.ssh/known_hosts"  && ssh-keygen -R "$vm_name"
+fi
+
 ```
-The k8s from ks8-101 might not have metallb installed, if so, install it. 
+if this k8s is self-managed k8s, then you might not have metallb install , you need install that .
 
 **install metallb**
 ```bash
@@ -68,10 +102,41 @@ metadata:
 EOF
 kubectl apply -f metallbippool.yaml 
 ```
+**Verify your environement**
 
-### Create Self-managed k8s
+```bash
+kubectl get node -o wide
+```
+Both node shall in Ready status
+```
+NAME          STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+node-worker   Ready    <none>          4m24s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.4 LTS   6.5.0-1022-azure   cri-o://1.25.4
+nodemaster    Ready    control-plane   9m30s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.4 LTS   6.5.0-1022-azure   cri-o://1.25.4
+```
+check whether any of below variable is empty. 
 
-This task is going take around 10 minutes. 
+```bash
+echo ReousrceGroup  = $resourceGroupName
+echo Location = $location
+echo ScriptDir = $scriptDir
+echo cFOS docker image = $cfosimage
+echo cFOS NameSpace= $cfosnamespace
+```
+
+you shall see result like
+
+```
+ReousrceGroup = k8s54-k8s101-workshop
+Location = eastus
+ScriptDir = /home/k8s54
+cFOS docker image = fortinetwandy.azurecr.io/cfos:255
+cFOS Name Space= cfostest
+```
+
+#### Option 2: Create Self-managed k8s
+
+if you are on K8s-201 workshop, you can directly create a self-managed k8s, it will take around 10 minutes.
+if you want use AKS instead self-managed k8s, skip this. 
 
 ```bash
 scriptDir="$HOME"
@@ -82,8 +147,10 @@ svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d 
 echo $svcname
 ```
 
-### or Create aks cluster 
-create aks cluster 
+#### Option 3: Create AKS 
+
+if you do not want use self-managed k8s, you can use AKS instead. 
+
 
 {{% notice style="tip" %}}
 append "--enable-node-public-ip" if you want assign a public ip to worker node" ,without public-ip for worker node, container will not able to use ping to reach internet
@@ -152,14 +219,35 @@ az aks create \
     --ssh-key-value ~/.ssh/${rsakeyname}.pub
 az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-existing
 
+```
+
+**check your AKS**
+```bash
+kubectl get node -o wide
+```
+
+you shall see single worker node only. because this is a managed k8s, the master node is hidden from you. you might also noticed that the container runtime is containerd. 
 
 ```
-### create image pull secret for k8s 
-use below script to create imagepullsecret, replace acessToken below with real token 
+NAME                             STATUS   ROLES   AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+aks-worker-39339143-vmss000000   Ready    agent   47m   v1.28.9   10.224.0.4    <none>        Ubuntu 22.04.4 LTS   5.15.0-1066-azure   containerd://1.7.15-1
+```
+
+### Create image pull secret for k8s 
+
+use below script to create a k8s secret for pulling cfos image from acr. you will need an accessToken from acr to create a token.
+
+{{% notice style="tip" %}}
+if you have your own cfos iamge hosted on other register. you can use that. but name secret with "cfosimagepullsecret". 
+{{% /notice %}}
+
 ```bash
-loginServer="fortinetwandy.azurecr.io"
-accessToken="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IklFTVI6TTdFRzpVV1JUOllIUEs6T1BZUTpZQjZNOjVUQ1M6S1RYRjpaQUhDOlZIRUw6RVVMUTo0SU1LIn0.eyJqdGkiOiIzMmZkYWY5ZS04ZTFlLTRhODUtYmQ0My02NjBiYWI4NDM0YjIiLCJzdWIiOiJ3YW5keUBmb3J0aW5ldC11cy5jb20iLCJuYmYiOjE3MTk0NjY4MDgsImV4cCI6MTcxOTQ3ODUwOCwiaWF0IjoxNzE5NDY2ODA4LCJpc3MiOiJBenVyZSBDb250YWluZXIgUmVnaXN0cnkiLCJhdWQiOiJmb3J0aW5ldHdhbmR5LmF6dXJlY3IuaW8iLCJ2ZXJzaW9uIjoiMS4wIiwicmlkIjoiMzkzYzEzYTJlNjE4NDk4ZDk0NDliMWUyZjRmMmUzMGQiLCJncmFudF90eXBlIjoicmVmcmVzaF90b2tlbiIsImFwcGlkIjoiMDRiMDc3OTUtOGRkYi00NjFhLWJiZWUtMDJmOWUxYmY3YjQ2IiwidGVuYW50IjoiOTQyYjgwY2QtMWIxNC00MmExLThkY2YtNGIyMWRlY2U2MWJhIiwicGVybWlzc2lvbnMiOnsiYWN0aW9ucyI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiLCJtZXRhZGF0YS9yZWFkIiwibWV0YWRhdGEvd3JpdGUiLCJkZWxldGVkL3JlYWQiLCJkZWxldGVkL3Jlc3RvcmUvYWN0aW9uIl19LCJyb2xlcyI6W119.cibhsDcRt0Jw9L55u66sLByl1blVxlzGIGC_rJxiDWFsjcIzjLHVYriGXgRBT5TE1pqxyJ4dSV35X9ADEbpAIA8rwSdlNyAQIL0DQ58DFz5MjG8FvTjdu3A2xfW4wdIF9n-jPONp9hZWXixXbsU5BNgbAUxcs_thXetjBrxqFHuRQuUqPm08ScaI2kZFPAVe3jzLm4a4vMZJyC70H2hO16poei4ac6AK1Ho1JcKzPHPa8K6e9HT4LcXT6NI7RibkkVwEd5zipE46xT7VZgICFtgFKd0IvYEQsPY4CfB8KeYp4qXXBUZq6TLBYkbEcvTo5XnVWcwOizg2tIQrHHT1OA"
+got your acr accessToken. paste to variable accessToken with below command
+
+read -p "Paste your accessToken:|  " accessToken
+
 echo $accessToken
+loginServer="fortinetwandy.azurecr.io"
 echo $loginServer 
 kubectl create namespace $cfosnamespace
 kubectl create secret -n $cfosnamespace docker-registry cfosimagepullsecret \
@@ -169,131 +257,38 @@ kubectl create secret -n $cfosnamespace docker-registry cfosimagepullsecret \
     --docker-email=wandy@fortinet.com
 ```
 
-
+**Verify the secret**
+```bash
+kubectl get secret -n cfostest 
+```
+shall see
+```
+NAME                  TYPE                             DATA   AGE
+cfosimagepullsecret   kubernetes.io/dockerconfigjson   1      38m
+```
 
 ### Create cFOS configmap license 
-upload you license via azue shell Manag files feature  to upload your cFOS license file. 
+
+cFOS require a license to be functional. once you got your license actived, download the license file and then upload to azure shell. 
 do not change or modify license file. 
 
 ![imageuploadlicensefile](../images/uploadLicense.png)
 
-assume you have downloaded cFOS license file and alread uploaded to your azure cloud shell. the cFOS license file has name "CFOSVLTM24000016.lic".  without need modify any content for your cFOS license. use below script to create a configmap file for cFOS license. once cFOS POD up , it will automatically get the configmap to apply the license. 
+assume you have downloaded cFOS license file and alread uploaded to your azure cloud shell. the cFOS license file has name "CFOSVLTM24000016.lic".  without need modify any content for your cFOS license. use below script to create a configmap file for cFOS license. once cFOS container boot up , it will automatically get the configmap to apply the license. 
 
 ```bash
 cd $HOME
-$scriptDir/k8s-201-workshop/scripts/cfos/generatecfoslicensefromvmlicense.sh CFOSVLTM24000016.lic
+cfoslicfilename="CFOSVLTM24000016.lic"
+[ ! -f $cfoslicfilename ] && read -p "Input your cfos license file name :|  " cfoslicfilename
+$scriptDir/k8s-201-workshop/scripts/cfos/generatecfoslicensefromvmlicense.sh $cfoslicfilename
 kubectl apply -f cfos_license.yaml -n $cfosnamespace
 ```
 
-### Quick Demo
+**check license configmap**
 
-With cFOS license and cFOS image pull secret ready, we are ready to do a quick demo. 
-in this demo, we will create a loadBalancer svc for backend web application, then we deploy a cfos controller, this cfos controller will deploy a cFOS and then create a reverse proxy with VIP on CFOS to pretect http traffic ingress to this web application, the cFOS configuration will be done by cFOS controller automatically, in Chapter 6, you will do same but without rely on cFOS controller. 
-
-
-**create cfos controller** 
-{{% notice style="info" %}}
-please be aware the cfos controller is only for demo purpose, this is NOT A PRODUCT from fortinet. it is build for this demo only. 
-{{% /notice %}}
-
-the cfos controller use below preconfigred variable 
-```
-  cfosContainerImage: "fortinetwandy.azurecr.io/cfos:255"
-  cfosImagePullSecret: "cfosimagepullsecret"
-  managedByController: "fortinetcfos"
-  cfosNameSpace: "cfostest"
-```
-if you use different cfosContainerImage repo or namespace etc, make sure modify 04_deploy_cfos_controller.yaml to match with actual variable before deploy cfoscontroller.
+use `kubectl get cm fos-license -o yaml` to check whether license is correct. or use script below to check 
 
 ```bash
-cd $HOME
-kubectl  apply -f $scriptDir/k8s-201-workshop/scripts/cfos/04_deploy_cfos_controller.yaml
+diff -s -b <(k get cm fos-license -n cfostest -o jsonpath='{.data}' | jq -r .license |  sed '${/^$/d}' ) $cfoslicfilename
 ```
-**create backend application and clusterip SVC**
-```bash
-kubectl create deployment goweb --image=interbeing/myfmg:fileuploadserverx86
-kubectl expose  deployment goweb --target-port=80  --port=80
-```
-**create loadBalancer SVC** 
-
-Below yaml file will create a loadbalancer SVC, this service will exposed TCP port 8888 to internet via azure LB,the target endpoint will be cfos container on tcp port 8888 based on selector **app: cfos** and **targetPort** field in spec , then cFOS controller will config CFOS with cFOS POD IP + 8888 as VIP and map to actual application goweb clusterIP+tcp port 80. goweb application can in any namespace like belew use namespace default. 
-
-The traffic path will be 
-client(1)---Internet--azure LB public IP/DNS(2) ---cFOS VIP+PORT(3) ---goweb cluster ip:port(4) --goweb POD IP:PORT(5)
-
-- (1) client can be azure cloud shell or your laptop browser 
-- (2) DNS name will be $svcname.$location.cloudapp.azure.com
-- (3) cFOS port1 IP + VIP PORT 8888
-- (4) goweb cluster ip for example 10.96.240.247:80 
-- (5) goweb POD IP + PORT for example 10.224.0.19:80
-
-```bash
-cd $HOME
-svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d "." -f 1 | cut -d "/" -f 3)
-cat << EOF | tee > 03_single.yaml 
-apiVersion: v1
-kind: Service
-metadata:
-  name: cfos7210250-service
-  annotations:
-    managedByController: fortinetcfos
-    metallb.universe.tf/loadBalancerIPs: 10.0.0.4
-    service.beta.kubernetes.io/azure-dns-label-name: $svcname
-spec:
-  sessionAffinity: ClientIP
-  ports:
-  - port: 8888
-    name: cfos-goweb-default-1
-    targetPort: 8888
-    protocol: TCP
-  selector:
-    app: cfos
-  type: LoadBalancer
-
-EOF
-kubectl apply -f 03_single.yaml  -n $cfosnamespace
-kubectl rollout status deployment cfos7210250-deployment -n $cfosnamespace
-sleep 5
-kubectl get svc cfos7210250-service  -n $cfosnamespace 
-```
-
-### Verify Result
-```
-
-curl http://$svcname.$location.cloudapp.azure.com:8888
-
-```
-you shall see output 
-```
-<html><body><form enctype="multipart/form-data" action="/upload" method="post">
-<input type="file" name="myFile" />
-<input type="submit" value="Upload" />
-```
-
-### Clean up 
-```bash
-cd $HOME
-kubectl delete namespace $cfosnamespace
-kubectl delete -f $scriptDir/k8s-201-workshop/scripts/cfos/04_deploy_cfos_controller.yaml
-kubectl delete sa sa-cfoscontrolleramd64alpha16
-kubectl delete deployment goweb
-kubectl delete svc goweb
-#az aks delete --name ${aksClusterName} -g ${resourceGroupName}
-```
-### Q&A
-
-**Question**
-What is the benefit of using cFOS to pretect ingress traffic compare with use Fortigate OS VM or appliance ?
-
-
-**Answer**
-
-- K8s Native 
-
-with cFOS controller, end-user even does not require any knowledge of network or fortios cli. end-user only require create or modify existing loadBalancer SVC yaml file and deploy them use kubectl. that's ALL.
-
-
-- secure POD to POD traffic and VM to POD traffic.
-FortiGate VM/appliance can not protect traffic within VNET if Fortigate deployed outside of VNET.
-but with cFOS, you can easiy secure traffic between POD to POD and VM to POD without introduce other component. 
 
