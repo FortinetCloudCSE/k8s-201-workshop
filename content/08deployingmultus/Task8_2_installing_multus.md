@@ -15,7 +15,10 @@ The most common way to install Multus is via a Kubernetes manifest file, which s
 
     You can find the latest configuration on the Multus GitHub repository (Multus CNI on GitHub). Typically, you would use the multus.yaml from the repo. This YAML file contains the configuration for the Multus DaemonSet along with the necessary ClusterRole, ClusterRoleBinding, and ServiceAccount.
 
-    ```kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick.yml```
+```bash
+kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick.yml
+kubectl rollout status ds/kube-multus-ds -n kube-system
+```
 
     output: 
 
@@ -28,16 +31,17 @@ The most common way to install Multus is via a Kubernetes manifest file, which s
     daemonset.apps/kube-multus-ds configured
     ```
 
-    ```kubectl get pods --all-namespaces | grep -i multus```
+```bash
+kubectl get pod -n kube-system -l app=multus
+```
+result
+```
+NAME                   READY   STATUS    RESTARTS   AGE
+kube-multus-ds-qlmrf   1/1     Running   0          88s
+```
 
-    output:
 
-    ```
-    sallam@master1:~$ sudo kubectl get pods --all-namespaces | grep -i multus
-    default            fos-multus-deployment-5c64cf64b8-jdpb4     1/1     Running   1               5d22h
-    kube-system        kube-multus-ds-95mls                       1/1     Running   0               17s
-    kube-system        kube-multus-ds-cx2gj                       1/1     Running   0               4s
-    ```
+
 
     You may further validate that it has ran by looking at the /etc/cni/net.d/ directory and ensure that the auto-generated /etc/cni/net.d/00-multus.conf exists corresponding to the alphabetically first configuration file.
 

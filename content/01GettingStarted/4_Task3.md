@@ -5,23 +5,18 @@ weight: 3
 
 In this chapter, we will do 
 
-- Get the script from github 
 - Get K8S ready
+- Get the script from github 
 - Set some Variable 
 
 
-
-
-### Clone script from github
-
-```bash
-cd $HOME
-git clone https://github.com/FortinetCloudCSE/k8s-201-workshop.git
-cd $HOME/k8s-201-workshop
-git pull
-cd $HOME
-```
 ### Get K8S ready
+
+You have mutliple option for setup K8S:
+
+1.  if you are on k8s-101 environment, you can continue to this k8s-101 environment and choose [Option 1](http://localhost:1313/UserRepo/01gettingstarted/4_task3.html#option-1--continue-from-k8s-101-session). 
+2.  if you are on k8s-201 environment, choose [option 2](http://localhost:1313/UserRepo/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s)  or [option 3](http://localhost:1313/UserRepo/01gettingstarted/4_task3.html#option-3-create-aks)  start from k8s-201 directly 
+
 
 #### Option 1 : Continue from K8S-101 session 
 
@@ -149,6 +144,8 @@ echo $svcname
 
 if you do not want use self-managed k8s, you can use AKS instead. 
 
+below script will create single node AKS cluster. 
+
 
 {{% notice style="tip" %}}
 append "--enable-node-public-ip" if you want assign a public ip to worker node" ,without public-ip for worker node, container will not able to use ping to reach internet
@@ -224,70 +221,10 @@ az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-e
 kubectl get node -o wide
 ```
 
-you shall see single worker node only. because this is a managed k8s, the master node is hidden from you. you might also noticed that the container runtime is containerd. 
+you shall see single worker node only. because this is a managed k8s, the master node is hidden from you. you might also noticed that the container runtime is **containerd**. 
 
 ```
 NAME                             STATUS   ROLES   AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
 aks-worker-39339143-vmss000000   Ready    agent   47m   v1.28.9   10.224.0.4    <none>        Ubuntu 22.04.4 LTS   5.15.0-1066-azure   containerd://1.7.15-1
-```
-
-### Create image pull secret for k8s 
-
-use below script to create a k8s secret for pulling cfos image from acr. you will need an accessToken from acr to create a token.
-
-{{% notice style="tip" %}}
-if you have your own cfos iamge hosted on other register. you can use that. but name secret with "cfosimagepullsecret". 
-{{% /notice %}}
-
-get your acr accessToken. paste to variable accessToken with below command
-
-```bash
-
-read -p "Paste your accessToken:|  " accessToken
-
-echo $accessToken
-loginServer="fortinetwandy.azurecr.io"
-echo $loginServer 
-kubectl create namespace $cfosnamespace
-kubectl create secret -n $cfosnamespace docker-registry cfosimagepullsecret \
-    --docker-server=$loginServer \
-    --docker-username=00000000-0000-0000-0000-000000000000 \
-    --docker-password=$accessToken \
-    --docker-email=wandy@fortinet.com
-```
-
-**Verify the secret**
-```bash
-kubectl get secret -n cfostest 
-```
-shall see
-```
-NAME                  TYPE                             DATA   AGE
-cfosimagepullsecret   kubernetes.io/dockerconfigjson   1      38m
-```
-
-### Create cFOS configmap license 
-
-cFOS require a license to be functional. once you got your license actived, download the license file and then upload to azure shell. 
-do not change or modify license file. 
-
-![imageuploadlicensefile](../images/uploadLicense.png)
-
-assume you have downloaded cFOS license file and alread uploaded to your azure cloud shell. the cFOS license file has name "CFOSVLTM24000016.lic".  without need modify any content for your cFOS license. use below script to create a configmap file for cFOS license. once cFOS container boot up , it will automatically get the configmap to apply the license. 
-
-```bash
-cd $HOME
-cfoslicfilename="CFOSVLTM24000016.lic"
-[ ! -f $cfoslicfilename ] && read -p "Input your cfos license file name :|  " cfoslicfilename
-$scriptDir/k8s-201-workshop/scripts/cfos/generatecfoslicensefromvmlicense.sh $cfoslicfilename
-kubectl apply -f cfos_license.yaml -n $cfosnamespace
-```
-
-**check license configmap**
-
-use `kubectl get cm fos-license -o yaml` to check whether license is correct. or use script below to check 
-
-```bash
-diff -s -b <(k get cm fos-license -n cfostest -o jsonpath='{.data}' | jq -r .license |  sed '${/^$/d}' ) $cfoslicfilename
 ```
 

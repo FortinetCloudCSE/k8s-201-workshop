@@ -219,23 +219,21 @@ EOF
 kubectl apply -f nad_10_1_100_252_cfos.yaml -n cfosegress
 ```
 
-- create CFOS daemonSet 
+###  create CFOS daemonSet 
 
 We are creating DaemonSet instead deployment as each worker node require deployment one cfos container.
 application which has route point to cFOS will always use cFOS on same worker node.
 
-**create cfosimagepull secret**
+- Create cFOS license configmap and image pull secret
+
+you shall already have cFOS license and cFOS image pull secret yaml file created in Chapter 1, since we are going to use different namespace for ingress protection. you can apply same yaml file to different namespace.
+
 ```bash
-[ -n "$accessToken" ] && $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml.sh || echo "please set \$accessToken"
-kubectl apply -f cfosimagepullsecret.yaml -n cfosegress
-kubectl get sa -n cfosingress
-```
-**create cfos license**
-```bash
-licfile="$scriptDir/CFOSVLTM24000016.lic"
-while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
-kubectl create -f cfos_license.yaml -n cfosegress
-```
+cd $HOME
+kubectl apply -f cfosimagepullsecret.yaml  -n cfosegress
+kubectl apply -f cfos_license.yaml  -n cfosegress
+``` 
+
 **create serviceaccount for cFOS**
 ```bash
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n cfosegress

@@ -5,6 +5,7 @@ weight: 3
 
 In this chapter, we will do 
 
+- git clone the scripts 
 - Create cFOS image pull Secret 
 - Create cFOS license ConfigMap
 - Bring up cFOS via Deployment 
@@ -13,16 +14,40 @@ if you are not familar with K8s Secret and ConfigMap, you can check [ConfigMap a
 when bring up cFOS, some concept like role, clusterrole will be required,to get better understanding RBAC, role, clusterrole etc, check Chapter 3 and 4.
 if you want know more about what is cFOS, check [cFOS overview](http://localhost:1313/UserRepo/07ingresstraffic/task7_1_overview-of-ingress-in-kubernetes.html#cfos-overview)
 
+### Clone script from github
+
+```bash
+cd $HOME
+git clone https://github.com/FortinetCloudCSE/k8s-201-workshop.git
+cd $HOME/k8s-201-workshop
+git pull
+cd $HOME
+``` 
+### Create namespae 
+
+```bash
+kubectl create namespace $cfosnamespace
+```
 ### Create image pull secret for k8s 
 
-use below script to create a k8s secret for pulling cfos image from acr. you will need an accessToken from acr to create a token.
+use below script to create a k8s secret for pulling cfos image from **acr**. you will need an accessToken from acr to create a token. if you prefer to create a yaml file for later reuse. choose option 1. 
 
 {{% notice style="tip" %}}
-if you have your own cfos iamge hosted on other register. you can use that. but name secret with "cfosimagepullsecret". 
+if you have your own cfos iamge hosted on other register. you can use that. but keep **secret** with name "cfosimagepullsecret". 
 {{% /notice %}}
 
 get your acr accessToken. paste to variable accessToken with below command
 
+option 1: create yaml file then apply it 
+
+```bash
+read -p "Paste your accessToken:|  " accessToken
+echo $accessToken
+[ -n "$accessToken" ] && $scriptDir/k8s-201-workshop/scripts/cfos/imagepullsecret.yaml.sh || echo "please set \$accessToken"
+kubectl apply -f cfosimagepullsecret.yaml -n cfosingress
+```
+
+option 2: use `kubectl create` command to create it 
 ```bash
 
 read -p "Paste your accessToken:|  " accessToken
@@ -67,13 +92,16 @@ kubectl apply -f cfos_license.yaml -n $cfosnamespace
 
 **check license configmap**
 
-use `kubectl get cm fos-license -o yaml` to check whether license is correct. or use script below to check 
+use `kubectl get cm fos-license -o yaml -n cfostest` to check whether license is correct. or use script below to check 
 
 ```bash
 diff -s -b <(k get cm fos-license -n cfostest -o jsonpath='{.data}' | jq -r .license |  sed '${/^$/d}' ) $cfoslicfilename
 ```
 
 ### Bring up cFOS
+
+Below we use yaml manifest to bring up a cFOS **Deployment**.
+it has **annotations** which is to workaround the cFOS mount permission issue. it also include a initContainers for cFOS to get DNS config from k8s, also the replicas is to set to 1. 
 
 ```bash
 kubectl create namespace cfostest
@@ -121,7 +149,7 @@ spec:
           capabilities:
             add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
         ports:
-        - containerPort: 80
+        - containerPort: 443
         volumeMounts:
         - mountPath: /data
           name: data-volume
@@ -154,7 +182,7 @@ cfos7210250-deployment-76c8d56d75-mt4jz   1/1     Running   0          13m
 
 or you can copy/paste below script to get into cFOS. 
 
-- cFOS cli 
+- get into cFOS cli 
 
 ```bash
 podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
@@ -171,6 +199,25 @@ Version: cFOS v7.2.1 build0255
 Serial-Number: 
 System time: Fri Jun 28 2024 12:46:41 GMT+0000 (UTC)
 ```
+use `exit` to quit from cFOS cli.
 
 
+### Q&A 
+
+1. How much cpu/memory does cFOS take in cluster ?
+2. How quick does cFOS get into full function from the moment it being created ?
+hint: use `kubectl delete -f cfos7210250-deployment.yaml` delete and create it again.
+
+
+### Cleanup
+
+```bash
+kubectl delete -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
+kubectl delete namespace cfostest
+```
+do not delete **cfosimagepullsecret.yaml** and **cfos_license.yaml**, we will need this later.
+
+### What to do Next
+
+if you want learn how to use cFOS for ingress protection , go directly to [Chapter 7](http://localhost:1313/UserRepo/07ingresstraffic/task7_2_configuring-and-securing-ingress.html#purpose). 
 
