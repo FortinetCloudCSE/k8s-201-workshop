@@ -10,9 +10,9 @@ In this chapter, we will do
 - Create cFOS license ConfigMap
 - Bring up cFOS via Deployment 
 
-if you are not familar with K8s Secret and ConfigMap, you can check [ConfigMap and Secret in cFOS](http://localhost:1313/UserRepo/task4_2_creating_managing_configmaps_secrets.html) for more detail. 
+if you are not familar with K8s Secret and ConfigMap, you can check [ConfigMap and Secret in cFOS](/05configmapsecrets/task4_2_creating_managing_configmaps_secrets.html) for more detail. 
 when bring up cFOS, some concept like role, clusterrole will be required,to get better understanding RBAC, role, clusterrole etc, check Chapter 3 and 4.
-if you want know more about what is cFOS, check [cFOS overview](http://localhost:1313/UserRepo/07ingresstraffic/task7_1_overview-of-ingress-in-kubernetes.html#cfos-overview)
+if you want know more about what is cFOS, check [cFOS overview](/07ingresstraffic/task7_1_overview-of-ingress-in-kubernetes.html#cfos-overview)
 
 ### Clone script from github
 
@@ -219,5 +219,5 @@ do not delete **cfosimagepullsecret.yaml** and **cfos_license.yaml**, we will ne
 
 ### What to do Next
 
-if you want learn how to use cFOS for ingress protection , go directly to [Chapter 7](http://localhost:1313/UserRepo/07ingresstraffic/task7_2_configuring-and-securing-ingress.html#purpose). 
+if you want learn how to use cFOS for ingress protection , go directly to [Chapter 7](/07ingresstraffic/task7_2_configuring-and-securing-ingress.html#purpose). 
 

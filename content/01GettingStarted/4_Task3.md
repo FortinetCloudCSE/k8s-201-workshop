@@ -14,8 +14,8 @@ In this chapter, we will do
 
 You have mutliple option for setup K8S:
 
-1.  if you are on k8s-101 environment, you can continue to this k8s-101 environment and choose [Option 1](http://localhost:1313/UserRepo/01gettingstarted/4_task3.html#option-1--continue-from-k8s-101-session). 
-2.  if you are on k8s-201 environment, choose [option 2](http://localhost:1313/UserRepo/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s)  or [option 3](http://localhost:1313/UserRepo/01gettingstarted/4_task3.html#option-3-create-aks)  start from k8s-201 directly 
+1.  if you are on k8s-101 environment, you can continue to this k8s-101 environment and choose [Option 1](/01gettingstarted/4_task3.html#option-1--continue-from-k8s-101-session). 
+2.  if you are on k8s-201 environment, choose [option 2](/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s)  or [option 3](/01gettingstarted/4_task3.html#option-3-create-aks)  start from k8s-201 directly 
 
 
 #### Option 1 : Continue from K8S-101 session 

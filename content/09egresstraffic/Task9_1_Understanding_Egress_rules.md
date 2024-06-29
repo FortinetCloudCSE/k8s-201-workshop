@@ -5,28 +5,56 @@ menuTitle: "Egress with cFOS"
 weight: 5
 ---
 
+### Purpose
+
+To stop malicious traffic from application POD to reach destination which is outside of Cluster, such as 
+
+- Internet
+- VM such as Database VM in your VPC.
+
+
+
 ![imageegress](../images/egress.png)
 
-
-To configure egress with a containerized FortiOS using Multus CNI in Kubernetes, and ensure that the default route for outbound traffic goes through FortiOS, you need to follow these general steps:
+To configure egress with a containerized FortiOS using Multus CNI in Kubernetes, and ensure that the route for outbound traffic goes through FortiOS, you need to follow these general steps:
 
 Key Configurations:
 
-Multus Network Configuration: Define the network attachment definitions to enable multiple network interfaces on the pods.
-Default Route Setup: Ensure that the default route for egress traffic from the application pods is through the FortiOS container.
-FortiOS Egress Rules: Configure FortiOS to handle and secure outbound traffic from the Kubernetes pods.
+- on cFOS
 
-Configuration Details:
+ 1. add extra NIC into cFOS to receive traffic from application pod
+ 2. apply security profile on incoming traffic from application 
+
+- on Application POD
+
+You have two ways to config static route on application POD
+
+Option 1. 
+  1. add specfic static route on application pod to make interested destination to cFOS for inspection 
+  2. the default route remain unchanged.
+
+Option 2. 
+  1. change default route to cFOS
+  2. add specific route on application pod to make traffic to in-cluster destination bypass cFOS.
+
+For Option 1, we need add specifc static route in secondary CNI, this is done by create a net-attach-def for application POD. 
+
+For Option 2, we need modify K8s Default CNI to make this happen. this is not always feasible as it depends on what CNI used for default CNI. 
+
+In this workshop, we use Option 1. 
+
+
+### Create application deployment  with NAD
 
 - Create namespace for application 
 
 ```bash
 kubectl create namespace app-1
 ```
-- Create NAD - Net-Attach-DE for app-1
+- Create net-attach-def for app-1
 
-this nad config will insert a NIC to application pod.
-it also config a few static route point to cFOS 
+this NAD define a subnet and IPAM pool for NIC to get ip address.
+it also defined a few static route with default gateway point to cFOS
 
 ```bash
 cat << EOF | tee > nad_10_1_200_1_1_1_1.yaml 
@@ -56,8 +84,48 @@ spec:
 EOF
 kubectl apply -f nad_10_1_200_1_1_1_1.yaml -n app-1
 ```
-- create application deployment
+check with `kubectl get net-attach-def -n app-1`
 
+
+
+```bash
+kubectl get net-attach-def -n app-1 -o jsonpath="{.items[0].spec.config}" | jq .
+```
+output
+
+```
+{
+  "cniVersion": "0.3.0",
+  "type": "macvlan",
+  "master": "eth0",
+  "mode": "bridge",
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.1.200.0/24",
+    "rangeStart": "10.1.200.20",
+    "rangeEnd": "10.1.200.100",
+    "routes": [
+      {
+        "dst": "1.1.1.1/32",
+        "gw": "10.1.200.252"
+      },
+      {
+        "dst": "34.117.186.0/24",
+        "gw": "10.1.200.252"
+      },
+      {
+        "dst": "10.1.100.0/24",
+        "gw": "10.1.200.252"
+      }
+    ],
+    "gateway": "10.1.200.252"
+  }
+}
+```
+
+
+- create application deployment
+when create application, we will use annotation to associate application with **NAD** we just created 
 
 ```bash
 cat << EOF | tee > demo_application_nad_200.yaml 
@@ -91,6 +159,42 @@ spec:
 EOF
 kubectl apply -f demo_application_nad_200.yaml -n app-1
 ```
+use command `kubectl describe po/diag200 -n app-1` to check the application shall get second NIC 
+
+for example 
+```bash
+kubectl get po/diag200 -n app-1 -o jsonpath='{.metadata.annotations}'  | jq -r '.["k8s.v1.cni.cncf.io/network-status"]'
+```
+result
+
+```
+[{
+    "name": "azure",
+    "ips": [
+        "10.224.0.8"
+    ],
+    "default": true,
+    "dns": {
+        "nameservers": [
+            "168.63.129.16"
+        ]
+    },
+    "gateway": [
+        "10.224.0.1"
+    ]
+},{
+    "name": "app-1/nadapplication200",
+    "interface": "net1",
+    "ips": [
+        "10.1.200.21"
+    ],
+    "mac": "6a:d7:a6:da:0a:a6",
+    "dns": {}
+}]
+```
+
+above you will find this application pod has two NIC, the first one is from azure CNI with ip 10.224.0.8 which is default gateway, the second interface is **net1** with ip **10.1.200.21** 
+
 - create another namespace 
 
 ```bash
@@ -162,12 +266,23 @@ EOF
 kubectl apply -f demo_application_nad_100.yaml -n app-2
 ```
 
+### Create CFOS DaemonSet nad NAD
 
 - Create NAD for cFOS 
 
-this will create two subnets with single ip address 10.1.200.252/32  and 10.1.100.252/32 for cFOS 
+We are going to create two NAD for cFOS, one NAD is for connect with application in namespace app-1, other NAD is for connect with application in namespace app-2. 
 
-**subnet 10.1.200.0/24**
+you can also just create singe NAD to connect both app-1 and app-2. that will also work, in this workshop, we want app-1 and app-2 on different subnet, so we associate them with different NAD. 
+
+here is what we are going to create 
+
+- NAD cfosdefaultcni6 with subnet 10.1.200.0/24
+- NAD cfosdefaultcni6100 with subnet 10.1.100.0/24  
+
+in these NAD, we limit available ip address to single one. so cFOS will always get same ip. 
+
+- NAD cfosdefaultcni6
+
 ```bash
 kubectl create namespace cfosegress
 cat << EOF | tee > nad_10_1_200_252_cfos.yaml 
@@ -193,7 +308,7 @@ EOF
 kubectl apply -f nad_10_1_200_252_cfos.yaml -n cfosegress
 
 ```
-**subne 10.1.100.0/24**
+- NAD cfosdefaultcni6100
 
 ```bash
 cat << EOF | tee > nad_10_1_100_252_cfos.yaml  
@@ -219,9 +334,25 @@ EOF
 kubectl apply -f nad_10_1_100_252_cfos.yaml -n cfosegress
 ```
 
-###  create CFOS daemonSet 
+check
 
-We are creating DaemonSet instead deployment as each worker node require deployment one cfos container.
+```bash
+kubectl get net-attach-def -n cfosegress
+```
+result
+```
+NAME                 AGE
+cfosdefaultcni6      27m
+cfosdefaultcni6100   27m
+```
+
+for more detail, you can use `kubectl get net-attach-def -n cfosegress -o yaml` 
+if you want know detail of each field. use `kubectl explain net-attach-def`
+
+- Create cFOS DaemonSet
+
+We are creating DaemonSet instead deployment as each worker node require deployment one cfos container. the DaemonSet mean cFOS POD always use replicas=1, each k8s worker node will have one cFOS. 
+
 application which has route point to cFOS will always use cFOS on same worker node.
 
 - Create cFOS license configmap and image pull secret
@@ -239,6 +370,8 @@ kubectl apply -f cfos_license.yaml  -n cfosegress
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_create_cfos_account.yaml -n cfosegress
 ```
 **deploy cfos DS**
+
+the cFOS will be associated with two NAD, as it will connect to two different subnets. this is done by add annotation in the spec. 
 
 ```bash
 k8sdnsip=$(k get svc kube-dns -n kube-system -o jsonpath='{.spec.clusterIP}')
@@ -300,7 +433,65 @@ EOF
 kubectl apply -f 02_create_cfos_ds.yaml -n cfosegress
 kubectl rollout status daemonset fos-multus-deployment -n cfosegress
 
+check 
+
+shell into cFOS, to check the ip address 
+
+```bash
+podname=$(kubectl get pod -n cfosegress -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n cfosegress -- ip address
 ```
+from cFOS cli, you can find cFOS show two interfaces. 
+
+```
+kubectl exec -it po/$podname -n cfosegress -- /bin/cli
+Defaulted container "cfos7210250-container" out of: cfos7210250-container, init-myservice (init)
+User: admin
+Password: 
+cFOS # show system interface 
+config system interface
+    edit "net1"
+        set ip 10.1.200.252 255.255.255.0
+        set macaddr ca:fe:c0:ff:00:02
+        config ipv6
+            set ip6-address fe80::c8fe:c0ff:feff:2/64
+        end
+    next
+    edit "net2"
+        set ip 10.1.100.252 255.255.255.0
+        set macaddr ca:fe:c0:ff:01:00
+        config ipv6
+            set ip6-address fe80::c8fe:c0ff:feff:100/64
+        end
+    next
+    edit "eth0"
+        set ip 10.224.0.6 255.255.255.0
+        set macaddr 1e:79:6d:1b:51:a8
+        config ipv6
+            set ip6-address fe80::1c79:6dff:fe1b:51a8/64
+        end
+    next
+    edit "any"
+    next
+end
+
+```
+cFOS will use route tabl 231 for handle traffic. 
+```
+kubectl exec -it po/$podname -n cfosegress -- ip route show table 231
+```
+result
+```
+Defaulted container "cfos7210250-container" out of: cfos7210250-container, init-myservice (init)
+default via 169.254.1.1 dev eth0 proto static metric 100 
+10.1.100.0/24 dev net2 proto kernel scope link src 10.1.100.252 metric 100 
+10.1.200.0/24 dev net1 proto kernel scope link src 10.1.200.252 metric 100 
+169.254.1.1 dev eth0 proto static scope link metric 100 
+```
+you can find the cFOS default route is default CNI assigned interface which is eth0.  
+
+### Config CFOS 
+
 - create firewall policy
 
 The firewall policy allow traffic from net1 and net2 with destination to internet and inspected with utm profiles.
@@ -355,9 +546,11 @@ EOF
 kubectl apply -f net1net2cmtointernetfirewallpolicy.yaml -n cfosegress
 ```
 
-- Send Normal traffic from app-1 namespace pod
+### Check with traffic 
 
-this traffic will be send to cFOS to reach internet 
+- Send regular  traffic from app-1 namespace pod
+
+this traffic will be send to cFOS to reach internet. the destination **ipinfo.io** will be resolve into ip address in subnet **34.117.186.0/24** which already added into application pod to send to cFOS.  
 
 ```bash
 k exec -it po/diag200 -n app-1 -- curl ipinfo.io
@@ -376,13 +569,15 @@ you shall see output
   "readme": "https://ipinfo.io/missingauth"
 }
 ```
+you can try do sniff on cFOS to check the packet detail 
 
 - Send malicous traffic 
 
 ```bash
 kubectl exec -it po/diag200 -n app-1 -- curl -H "User-Agent: () { :; }; /bin/ls" http://ipinfo.io
 ```
-it's expected that you wont get response as it droped by cFOS.
+it's expected that you wont get response as it droped by cFOS. as this traffic will be blocked by cFOS because it will be marked as malicious by cFOS IPS profile.
+
 
 
 - do same on app-2
@@ -407,11 +602,12 @@ date=2024-06-27 time=08:15:50 eventtime=1719476150 tz="+0000" logid="0419016384"
 date=2024-06-27 time=08:16:09 eventtime=1719476169 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.100.20 dstip=34.117.186.192 srcintf="net1" dstintf="eth0" sessionid=7 action="dropped" proto=6 service="HTTP" policyid=100 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=39216 dstport=80 hostname="ipinfo.io" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=157286409 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
 ```
 
-- clean up
+### Q&A
 
-```bash
-kubectl delete namespace app-1
-kubectl delete namespace app-2
-kubectl delete namespace cfosegress
-```
+assume you have a database VM deployed in azure VNET, in same VNET, you have AKS deployed in other subnet. 
+how to secure traffic from your application POD to database VM ?
 
+
+### Next
+
+Do not delete enviroment, we will use same for next Task Secure POD to POD east-west traffic
