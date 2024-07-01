@@ -142,10 +142,7 @@ echo $svcname
 
 #### Option 3: Create AKS 
 
-if you do not want use self-managed k8s, you can use AKS instead. 
-
-below script will create single node AKS cluster. 
-
+If you prefer AKS, use below script to create a single node cluster.
 
 {{% notice style="tip" %}}
 append "--enable-node-public-ip" if you want assign a public ip to worker node" ,without public-ip for worker node, container will not able to use ping to reach internet
@@ -216,15 +213,55 @@ az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-e
 
 ```
 
-**check your AKS**
+- **Check your AKS cluster**
+
 ```bash
 kubectl get node -o wide
 ```
 
-you shall see single worker node only. because this is a managed k8s, the master node is hidden from you. you might also noticed that the container runtime is **containerd**. 
+you shall see single worker node only. because this is a managed k8s, the master node is hidden from you. you might also noticed that the container runtime is **containerd** which is different than self-managed k8s where the container runtime is cri-o. 
+
 
 ```
 NAME                             STATUS   ROLES   AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
 aks-worker-39339143-vmss000000   Ready    agent   47m   v1.28.9   10.224.0.4    <none>        Ubuntu 22.04.4 LTS   5.15.0-1066-azure   containerd://1.7.15-1
 ```
+
+
+
+{{% notice style="tip" %}}
+you can ssh into worker node via public ip or internal ip via jumphost, below script will help you ssh into worker node via a jumphost pod. 
+
+```bash
+nodeip=$(kubectl get node -o jsonpath='{.items[0].status.addresses[0].address}')
+echo $nodeip 
+
+cat << EOF | tee sshclient.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ssh-jump-host
+  labels:
+    app: ssh-jump-host
+spec:
+  containers:
+  - name: ssh-client
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "apk add --no-cache openssh && tail -f /dev/null"]
+    stdin: true
+    tty: true
+EOF
+
+kubectl apply -f sshclient.yaml
+kubectl exec -it ssh-jump-host -- sh -c "mkdir -p ~/.ssh"
+kubectl cp ~/.ssh/id_rsa_tecworkshop default/ssh-jump-host:/root/.ssh/id_rsa
+kubectl exec -it ssh-jump-host -- sh -c 'chmod 600 /root/.ssh/id_rsa'
+kubectl exec -it po/ssh-jump-host -- ssh azureuser@$nodeip sudo crictl version
+kubectl exec -it po/ssh-jump-host -- ssh azureuser@$nodeip
+```
+{{% /notice %}}
+
+type `exit` to exit from worker node back to azure shell.
+
 
