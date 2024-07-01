@@ -221,13 +221,15 @@ kubectl get node -o wide
 
 you shall see single worker node only. because this is a managed k8s, the master node is hidden from you. you might also noticed that the container runtime is **containerd** which is different than self-managed k8s where the container runtime is cri-o. 
 
-
 ```
 NAME                             STATUS   ROLES   AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
 aks-worker-39339143-vmss000000   Ready    agent   47m   v1.28.9   10.224.0.4    <none>        Ubuntu 22.04.4 LTS   5.15.0-1066-azure   containerd://1.7.15-1
 ```
 
+### ssh into your worker node.
 
+for self-managed k8s, you can ssh into both master node and worker node. for AKS, you can only ssh into worker node.
+below is a exsample for how to ssh into AKS worker node.
 
 {{% notice style="tip" %}}
 you can ssh into worker node via public ip or internal ip via jumphost, below script will help you ssh into worker node via a jumphost pod. 
@@ -258,6 +260,7 @@ kubectl exec -it ssh-jump-host -- sh -c "mkdir -p ~/.ssh"
 kubectl cp ~/.ssh/id_rsa_tecworkshop default/ssh-jump-host:/root/.ssh/id_rsa
 kubectl exec -it ssh-jump-host -- sh -c 'chmod 600 /root/.ssh/id_rsa'
 kubectl exec -it po/ssh-jump-host -- ssh azureuser@$nodeip sudo crictl version
+#kubectl exec -it po/ssh-jump-host -- ssh azureuser@nodeip journalctl -f -u containerd
 kubectl exec -it po/ssh-jump-host -- ssh azureuser@$nodeip
 ```
 {{% /notice %}}

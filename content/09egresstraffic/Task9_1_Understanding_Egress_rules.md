@@ -5,7 +5,20 @@ menuTitle: "Egress with cFOS"
 weight: 5
 ---
 
-### Purpose
+### Why egress security with cFOS
+
+Pod egress security is essential for protecting networks and data from potential threats originating from outgoing traffic in Kubernetes clusters.
+
+Here are some reasons why pod egress security is crucial:
+
+- Prevent data exfiltration: Without proper egress security controls, a malicious actor could potentially use an application running in a pod to exfiltrate sensitive data from the cluster.
+- Control outgoing traffic: By restricting egress traffic from pods to specific IP addresses or domains, organizations can prevent unauthorized communication with external entities and control access to external resources.
+- Comply with regulatory requirements: Many regulations require organizations to implement controls around outgoing traffic to ensure compliance with data privacy and security regulations. Implementing pod egress security controls can help organizations meet these requirements.
+- Prevent malware infections: A pod compromised by malware could use egress traffic to communicate with external command and control servers, leading to further infections and data exfiltration. Egress security controls can help prevent these types of attacks.
+
+In summary, implementing pod egress security controls is a vital part of securing Kubernetes clusters and ensuring the integrity, confidentiality, and availability of organizational data. In this use case, applications can route traffic through a dedicated network created by Multus to the cFOS pod. The cFOS pod inspects packets for IPS attacks, URL filtering, DNS filtering, and performs deep packet inspection for SSL encrypted traffic.
+
+the most common use case for egress security will be 
 
 To stop malicious traffic from application POD to reach destination which is outside of Cluster, such as 
 
@@ -13,10 +26,18 @@ To stop malicious traffic from application POD to reach destination which is out
 - VM such as Database VM in your VPC.
 
 
+### Lab Diagram
 
-![imageegress](../images/egress.png)
+{{% notice note %}}
+In this chapter, we are going to config cFOS to inspect traffic from two application pod to specfic destination ip addres in internet.
 
-To configure egress with a containerized FortiOS using Multus CNI in Kubernetes, and ensure that the route for outbound traffic goes through FortiOS, you need to follow these general steps:
+the application pod will use dedicated NIC (NET1) to reach cFOS. the NET1 NIC is inserted by NAD (Net-ATTACH-DEF), two application attach to same NAD or attach to different NAD depends on whether they are using same subnet or different subnet. in this chapter, two application POD use different NAD to attach to cFOS, therefore, cFOS also require attach to two NAD. 
+
+{{% /notice %}}
+
+![imageegress](../images/cfosptopnew.png)
+
+To configure egress with a containerized FortiOS  using Multus CNI in Kubernetes, and ensure that the route for outbound traffic goes through cFOS, you need to follow these general steps:
 
 Key Configurations:
 
@@ -55,6 +76,15 @@ kubectl create namespace app-1
 
 this NAD define a subnet and IPAM pool for NIC to get ip address.
 it also defined a few static route with default gateway point to cFOS
+
+below the content under spec.config is the cni json formatted configuration, the json config is different per different cni. for above example below, the macvlan CNI will parse the config based on the config. also beware  that the config section is json formated context which will not be parsed by `NetworkAttachmentDefinition`, therefore, if you have syntax error in this section. when you do kubectl apply , you will not see error messages. 
+
+
+- Type: macvlan specifies the network plugin.
+- Mode: bridge sets the operation mode of the plugin.
+- Master: eth0 is the host network interface used by the plugin.
+- IPAM: Manages IP allocation, specifies subnet, range, routes, and gateway configurations. host-local means ip allocation is local to this worker node only. it is not cluster wide. if you want use cluster wide ipam, use other ipam like [whereabouts](https://github.com/k8snetworkplumbingwg/whereabouts) 
+
 
 ```bash
 cat << EOF | tee > nad_10_1_200_1_1_1_1.yaml 
@@ -122,7 +152,7 @@ output
   }
 }
 ```
-
+you can use `kubectl logs -f -l app=multus -n kube-system` to check the log for how detail about net-attach-log creationg etc., 
 
 - create application deployment
 when create application, we will use annotation to associate application with **NAD** we just created 

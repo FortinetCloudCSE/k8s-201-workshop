@@ -15,21 +15,26 @@ The most common way to install Multus is via a Kubernetes manifest file, which s
 
     You can find the latest configuration on the Multus GitHub repository (Multus CNI on GitHub). Typically, you would use the multus.yaml from the repo. This YAML file contains the configuration for the Multus DaemonSet along with the necessary ClusterRole, ClusterRoleBinding, and ServiceAccount.
 
+{{% notice style="info" %}} 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick.yml
 kubectl rollout status ds/kube-multus-ds -n kube-system
 ```
+{{% /notice  %}} 
 
-    output: 
+output: 
 
-    ```
-    customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io configured
-    clusterrole.rbac.authorization.k8s.io/multus configured
-    clusterrolebinding.rbac.authorization.k8s.io/multus configured
-    serviceaccount/multus configured
-    configmap/multus-daemon-config configured
-    daemonset.apps/kube-multus-ds configured
-    ```
+```
+kubectl rollout status ds/kube-multus-ds -n kube-system
+customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io created
+clusterrole.rbac.authorization.k8s.io/multus created
+clusterrolebinding.rbac.authorization.k8s.io/multus created
+serviceaccount/multus created
+configmap/multus-daemon-config created
+daemonset.apps/kube-multus-ds created
+Waiting for daemon set "kube-multus-ds" rollout to finish: 0 of 1 updated pods are available...
+daemon set "kube-multus-ds" successfully rolled out
+```
 
 ```bash
 kubectl get pod -n kube-system -l app=multus
@@ -43,7 +48,28 @@ kube-multus-ds-qlmrf   1/1     Running   0          88s
 
 
 
-    You may further validate that it has ran by looking at the /etc/cni/net.d/ directory and ensure that the auto-generated /etc/cni/net.d/00-multus.conf exists corresponding to the alphabetically first configuration file.
+You may further validate that it has ran by looking at the /etc/cni/net.d/ directory and ensure that the auto-generated /etc/cni/net.d/00-multus.conf exists corresponding to the alphabetically first configuration file.
+
+refer [how ssh into worker node](/01gettingstarted/4_task3.html#ssh-into-your-worker-node) for detail. 
+
+once you are in worker node, you can use `sudo cat /etc/cni/net.d/00-multus.conf` to check the multus default configuration.
+below you can find multus CNI is simply **proxy** to request to azure CNI config which is **10-azure.conflist**
+
+```
+azureuser@aks-worker-27647061-vmss000000:~$ sudo cat /etc/cni/net.d/00-multus.conf  | jq .
+{
+  "capabilities": {
+    "portMappings": true
+  },
+  "cniVersion": "0.3.1",
+  "logLevel": "verbose",
+  "logToStderr": true,
+  "name": "multus-cni-network",
+  "clusterNetwork": "/host/etc/cni/net.d/10-azure.conflist",
+  "type": "multus-shim"
+}
+```
+
 
 
 **Step 2: Creating additional interfaces**
@@ -265,4 +291,7 @@ If you were to create another custom resource with the name foo you could use th
 
 **Cleanup:**
 
-```kubectl delete pod samplepod```
+```bash
+kubectl delete pod samplepod
+kubectl delete net-attach-def macvlan-conf
+```
