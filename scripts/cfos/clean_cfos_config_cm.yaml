@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  config: |2
+  type: full
+kind: ConfigMap
+metadata:
+  labels:
+    app: fos
+    category: config
+  name: cm-full-empty

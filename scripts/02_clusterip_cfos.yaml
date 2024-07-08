@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cfos
+  name: ipsec
+spec:  
+  internalTrafficPolicy: Cluster
+  clusterIP: 10.96.17.42
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 500
+    protocol: UDP
+    targetPort: 500
+    name: udp-500
+  - port: 4500
+    protocol: UDP
+    targetPort: 4500
+    name: udp-4500
+  selector:
+    app: cfos
+  sessionAffinity: None
+  type: ClusterIP

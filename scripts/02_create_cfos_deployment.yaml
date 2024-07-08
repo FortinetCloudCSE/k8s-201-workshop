@@ -1,0 +1,32 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cfos7210250-deployment
+  labels:
+    app: cfos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cfos
+  template:
+    metadata:
+      labels:
+        app: cfos
+    spec:
+      serviceAccountName: cfos-serviceaccount
+      containers:
+      - name: cfos7210250-container
+        image: interbeing/fos:latest
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /data
+          name: data-volume
+      volumes:
+      - name: data-volume
+        emptyDir: {}

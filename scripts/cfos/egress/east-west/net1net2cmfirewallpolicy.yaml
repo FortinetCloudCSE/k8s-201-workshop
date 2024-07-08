@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: net1net2
+  labels:
+      app: fos
+      category: config
+data:
+  type: partial
+  config: |-
+    config firewall policy
+      edit 10
+        set utm-status enable
+        set srcintf "net1"
+        set dstintf "net2"
+        set srcaddr "all"
+        set dstaddr "all"
+        set service "ALL"
+        set ssl-ssh-profile "deep-inspection"
+        set av-profile "default"
+        set webfilter-profile "default"
+        set ips-sensor "high_security"
+        set logtraffic all
+       next
+    end
+    config firewall policy
+      edit 11
+        set utm-status enable
+        set srcintf "net2"
+        set dstintf "net1"
+        set srcaddr "all"
+        set dstaddr "all"
+        set service "ALL"
+        set ssl-ssh-profile "deep-inspection"
+        set av-profile "default"
+        set webfilter-profile "default"
+        set ips-sensor "high_security"
+        set logtraffic all
+       next
+    end

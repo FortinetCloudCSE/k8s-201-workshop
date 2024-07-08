@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: net1net2
+  labels:
+      app: fos
+      category: config
+data:
+  type: partial
+  config: |-
+    config firewall policy
+        edit 100
+            set utm-status enable
+            set name "net1tointernet"
+            set srcintf "net1"
+            set dstintf "eth0"
+            set srcaddr "all"
+            set dstaddr "all"
+            set service "ALL"
+            set ssl-ssh-profile "deep-inspection"
+            set av-profile "default"
+            set ips-sensor "high_security"
+            set application-list "default"
+            set nat enable
+            set logtraffic all
+        next
+    end
+    config firewall policy
+        edit 101
+            set utm-status enable
+            set name "net2tointernet"
+            set srcintf "net2"
+            set dstintf "eth0"
+            set srcaddr "all"
+            set dstaddr "all"
+            set service "ALL"
+            set ssl-ssh-profile "deep-inspection"
+            set av-profile "default"
+            set ips-sensor "high_security"
+            set application-list "default"
+            set nat enable
+            set logtraffic all
+        next
+    end

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: diag
+  labels: 
+    app: diag
+  annotations:
+    #k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni5",  "default-route": ["10.1.200.252"]  } ]'
+    k8s.v1.cni.cncf.io/networks: '[ { "name": "nadapplication" } ]'
+spec:
+  containers:
+  - name: praqma
+    image: praqma/network-multitool
+    args: 
+      - /bin/sh
+      - -c 
+      - /usr/sbin/nginx -g "daemon off;"
+    securityContext:
+      capabilities:
+        add: ["NET_ADMIN","SYS_ADMIN","NET_RAW"]
+#      privileged: true
+    volumeMounts:
+    - name: host-root
+      mountPath: /host
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+      type: Directory
+
