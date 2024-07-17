@@ -27,19 +27,6 @@ You have multiple options for setting up Kubernetes:
 1. If you are using the [K8s-101 workshop environment](https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html), you can continue in the K8s-101 environment and choose [Option 1](/01gettingstarted/4_task3.html#option-1--continue-from-k8s-101-session).
 2. If you are on the K8s-201 environment, choose [Option 2](/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s) or [Option 3](/01gettingstarted/4_task3.html#option-3-create-aks) to start from K8s-201 directly.
 
-#### Option 1: Continue from K8S-101 Session
-
-If you are continuing from the K8s-101 session, you should already have Kubernetes installed.
-
-
-
-**check your k8s**
-
-```bash
-kubectl get node -o wide
-
-```
-you shall have a K8S ready 
 
 **setup some variable** 
 ```bash
@@ -80,6 +67,40 @@ grep -qxF "$vm_name" "$HOME/.ssh/known_hosts"  && ssh-keygen -R "$vm_name"
 fi
 
 ```
+
+Check whether any of the following variables are empty:
+
+```bash
+echo ReousrceGroup  = $resourceGroupName
+echo Location = $location
+echo ScriptDir = $scriptDir
+echo cFOS docker image = $cfosimage
+echo cFOS NameSpace= $cfosnamespace
+```
+
+You should see results like:
+
+```
+ReousrceGroup = k8s54-k8s101-workshop
+Location = eastus
+ScriptDir = /home/k8s54
+cFOS docker image = fortinetwandy.azurecr.io/cfos:255
+cFOS Name Space= cfostest
+```
+
+#### Option 1: Continue from K8S-101 Session
+
+If you are continuing from the K8s-101 session, you should already have Kubernetes installed.
+
+**check your k8s**
+
+```bash
+kubectl get node -o wide
+
+```
+you shall have a K8S ready 
+
+
 If this K8S is self-managed, you might not have MetalLB installed, and you need to install it.
 
 **install metallb**
@@ -118,25 +139,7 @@ NAME          STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-
 node-worker   Ready    <none>          4m24s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.4 LTS   6.5.0-1022-azure   cri-o://1.25.4
 nodemaster    Ready    control-plane   9m30s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.4 LTS   6.5.0-1022-azure   cri-o://1.25.4
 ```
-Check whether any of the following variables are empty:
 
-```bash
-echo ReousrceGroup  = $resourceGroupName
-echo Location = $location
-echo ScriptDir = $scriptDir
-echo cFOS docker image = $cfosimage
-echo cFOS NameSpace= $cfosnamespace
-```
-
-You should see results like:
-
-```
-ReousrceGroup = k8s54-k8s101-workshop
-Location = eastus
-ScriptDir = /home/k8s54
-cFOS docker image = fortinetwandy.azurecr.io/cfos:255
-cFOS Name Space= cfostest
-```
 
 #### Option 2: Create Self-managed K8S
 
