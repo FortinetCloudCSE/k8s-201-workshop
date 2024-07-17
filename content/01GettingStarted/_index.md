@@ -24,5 +24,5 @@ When provisioning is complete, one of the following will happen.
 Tasks
 
 * Setup Azure Cloud Shell
-* Run Terraform
-* Verify Terraform
+* Get Kubernetes Ready
+* Get Familiar with cFOS
