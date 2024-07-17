@@ -61,8 +61,15 @@ gowebsvc   LoadBalancer   10.108.22.4   10.0.0.4      8888:31981/TCP   2m30s
 ```
 now, the goweb application is ready for you to upload file, let's upload  a virus file to goweb
 
-```bash
+- download eicar_com.zip from eicar.org website
 
+```bash
+wget -c https://secure.eicar.org/eicar_com.zip
+cp eicar_com.zip $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/
+```
+- send file to application 
+
+```
 curl -v -F "file=@$scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/eicar_com.zip" http://$svcname.$location.cloudapp.azure.com:8888/upload
 ```
 result
