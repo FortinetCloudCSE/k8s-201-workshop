@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: diag200
+  labels: 
+    app: diag
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[ { "name": "nadapplication200" } ]'
+spec:
+  securityContext:
+    runAsNonRoot: false
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: praqma
+    image: praqma/network-multitool
+    args: 
+      - /bin/sh
+      - -c 
+      - /usr/sbin/nginx -g "daemon off;"
+    volumeMounts:
+    - name: host-root
+      mountPath: /host
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+      type: Directory

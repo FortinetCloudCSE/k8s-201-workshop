@@ -1,0 +1,33 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: custom-scc
+allowPrivilegedContainer: true
+allowHostNetwork: false
+allowHostPorts: false
+allowHostPID: false
+allowHostIPC: false
+allowHostDirVolumePlugin: false
+priority: 10
+requiredDropCapabilities:
+- MKNOD
+allowedCapabilities:
+- NET_ADMIN
+- SYS_ADMIN
+- NET_RAW
+runAsUser:
+  type: MustRunAs
+  uid: 0
+fsGroup:
+  type: MustRunAs
+  ranges:
+  - min: 1
+    max: 65535
+seLinuxContext:
+  type: MustRunAs
+seccompProfiles:
+- "runtime/default"
+- "localhost"
+users:
+- system:serviceaccount:cfos-egress:cfos-serviceaccount
+

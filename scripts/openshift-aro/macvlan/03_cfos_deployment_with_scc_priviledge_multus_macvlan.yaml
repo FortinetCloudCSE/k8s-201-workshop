@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cfos7210250-deployment
+  labels:
+    app: cfos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cfos
+  template:
+    metadata:
+      annotations:
+#        container.apparmor.security.beta.kubernetes.io/cfos7210250-container: unconfined
+        k8s.v1.cni.cncf.io/networks: '[ { "name": "cfosdefaultcni6",  "ips": [ "10.1.200.252/24" ] }]'
+      labels:
+        app: cfos
+    spec:
+      serviceAccountName: cfos-serviceaccount
+      initContainers:
+      - name: init-myservice
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "nameserver 172.30.0.10" > /mnt/resolv.conf
+          echo "search default.svc.cluster.local svc.cluster.local cluster.local" >> /mnt/resolv.conf;
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          capabilities:
+            add: ["NET_ADMIN", "SYS_ADMIN", "NET_RAW"]
+        volumeMounts:
+        - name: resolv-conf
+          mountPath: /mnt
+      containers:
+      - name: cfos7210250-container
+        image: fortinetwandy.azurecr.io/cfos:255
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          capabilities:
+            add: ["NET_ADMIN", "SYS_ADMIN", "NET_RAW"]
+        ports:
+        - containerPort: 443
+        volumeMounts:
+        - mountPath: /data
+          name: data-volume
+        - mountPath: /etc/resolv.conf
+          name: resolv-conf
+          subPath: resolv.conf
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+      - name: resolv-conf
+        emptyDir: {}
+      dnsPolicy: ClusterFirst
+

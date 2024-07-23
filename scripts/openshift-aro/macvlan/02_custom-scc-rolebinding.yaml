@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: use-custom-scc
+  namespace: cfos-egress
+subjects:
+  - kind: ServiceAccount
+    name: cfos-serviceaccount
+    namespace: cfos-egress
+roleRef:
+  kind: ClusterRole
+  name: use-custom-scc
+  apiGroup: rbac.authorization.k8s.io
+
