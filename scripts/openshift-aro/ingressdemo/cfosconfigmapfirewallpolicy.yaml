@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfosconfigpolicy
+  labels:
+      app: fos
+      category: config
+data:
+  type: partial
+  config: |-
+    config firewall policy
+           edit 1
+            set name "nginx"
+            set srcintf "eth0"
+            set dstintf "eth0"
+            set srcaddr "all"
+            set dstaddr "nginx"
+            set nat enable
+           next
+           edit 2
+            set name "goweb"
+            set srcintf "eth0"
+            set dstintf "eth0"
+            set srcaddr "all"
+            set dstaddr "goweb"
+            set utm-status enable
+            set av-profile default
+            set nat enable
+           next
+       end

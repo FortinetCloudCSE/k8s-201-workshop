@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfosconfigvip
+  labels:
+      app: fos
+      category: config
+data:
+  type: partial
+  config: |-
+    config firewall vip
+           edit "nginx"
+            set extip "cfostest-headless.cfos-ingress.svc.cluster.local"
+            set mappedip 172.30.100.162
+            set extintf "eth0"
+            set portforward enable
+            set extport "8005"
+            set mappedport "80"
+           next
+           edit "goweb"
+            set extip "cfostest-headless.cfos-ingress.svc.cluster.local"
+            set mappedip 172.30.33.158
+            set extintf "eth0"
+            set portforward enable
+            set extport "8000"
+            set mappedport "80"
+           next
+       end
