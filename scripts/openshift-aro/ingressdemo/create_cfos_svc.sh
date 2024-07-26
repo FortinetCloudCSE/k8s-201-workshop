@@ -78,6 +78,7 @@ EOF
 kubectl apply -f cfosconfigmapfirewallvip.yaml -n $cfosnamespace
 }
 
+
 function create_firewall_policy() {
 cat << EOF | tee cfosconfigmapfirewallpolicy.yaml
 apiVersion: v1
@@ -156,5 +157,7 @@ kubectl get svc cfos7210250-service  -n $cfosnamespace
 create_cfos_headless_asvip
 create_cfos_rest
 create_cfosvip_forbackendapp
+echo sleep 60
+sleep 60
 create_firewall_policy
 create_lb_svc
