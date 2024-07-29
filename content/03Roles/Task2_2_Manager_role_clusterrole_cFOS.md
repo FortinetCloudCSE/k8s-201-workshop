@@ -25,7 +25,7 @@ A rule should define the least permission on an API resource:
 - apiGroups: Lists which include the API group to which the resource belongs.
 - verbs: The permissions on resources.
 
-```
+```YAML
 rules:
 - apiGroups:
   - ""
