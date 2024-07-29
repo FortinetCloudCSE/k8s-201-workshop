@@ -53,8 +53,8 @@ kind: ClusterRole
 
 You can use kubectl create command or use a yaml file.  Use one of these options and then check the output!
 
-{{< tabs title="Creating Cluster Role" >}}
-{{% tab title="Kubectl command method" %}}
+{{< tabs title="Options for Creating Cluster Role" >}}
+{{% tab title="kubectl command method" %}}
 
 ```bash
 kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps 
@@ -118,15 +118,19 @@ cFOS pods require using imagePullSecret to pull containers from an image reposit
 
 #### Create a ClusterRole for cFOS to Read Secrets
 
-- Using kubectl command:
+Use one of these options and then check the commands
+
+{{< tabs title="Options for Create ClusterRole for cFOS" >}}
+{{% tab title="kubectl method" %}}
 ```bash
 kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets --resource-name=cfosimagepullsecret,someothername
 ```
+
 {{% notice style="info" %}}
 --resource-name is optional, only needed if you want clusterrole only able to read the secret with specific resource name. 
 {{% /notice %}}
-
-- Using a YAML file:
+{{% /tab %}}
+{{% tab title="YAML file method" %}}
 
 ```bash
 cat << EOF | tee cfosSecretClusterRole.yaml
@@ -142,13 +146,13 @@ rules:
 EOF
 kubectl create -f cfosSecretClusterRole.yaml
 ```
-
-#### Check Result
-
+{{% /tab %}}
+{{% tab title="Check Result" %}}
 ```bash
 kubectl describe clusterrole secrets-reader
 ```
-Expected Result:
+{{% /tab %}}
+{{% tab title="Expected Result" style="info" %}}
 ```
 Name:         secrets-reader
 Labels:       <none>
@@ -159,6 +163,8 @@ PolicyRule:
   secrets    []                 [cfosimagepullsecret]  [get watch list]
   secrets    []                 [someothername]        [get watch list]
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Summary
 
