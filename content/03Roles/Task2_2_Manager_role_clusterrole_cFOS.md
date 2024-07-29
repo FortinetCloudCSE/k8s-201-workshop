@@ -51,21 +51,17 @@ kind: ClusterRole
 
 ### Task 1 - Create a clusterrole for cFOS 
 
-you can use kubectl create command or use a yaml file.
+You can use kubectl create command or use a yaml file.  Use one of these options and then check the output!
 
-{{% tabs title="c" %}}
-```c
-printf("Hello World!");
-```
-{{% /tabs %}}
-
-- Using kubectl command:
+{{< tabs title="Creating Cluster Role" >}}
+{{% tab title="Kubectl command method" %}}
 
 ```bash
 kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps 
 ```
+{{% /tab %}}
 
-- Using a YAML file:
+{{% tab title="YAML file method" %}}
 
 ```bash
 cat << EOF | tee cfosConfigMapsClusterRole.yaml
@@ -80,25 +76,29 @@ rules:
 EOF
 kubectl create -f cfosConfigMapsClusterRole.yaml 
 ```
+{{% /tab %}}
 
-- Check Result
-
+{{% tab title = "Check Result" %}}
 
 ```bash
 kubectl get clusterrole configmap-reader
 ```
-Expected Result:
+{{% /tab %}}
+{{% tab title="Expected Result" style="info" %}}
 ```
 NAME               CREATED AT
 configmap-reader   2024-05-05T08:11:35Z
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
-- Check resource detail:
-
+{{< tabs title="Check resource detail" >}}
+{{% tab title="command" %}}
 ```bash
 kubectl describe clusterrole configmap-reader
 ```
-Expected Result:
+{{% /tab %}}
+{{% tab title="Expected Result" style="info" %}}
 ```
 Name:         configmap-reader
 Labels:       <none>
@@ -109,6 +109,8 @@ PolicyRule:
   configmaps  []                 []              [get list watch]
 ```
 The empty list [] under "Non-Resource URLs" and "Resource Names" means the configmaps can read any configmaps.
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Task 2 - Create a Role for cFOS to Read Secrets
 
