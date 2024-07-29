@@ -1,7 +1,7 @@
 ---
 title: "Task 1 - Difference between RoleBindings and ClusterRoleBindings"
 chapter: false
-menuTitle: "RoleBindings and ClusterRoleBindings"
+linkTitle: "RoleBindings and ClusterRoleBindings"
 weight: 1
 ---
 

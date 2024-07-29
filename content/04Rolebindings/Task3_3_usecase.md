@@ -1,7 +1,7 @@
 ---
 title: "Task 3 - Use cases and scenarios"
 chapter: false
-menuTitle: "Use cases"
+linkTitle: "Use cases"
 weight: 10
 ---
 

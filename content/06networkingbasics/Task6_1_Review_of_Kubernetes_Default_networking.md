@@ -1,7 +1,7 @@
 ---
 title: "Task 1 - Review of Kubernetes Default Networking"
 chapter: false
-menuTitle: "Kubernetes Default Networking"
+linkTitle: "Kubernetes Default Networking"
 weight: 1
 ---
 
