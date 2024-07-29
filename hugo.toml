@@ -40,6 +40,10 @@ metaDataFormat = "yaml"
 defaultContentLanguageInSubdir= "false"
 enableEmoji = true
 
+[services]
+  [services.googleAnalytics]
+    ID = "G-5RZBH288ST"
+
 [outputs]
   home = [ "HTML", "RSS", "SEARCH", "SEARCHPAGE"]
   section = ["HTML", "RSS"]
