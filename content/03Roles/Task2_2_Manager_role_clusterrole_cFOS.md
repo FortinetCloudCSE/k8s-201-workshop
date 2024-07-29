@@ -1,7 +1,7 @@
 ---
 title: "Task 2 - Creating and Managing Roles and ClusterRoles for cFOS"
 chapter: false
-menuTitle: "Roles and ClusterRoles for cFOS"
+linkTitle: "Roles and ClusterRoles for cFOS"
 weight: 5
 ---
 

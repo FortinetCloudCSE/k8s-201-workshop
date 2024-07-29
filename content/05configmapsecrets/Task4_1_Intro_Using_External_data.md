@@ -1,7 +1,7 @@
 ---
 title: "Task 1 - Access External Data"
 chapter: false
-menuTitle: "Overview"
+linkTitle: "Overview"
 weight: 2
 ---
 ## Overview of how POD access external data

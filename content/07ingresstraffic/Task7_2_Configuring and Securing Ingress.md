@@ -1,7 +1,7 @@
 ---
 title: "Task 2 - Configuring and Securing Ingress"
 chapter: false
-menuTitle: "Ingress Protection  with cFOS"
+linkTitle: "Ingress Protection  with cFOS"
 weight: 5
 ---
 

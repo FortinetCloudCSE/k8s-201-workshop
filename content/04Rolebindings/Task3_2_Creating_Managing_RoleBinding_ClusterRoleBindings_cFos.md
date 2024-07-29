@@ -1,7 +1,7 @@
 ---
 title: "Task 2 - Creating and managing RoleBindings and ClusterRoleBindings"
 chapter: false
-menuTitle: "Creating RoleBindings,ClusterRoleBindings"
+linkTitle: "Creating RoleBindings,ClusterRoleBindings"
 weight: 5
 ---
 

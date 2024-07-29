@@ -1,7 +1,7 @@
 ---
 title: "Task 3 - Creating and Managing Storage"
 chapter: false
-menuTitle: "Storage"
+linkTitle: "Storage"
 weight: 10
 ---
 

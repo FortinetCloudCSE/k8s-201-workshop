@@ -1,7 +1,7 @@
 ---
 title: "Task 2 - Challenges of Single network interface"
 chapter: false
-menuTitle: "Single netowork interface"
+linkTitle: "Single netowork interface"
 weight: 5
 ---
 

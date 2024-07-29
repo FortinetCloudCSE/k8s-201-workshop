@@ -1,7 +1,7 @@
 ---
 title: "Task 1 - Configuring and Securing Egress"
 chapter: false
-menuTitle: "Egress with cFOS"
+linkTitle: "Egress with cFOS"
 weight: 5
 ---
 

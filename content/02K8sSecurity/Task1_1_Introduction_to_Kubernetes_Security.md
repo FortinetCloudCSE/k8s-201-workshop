@@ -1,7 +1,7 @@
 ---
 title: "Introduction to Kubernetes Security"
 chapter: false
-menuTitle: "Kubernetes Security"
+linkTitle: "Kubernetes Security"
 weight: 1
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Task 1 - What is Multus"
 chapter: false
-menuTitle: "Multus"
+linkTitle: "Multus"
 weight: 5
 ---
 
