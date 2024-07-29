@@ -12,7 +12,7 @@ In this chapter, we will:
 
 ### Clone script from github
 
-```
+```bash
 cd $HOME
 git clone https://github.com/FortinetCloudCSE/k8s-201-workshop.git
 cd $HOME/k8s-201-workshop
@@ -27,8 +27,14 @@ You have multiple options for setting up Kubernetes:
 1. If you are using the [K8s-101 workshop environment](https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html), you can continue in the K8s-101 environment and choose [Option 1](/01gettingstarted/4_task3.html#option-1-continue-from-k8s-101-session).
 2. If you are on the K8s-201 environment, choose [Option 2](/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s) or [Option 3](/01gettingstarted/4_task3.html#option-3-create-aks) to start from K8s-201 directly.
 
+#### Start Here
+
+{{< tabs title="START HERE" icon="thumbtack" >}}
+{{% tab title="Establish initialization variables" %}}
+
 
 #### setup some variable 
+
 ```bash
 owner="tecworkshop"
 alias k="kubectl"
@@ -67,27 +73,32 @@ grep -qxF "$vm_name" "$HOME/.ssh/known_hosts"  && ssh-keygen -R "$vm_name"
 fi
 
 ```
+{{% /tab %}}
 
-Check whether any of the following variables are empty:
+{{% tab title="Check variables" %}}
 
 ```bash
-echo ReousrceGroup  = $resourceGroupName
+echo ResourceGroup  = $resourceGroupName
 echo Location = $location
 echo ScriptDir = $scriptDir
 echo cFOS docker image = $cfosimage
-echo cFOS NameSpace= $cfosnamespace
+echo cFOS NameSpace = $cfosnamespace
 ```
+{{% /tab %}}
 
-You should see results like:
-
+{{% tab title="Expected Output" style="info" %}}
+  
+```shell
+ ResourceGroup = k8s54-k8s101-workshop
+ Location = eastus
+ ScriptDir = /home/k8s54
+ cFOS docker image = fortinetwandy.azurecr.io/cfos:255
+ cFOS NameSpace = cfostest
 ```
-ReousrceGroup = k8s54-k8s101-workshop
-Location = eastus
-ScriptDir = /home/k8s54
-cFOS docker image = fortinetwandy.azurecr.io/cfos:255
-cFOS Name Space= cfostest
-```
+{{% /tab %}}
+{{< /tabs >}}
 
+{{% expand title="**Option 1: Continue from K8S-101 Session...**" %}}
 #### Option 1: Continue from K8S-101 Session
 
 If you are continuing from the K8s-101 session, you should already have Kubernetes installed.
@@ -139,7 +150,9 @@ NAME          STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-
 node-worker   Ready    <none>          4m24s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.4 LTS   6.5.0-1022-azure   cri-o://1.25.4
 nodemaster    Ready    control-plane   9m30s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.4 LTS   6.5.0-1022-azure   cri-o://1.25.4
 ```
+{{% /expand %}}
 
+{{% expand title="**Option 2: Create Self-managed K8S...**" %}}
 
 #### Option 2: Create Self-managed K8S
 
@@ -265,13 +278,18 @@ or
 
 After you ssh into node. you can use `cat /etc/cni/net.d/10-calico.conflist` to check CNI configuration.
 
+{{% /expand %}}
+
+{{% expand title="**Option 3: Create AKS ...**" %}}
+
 #### Option 3: Create AKS 
 
 If you prefer AKS, use the script below to create a single-node cluster.
 
-{{% notice style="tip" %}}
-append "--enable-node-public-ip" if you want assign a public ip to worker node" ,without public-ip for worker node, container will not able to use ping to reach internet
-{{% /notice %}}
+
+{{< tabs title="AKS K8s Deployment" icon="thumbtack" >}}
+{{% tab title="Start Here" %}}
+
 
 ```bash
 #!/bin/bash -x
@@ -335,14 +353,17 @@ az aks create \
     --vnet-subnet-id $aksSubnetId \
     --ssh-key-value ~/.ssh/${rsakeyname}.pub
 az aks get-credentials -g  $resourceGroupName -n ${aksClusterName} --overwrite-existing
-
 ```
 
-- **Check your AKS cluster**
+{{% /tab %}}
+{{% tab title ="Check your AKS cluster" %}}
 
 ```bash
 kubectl get node -o wide
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+
 You will only see a single worker node because this is a managed Kubernetes cluster (AKS), and the master nodes are hidden from you. Additionally, you may notice that the container runtime is **containerd**, which differs from self-managed Kubernetes clusters where the container runtime is typically **cri-o**.
 
 
@@ -351,17 +372,20 @@ NAME                             STATUS   ROLES   AGE   VERSION   INTERNAL-IP   
 aks-worker-39339143-vmss000000   Ready    agent   47m   v1.28.9   10.224.0.4    <none>        Ubuntu 22.04.4 LTS   5.15.0-1066-azure   containerd://1.7.15-1
 ```
 
+{{% /tab %}}
+{{< /tabs >}}
+
 ### ssh into your worker node.
 
-if your k8s node does not have public ip assigned, you can SSH via internal ip with jumphost container.
+If your k8s node does not have public ip assigned, you can SSH via internal IP with jumphost container.
 
 For self-managed Kubernetes clusters, you can SSH into both the master and worker nodes. However, for AKS (Azure Kubernetes Service), you can only SSH into the worker nodes. Below is an example of how to SSH into an AKS worker node with internal ip.
 
-
-{{% notice style="tip" %}}
-
 You can SSH into a worker node via a public IP or through an internal IP using a jump host. The script below demonstrates how to SSH into a worker node using a jump host pod.
 
+
+{{< tabs title="Login to Cluster Worker Node" icon="thumbtack" >}}
+{{% tab title="Create Jrump Host Pod" %}}
 ```bash
 nodeip=$(kubectl get node -o jsonpath='{.items[0].status.addresses[0].address}')
 echo $nodeip 
@@ -387,22 +411,31 @@ kubectl apply -f sshclient.yaml
 echo wait for pod ready, use Ctr-c to break
 kubectl get pod  ssh-jump-host -w
 ```
-after pod show running  then shell into to use ssh 
+after pod show running  then shell into to use ssh
 
+Once You see **Status** as **Running**, you can press **ctrl+c** to end the wait command, and proceed
 
+{{% /tab %}}
+{{% tab title="enter Pod Shell and SSH into worker node" %}}
 ```bash
 kubectl exec -it ssh-jump-host -- sh -c "mkdir -p ~/.ssh"
 kubectl cp ~/.ssh/id_rsa_tecworkshop default/ssh-jump-host:/root/.ssh/id_rsa
 kubectl exec -it ssh-jump-host -- sh -c 'chmod 600 /root/.ssh/id_rsa'
 kubectl exec -it po/ssh-jump-host -- ssh azureuser@$nodeip
 ```
-{{% /notice %}}
-some useful command after you ssh into worker node. 
+{{% /tab %}}
+{{% tab title="Useful Worker Node Commands" style="info" %}}
 - `sudo crictl version` check runtime version
 - `journalctl -f -u containerd` check containerd log
 - `sudo cat /etc/cni/net.d/10-azure.conflist` check cni config etc.,
 - `journalctl -f -u kubelet` check kubelet log
 type `exit` to exit from worker node back to azure shell.
+
+{{% /tab %}}
+{{< /tabs >}}
+
+{{% /expand %}}
+
 
 ### Summary
 

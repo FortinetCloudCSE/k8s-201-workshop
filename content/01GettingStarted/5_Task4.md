@@ -17,16 +17,6 @@ When deploying cFOS, concepts such as Role and ClusterRole will be required. To 
 
 For more information about cFOS, check the [cFOS overview](/07ingresstraffic/task7_1_overview-of-ingress-in-kubernetes.html#cfos-overview) and [cFOS role in K8s](/02k8ssecurity/task1_1_introduction_to_kubernetes_security.html#preventionprotection-via-network-security-1).
 
-
-## Clone script from github
-
-```bash
-cd $HOME
-git clone https://github.com/FortinetCloudCSE/k8s-201-workshop.git
-cd $HOME/k8s-201-workshop
-git pull
-cd $HOME
-``` 
 ### Create namespae 
 
 ```bash
@@ -38,7 +28,7 @@ kubectl create namespace $cfosnamespace
 
 Use the script below to create a Kubernetes secret for pulling the cFOS image from **Azure Container Registry (ACR)**. You will need an access token from ACR to create the secret. 
 
-{{% notice style="tip" %}}
+{{% notice tip %}}
 If you have your own cFOS image hosted on another registry, you can use that. Just ensure that the **secret** is named "cfosimagepullsecret".
 {{% /notice %}}
 
@@ -94,20 +84,26 @@ cFOS requires a license to be functional. Once your license is activated, downlo
 
 ![imageuploadlicensefile](../images/uploadLicense.png)
 
-Assume you have downloaded the cFOS license file and already uploaded it to your Azure Cloud Shell. Assume cFOS license file is named "CFOSVLTM24000016.lic". Without modifying any content of your cFOS license, use the script below to create a ConfigMap for the cFOS license. Once the cFOS container boots up, it will automatically retrieve the ConfigMap to apply the license.
+- After upload, your **.lic** license file will be located in **$HOME**
+- replace your **.lic** license file name in the script below to create a ConfigMap for the cFOS license
+- Once the cFOS container boots up, it will automatically retrieve the ConfigMap to apply the license.
 
 
 ```bash
 cd $HOME
-cfoslicfilename="CFOSVLTM24000016.lic"
+cfoslicfilename="<<INSERT YOUR .LIC FILENAME HERE>>"
 [ ! -f $cfoslicfilename ] && read -p "Input your cfos license file name :|  " cfoslicfilename
 $scriptDir/k8s-201-workshop/scripts/cfos/generatecfoslicensefromvmlicense.sh $cfoslicfilename
 kubectl apply -f cfos_license.yaml -n $cfosnamespace
 ```
+{{% notice tip %}}
+You should see the following result: 
 
-if you do not have generatecfoslicensefromvmlicense.sh , you can use below script instead
+**cfos_license.yaml created.**
 
-```bash
+
+{{% expand title="If not, please use below script instead" %}}
+
 
 echo get your cFOS license file ready.
 cat <<EOF | tee cfos_license.yaml
@@ -122,11 +118,16 @@ data:
     license: |+
 EOF
 cd $HOME
-cfoslicfilename="CFOSVLTM24000016.lic"
+cfoslicfilename="<<INSERT YOUR .LIC FILENAME HERE>>"
 [ ! -f $cfoslicfilename ] && read -p "Input your cfos license file name :|  " cfoslicfilename
 while read -r line; do printf "      %s\n" "$line"; done < $cfoslicfilename >> cfos_license.yaml
 kubectl create -f cfos_license.yaml -n $cfosnamespace
 ```
+
+{{% /expand %}}
+
+{{% /notice %}}
+
 
 **check license configmap**
 
@@ -138,13 +139,10 @@ diff -s -b <(k get cm fos-license -n $cfosnamespace -o jsonpath='{.data}' | jq -
 
 ### Bring up cFOS
 
-Below, we use a YAML manifest to deploy a cFOS **Deployment**. This deployment includes **annotations** to work around the cFOS mount permission issue. It also features an `initContainers` section to ensure cFOS gets DNS configuration from Kubernetes. The number of replicas is set to 1.
-
-The file `Task1_1_create_cfos_serviceaccount.yaml` includes a ServiceAccount configured with the necessary permissions to read ConfigMaps and Secrets from Kubernetes. This setup involves Kubernetes RBAC (Role-Based Access Control), which includes creating a [Role](/03roles.html) and a [Role Binding](/04rolebindings.html). For more details, refer to [K8S RBAC](/02k8ssecurity/task1_3_using_rbac.html).
-
-the field "securityContext" has linux priviledge defined for cFOS container. check [K8s Security](/02k8ssecurity/task1_1_introduction_to_kubernetes_security.html) for more detail.
-
-The field "volumes"  about how to create [storage](/05configmapsecrets/task4_3_creating_managing_storage.html#use-external-data) for cFOS,the example below cFOS will not persist the data into storage.  
+Enter the following YAML manifest to deploy a cFOS **Deployment**. This deployment includes **annotations** to work around the cFOS mount permission issue. It also features an **_initContainers_** section to ensure cFOS gets DNS configuration from Kubernetes. The number of replicas is set to 1.
+- The file `Task1_1_create_cfos_serviceaccount.yaml` includes a ServiceAccount configured with the necessary permissions to read ConfigMaps and Secrets from Kubernetes. This setup involves Kubernetes RBAC (Role-Based Access Control), which includes creating a [Role](/03roles.html) and a [Role Binding](/04rolebindings.html). For more details, refer to [K8S RBAC](/02k8ssecurity/task1_3_using_rbac.html). 
+- The field "securityContext" has linux priviledge defined for cFOS container. check [K8s Security](/02k8ssecurity/task1_1_introduction_to_kubernetes_security.html) for more detail. 
+- The field "volumes"  about how to create [storage](/05configmapsecrets/task4_3_creating_managing_storage.html#use-external-data) for cFOS,the example below cFOS will not persist the data into storage.  
 
 ```bash
 kubectl create namespace $cfosnamespace
@@ -211,22 +209,22 @@ kubectl rollout status deployment cfos7210250-deployment -n $cfosnamespace &
 ```
 ### Config cFOS 
 
-By default, cFOS does not have an SSH server installed, so you cannot SSH into cFOS for configuration. Instead, you need to use `kubectl exec` to access the cFOS shell for configuration. Another way to configure cFOS is by using a [ConfigMap](/05configmapsecrets.html) or the REST API.
+By default, cFOS does not have an SSH server installed, so you cannot SSH into cFOS for configuration. Instead, you need to use **kubectl exec** to access the cFOS shell for configuration. Another way to configure cFOS is by using a [ConfigMap](/05configmapsecrets.html) or the REST API.
 
 For CLI configuration, the cli parser is "/bin/cli", the default username is "admin" with no password.
 
-To use `kubectl exec` to access the cFOS shell, you need to know the cFOS pod name first. You can use `kubectl get pod -n $cfosnamespace` to display the pod name, then use `kubectl exec -it po/<cFOS podname> -n cfostest -- /bin/cli`  to access the cFOS shell:
+To use **kubectl exec** to access the cFOS shell, you need to know the cFOS pod name first. You can use `kubectl get pod -n $cfosnamespace` to display the pod name, then use `kubectl exec -it po/<cFOS podname> -n cfostest -- /bin/cli`  to access the cFOS shell:
 
-or you can copy/paste below script to get into cFOS. 
-
-- get into cFOS cli 
+{{% expand title="Use this script for quick access into cFOS" %}} 
 
 ```bash
 podname=$(kubectl get pod -n $cfosnamespace -l app=cfos -o jsonpath='{.items[*].metadata.name}')
 kubectl exec -it po/$podname -n $cfosnamespace -- /bin/cli
 ```
+{{% /expand %}}
 
-enter username **admin** with empty password. now you can use cFOS cli 
+- Username **admin**
+- Password: **<empty>** 
 
 ```
 User: admin
@@ -236,7 +234,7 @@ Version: cFOS v7.2.1 build0255
 Serial-Number: 
 System time: Fri Jun 28 2024 12:46:41 GMT+0000 (UTC)
 ```
-use `exit` to quit from cFOS cli.
+Type ```exit``` to quit cFOS cli.
 
 - cFOS package update
 

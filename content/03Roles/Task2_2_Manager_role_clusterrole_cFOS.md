@@ -51,7 +51,13 @@ kind: ClusterRole
 
 ### Task 1 - Create a clusterrole for cFOS 
 
-you can use kubectl create comamnd or use a yaml file.
+you can use kubectl create command or use a yaml file.
+
+{{% tabs title="c" %}}
+```c
+printf("Hello World!");
+```
+{{% /tabs %}}
 
 - Using kubectl command:
 
