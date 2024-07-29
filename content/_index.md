@@ -1,3 +1,11 @@
+---
+title: "Fortinet K8S 201 Workshop"
+weight: 1
+archetype: "home"
+description : "Fortinet K8S 201 Workshop"
+---
+
+
 # Welcome to the Kubernetes 201 Workshop!
 
 This is a continuation of the K8s 101 workshop. This workshop will help you understand the role of cFOS in Kubernetes security, focusing on ingress and egress protection.

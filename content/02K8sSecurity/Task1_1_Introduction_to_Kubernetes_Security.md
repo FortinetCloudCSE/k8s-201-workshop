@@ -44,28 +44,24 @@ Fortinet Product [FortiXDR](https://www.fortinet.com/products/fortixdr) can prov
  
 ##  Runtime Workload Protection 
 
-- ### Prevention/Protection via Network Security 
+  ### Prevention/Protection via Network Security
+  - Actively stop unwanted traffic from entering or leaving Pods. 
+  - Includes network security enhancements via deploy container based firewall like **cFOS** and CNI based Kubernetes network policies.
 
-Actively stop unwanted traffic from entering or leaving Pods.
-Includes network security enhancements via deploy container based firewall like **cFOS** and CNI based Kubernetes network policies.
+  ### Prevention/Protection via Application Security
+  - Actively stop API or Layer 4-7 traffic entering Application Pods. For example, malicious API traffic via Kubernetes load balancer service entering application POD, malicious TCP/UDP/SCTP traffic from external entering into application Pod etc., the attack is embedded in the traffic payload.
 
-- ### Prevention/Protection via Application Security
+  ### Prevention with Detection 
+  - Control Plane Monitoring: Use Kubernetes API audit logs to detect unusual API access. 
+  - Runtime Monitoring: Employ Linux agents or agentless technology to detect unusual container syscalls, such as privilege escalation.
 
-Actively stop API or Layer 4-7 traffic entering Application Pods. For example, malicious API traffic via Kubernetes load balancer service entering application POD, malicious TCP/UDP/SCTP traffic from external entering into application Pod etc., the attack is embedded in the traffic payload.
+  ### Kubernetes API Level Security
 
-- ### Prevention with Detection 
+  ##### RBAC:
 
-Control Plane Monitoring: Use Kubernetes API audit logs to detect unusual API access.
+  - RBAC Provides authorization control to Kubernetes resources by granting authenticated users minimal necessary permissions. We will talk about RBAC in next chapter.
 
-Runtime Monitoring: Employ Linux agents or agentless technology to detect unusual container syscalls, such as privilege escalation.
-
-- ### Kubernetes API Level Security
-
-- ##### RBAC:
-
-RBAC Provides authorization control to Kubernetes resources by granting authenticated users minimal necessary permissions. We will talk about RBAC in next chapter.
-
-- ##### Admission Control:
+  ##### Admission Control:
 
   - Controls access at the Kubernetes API level. Built-in controllers include:
     - Pod Security Policy
@@ -73,37 +69,37 @@ RBAC Provides authorization control to Kubernetes resources by granting authenti
 
   - Kubernetes offers integration capabilities with external tools like OPA and Kyverno for detailed Pod security control.
 
-As of Kubernetes 1.21, PodSecurityPolicy (PSP) has been deprecated and is fully removed in Kubernetes 1.25 replaced by PSA.
-PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels."
+  As of Kubernetes 1.21, PodSecurityPolicy (PSP) has been deprecated and is fully removed in Kubernetes 1.25 replaced by PSA.
+  PSA can be used to evaluate the security settings of pod and container configurations to determine if they meet compliance requirements and enterprise security policies based on predefined policy levels."
 
-- ##### Pod Security Contexts and Container SecurityContext 
+  ##### Pod Security Contexts and Container SecurityContext 
 
-PodSecurityContext or securityContext defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
+  - PodSecurityContext or securityContext defines privileges for individual Pods or containers, allowing specific permissions like file access or running in privileged mode.
 
-  - pod.spec.containers.allowPrivilegeEscalation
+    - pod.spec.containers.allowPrivilegeEscalation
 
-    AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process.
+      AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process.
 
-  - pod.spec.containers.privileged
+    - pod.spec.containers.privileged
 
-    Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host.
+      Run container in privileged mode. Processes in privileged containers are essentially equivalent to root on the host.
 
-For most containers, these two options shall be set to false. Other options like runAsUser and runAsGroup can specify a user and group ID for running the container. Applications like firewalls will require running as the root user.
+  For most containers, these two options shall be set to false. Other options like runAsUser and runAsGroup can specify a user and group ID for running the container. Applications like firewalls will require running as the root user.
 
-- ##### Decide the SecurityContext for cFOS application 
+  ##### Decide the SecurityContext for cFOS application 
 
-Containers, by default, inherit Linux capabilities from the container runtime, such as CRI-O or containerd. For instance, the CRI-O runtime typically grants most common Linux capabilities. Below are the capabilities provided by default in version cri1.25.4:
-```
-"CAP_CHOWN",
-"CAP_DAC_OVERRIDE",
-"CAP_FSETID",
-"CAP_FOWNER",
-"CAP_SETGID",
-"CAP_SETUID",
-"CAP_SETPCAP",
-"CAP_NET_BIND_SERVICE",
-"CAP_KILL"
-```
+  Containers, by default, inherit Linux capabilities from the container runtime, such as CRI-O or containerd. For instance, the CRI-O runtime typically grants most common Linux capabilities. Below are the capabilities provided by default in version cri1.25.4:
+  ```
+  "CAP_CHOWN",
+  "CAP_DAC_OVERRIDE",
+  "CAP_FSETID",
+  "CAP_FOWNER",
+  "CAP_SETGID",
+  "CAP_SETUID",
+  "CAP_SETPCAP",
+  "CAP_NET_BIND_SERVICE",
+  "CAP_KILL"
+  ```
 However, some network applications like cFOS may require additional privileges to be fully functional. For example, the capability CAP_NET_RAW is not included in the default list. Without CAP_NET_RAW, functions like ping cannot be executed inside the cFOS container.
 
 Here is the brief purpose of mentioned capabilites 
