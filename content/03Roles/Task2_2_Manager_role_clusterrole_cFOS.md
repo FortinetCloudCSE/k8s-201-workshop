@@ -45,7 +45,7 @@ rules:
 
 For cFOS, either a ClusterRole or a Role can be used as cFOS only requires minimal permissions. 
 
-```
+```yaml
 kind: ClusterRole
 ```
 

@@ -15,8 +15,9 @@ K8s cluster internal application like cFOS will use serviceAccount with a JWT to
 
 ServiceAccounts are namespaced resources; if no namespace is supplied, they default to the "default" namespace.
 
-- ### Task 1: Create a serviceAccount for cFOS and bind to ClusterRole
-
+### Task 1: Create a serviceAccount for cFOS and bind to ClusterRole
+{{< tabs title="serviceAccount" >}}
+{{% tab title="create" %}}
 - use kubectl  create cli
 ```bash
 kubectl create namespace cfostest
@@ -24,7 +25,8 @@ kubectl create serviceaccount cfos-serviceaccount -n cfostest
 kubectl create clusterrole configmap-reader --verb=get,list,watch --resource=configmaps 
 kubectl create clusterrole secrets-reader --verb=get,list,watch --resource=secrets 
 ```
-
+{{% /tab %}}
+{{% tab title="add secret" %}}
 Add an imagePullSecret to this service account so a POD using this service account also include a image pull secret to pull container images:
 
 ```bash
@@ -33,14 +35,19 @@ kubectl apply -f cfosimagepullsecret.yaml -n cfostest
 kubectl get sa -n cfostest 
 ```
 
-patch serviceaccount with imagePullSecrets
+{{% /tab %}}
+{{% tab title="patch serviceaccount" %}}
+Patch serviceaccount with imagePullSecrets
 
+{{< tabs >}}
+{{% tab title="kubectl method" %}}
 ```bash
 kubectl patch serviceaccount cfos-serviceaccount -n cfostest \
   -p '{"imagePullSecrets": [{"name": "cfosimagepullsecret"}]}'
 ```
-
-- or use YAML manifest 
+{{% /tab %}}
+{{% tab title="YAML manifest method" %}}
+Or use YAML manifest 
 
 ```
 cat << EOF | tee cfos-serviceaccount.yaml
@@ -54,14 +61,21 @@ imagePullSecrets:
 EOF
 kubectl create -f cfos-serviceaccount.yaml 
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
-#### Check Result
+{{% /tab %}}
+
+
+{{% tab title="Check Result" %}}
 
 ```bash
 kubectl describe sa cfos-serviceaccount -n cfostest
 ```
+{{% /tab %}}
+{{% tab title="Expected Result" style="info" %}}
 Expected Result:
-```
+```tableGen
 Name:                cfos-serviceaccount
 Namespace:           cfostest
 Labels:              <none>
@@ -71,19 +85,29 @@ Mountable secrets:   <none>
 Tokens:              <none>
 Events:              <none>
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 #### Bind ClusterRole to ServiceAccount
 
 Bind previously created ClusterRoles "configmap-reader" and "secrets-reader" to the service account in the namespace cfostest.
 
-- use kubectl create cli
+{{< tabs >}}
+
+{{% tab title="create clusterRole" %}}
+One one of these methods to create a clusterRole
+
+{{< tabs >}}
+{{% tab title="kubectl method" %}}
+Choose kubectl create cli
 
 ```bash
 kubectl create rolebinding cfosrolebinding-configmap-reader --clusterrole=configmap-reader --serviceaccount=cfostest:cfos-serviceaccount -n cfostest
 kubectl create rolebinding cfosrolebinding-secrets-reader --clusterrole=secrets-reader --serviceaccount=cfostest:cfos-serviceaccount -n cfostest
 ```
-
-- or use yaml manifest 
+{{% /tab %}}
+{{% tab title="Yaml method" %}}
+Or use yaml manifest 
 
 ```bash
 cat << EOF | tee cfosrolebinding.yaml
@@ -116,13 +140,42 @@ subjects:
 EOF
 kubectl create -f cfosrolebinding.yaml -n cfostest
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
-### Check the result
+{{% /tab %}}
+{{% tab title="Check result" %}}
 
 ```bash
 kubectl describe rolebinding cfosrolebinding-configmap-reader -n cfostest
 kubectl describe rolebinding cfosrolebinding-secrets-reader -n cfostest
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" %}}
+```tableGen
+Name:         cfosrolebinding-configmap-reader
+Labels:       <none>
+Annotations:  <none>
+Role:
+  Kind:  ClusterRole
+  Name:  configmap-reader
+Subjects:
+  Kind            Name                 Namespace
+  ----            ----                 ---------
+  ServiceAccount  cfos-serviceaccount  cfostest
+Name:         cfosrolebinding-secrets-reader
+Labels:       <none>
+Annotations:  <none>
+Role:
+  Kind:  ClusterRole
+  Name:  secrets-reader
+Subjects:
+  Kind            Name                 Namespace
+  ----            ----                 ---------
+  ServiceAccount  cfos-serviceaccount  cfostest
+```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Check service account permission
 
@@ -135,8 +188,9 @@ kubectl auth can-i get secrets --as=system:serviceaccount:cfostest:cfos-servicea
 Both commands should return "yes".
 
 ### Check service account with kubectl pod
-
-```yaml
+{{< tabs title="Apply Service Account" >}}
+{{% tab title="apply" %}}
+```bash
 cat << EOF | kubectl -n cfostest apply -f - 
 apiVersion: v1
 kind: Pod
@@ -154,21 +208,32 @@ spec:
     - "infinity"
 EOF
 ```
-Check Result
+{{% /tab %}}
+{{% tab title="Check Result" %}}
 
 ```bash
 kubectl exec -it po/kubectl -n cfostest  -- kubectl get cm
-```
-and
-```
 kubectl exec -it po/kubectl -n cfostest  -- kubectl get secret
 ```
+
+{{% /tab %}}
+{{% tab title="Expected Output" %}}
 both command show able to list cm and secret in namespace cfostest 
+```tableGen
+NAME               DATA   AGE
+kube-root-ca.crt   1      3m32s
+NAME                  TYPE                             DATA   AGE
+cfosimagepullsecret   kubernetes.io/dockerconfigjson   1      3m25s
+```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Task 2 - Create cFOS Deployment and with serviceaccount
 
 - Using kubectl with a YAML file 
 
+{{< tabs title="CFos Deployment" >}}
+{{% tab title="kubectl" %}}
 ```bash
 cat << EOF | tee cfosPOD.yaml 
 ---
@@ -195,16 +260,22 @@ spec:
 EOF
 kubectl apply -f cfosPOD.yaml -n cfostest
 ```
-
+{{% /tab %}}
+{{% tab title="Verify" %}}
 After deployment, you can use:
 
 ```bash
 kubectl describe po/cfos-pod -n cfostest | grep 'Service Account:'
 ```
-Expected result:
+{{% /tab %}}
+{{% tab title="Expected result" %}}
+
 ```
 Service Account: cfos-serviceaccount
 ```
+
+{{% /tab %}}
+{{< /tabs >}}
 
 ### clean up
 

@@ -89,7 +89,7 @@ Fortinet Product [FortiXDR](https://www.fortinet.com/products/fortixdr) can prov
   ##### Decide the SecurityContext for cFOS application 
 
   Containers, by default, inherit Linux capabilities from the container runtime, such as CRI-O or containerd. For instance, the CRI-O runtime typically grants most common Linux capabilities. Below are the capabilities provided by default in version cri1.25.4:
-  ```
+  ```tableGen
   "CAP_CHOWN",
   "CAP_DAC_OVERRIDE",
   "CAP_FSETID",
@@ -119,6 +119,9 @@ Here is the brief purpose of mentioned capabilites
 
 - deploy imagepullsecret, serviceaccount 
 
+{{< tabs title="cFOS boot permissions" >}}
+{{% tab title="Deploy imagepullsecret" %}}
+
 If you do not have valid cfosimagepullsecret.yaml, check [Create imagepullsecret](/01gettingstarted/5_task4.html#create-image-pull-secret-for-kubernetes)
 
 ```
@@ -127,8 +130,8 @@ kubectl create namespace cfostest
 kubectl apply -f cfosimagepullsecret.yaml -n cfostest
 kubectl create -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
-- deploy cfos  deployment
-
+{{% /tab %}}
+{{% tab title="cFOS Deployment" %}}
 ```bash
 cfosimage="fortinetwandy.azurecr.io/cfos:255"
 cat << EOF | tee > cfos7210250-deployment.yaml 
@@ -171,24 +174,26 @@ EOF
 kubectl apply -f cfos7210250-deployment.yaml -n cfostest 
 kubectl rollout status deployment cfos7210250-deployment -n cfostest
 ```
-- check whether cFOS container is able to execute some command
-
+{{% /tab %}}
+{{% tab title="command verification" %}} 
+Verify cFOS container is able to execute some command
 ```bash
 cmd="iptables -t nat -L -v"
 podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
 kubectl exec -it po/$podname -n cfostest -- $cmd
 ```
-
-Expected Result
-
+{{% /tab %}}
+{{% tab title="Expected Result" style="info" %}}
 You will see error message below which indicate that the container does not have permission to run cmd
-
-```
+```tableGen
 iptables v1.8.7 (legacy): can't initialize iptables table `nat': Permission denied (you must be root)
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 - Try to solve the permission issue by adjust the securityContext Setting.
 
+{{< tabs title="Hints" >}}
+{{% tab title="Answer" %}}
 {{% notice style="tip" %}}
 add linux capabilites to ["NET_ADMIN","NET_RAW"] then check log again
 {{% /notice %}}
@@ -197,7 +202,7 @@ add linux capabilites to ["NET_ADMIN","NET_RAW"] then check log again
 In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent in current version of AKS or self-managed k8s.
 {{% /notice %}}
 
-- Answer
+Answer
 
 ```bash
 sed -i 's/add: \["NET_RAW"\]/add: ["NET_RAW","NET_ADMIN"]/' cfos7210250-deployment.yaml
@@ -205,14 +210,19 @@ kubectl replace -f cfos7210250-deployment.yaml -n cfostest
 kubectl rollout status deployment cfos7210250-deployment -n cfostest
 ```
 
+{{% /tab %}}
+{{% tab title="verification" %}}
 Check again with below command after new pod created
+
 ```bash
 cmd="iptables -t nat -L -v"
 podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
 kubectl exec -it po/$podname -n cfostest -- $cmd
 ```
-you shall see now command is sucessful 
-```
+{{% /tab %}}
+{{% tab title="Expected Result" style="info" %}}
+You should see now command is now successful 
+```tableGen
 Chain PREROUTING (policy ACCEPT)
 target     prot opt source               destination         
 
@@ -225,6 +235,8 @@ target     prot opt source               destination
 Chain POSTROUTING (policy ACCEPT)
 target     prot opt source               destination  
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Prevention/Protection via Network Security
 

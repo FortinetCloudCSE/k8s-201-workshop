@@ -51,6 +51,8 @@ These methods provide versatile options for passing data to containers, ensuring
 
 Below is a configuration sample that allow cFOS to use external url to get a file as dstaddr in firewall policy
 
+{{< tabs title="cFOS external data sources" >}}
+{{% tab title="apply external data" %}}
 ```bash
 cat << EOF | tee cm_external_resource.yaml 
 apiVersion: v1
@@ -83,12 +85,58 @@ data:
 EOF
 kubectl apply -f cm_external_resource.yaml
 ```
+{{% /tab %}}
+{{% tab title="Verify" %}}
 
-after apply above yaml manifest, you can use `kubectl describe cm cm-externalresource` to check the configuration. 
-if you have cFOS container running, cFOS will read this configmap and config itself accordingly. 
+after apply above yaml manifest, check the configuration.
+```bash
+kubectl describe cm cm-externalresource
+```
+{{% /tab %}}
+{{% tab title="Expected Output" %}}
+If you have cFOS container running, cFOS will read this configmap and config itself accordingly.
+```tableGen
+Name:         cm-externalresource
+Namespace:    default
+Labels:       app=fos
+              category=config
+Annotations:  <none>
+
+Data
+====
+config:
+----
+config system external-resource
+  edit "External-resource-files"
+    set type address
+    set resource "http://10.104.3.130/resources/urls"
+    set refresh-rate 2
+    set interface "eth0"
+  next
+end
+config firewall policy
+   edit 10
+    set srcintf "eth0"
+    set dstintf "eth0"
+    set srcaddr "all"
+    set dstaddr "External-resource-files"
+    set action deny
+   next
+end
+type:
+----
+partial
+
+BinaryData
+====
+
+Events:  <none>
+```
+{{% /tab %}}
+{{< /tabs >}}
 
 
-### clean up
+### Clean up
 
 ```bash
 cat << EOF | kubectl apply -f - 

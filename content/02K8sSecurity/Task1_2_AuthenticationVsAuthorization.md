@@ -78,16 +78,21 @@ Admission controllers are not enabled by default. They must be explicitly config
 Authentication, authorization, and admission control are foundational to Kubernetes security, ensuring only authenticated and authorized actions that meet the cluster's policy requirements are performed within the cluster.
 
 ## Task 1 Investigate your k8s environment
-
+{{< tabs title="K8s investigation" >}}
+{{% tab title="User" %}}
 - Who are you?
 ```bash
 kubectl config view --minify -o jsonpath='{.users[0].name}'
 ```
+{{% /tab %}}
+{{% tab title="Cluster" %}}
 
 - Which cluster are you connected to?
 ```bash
 kubectl config current-context
 ```
+{{% /tab %}}
+{{% tab title="Permissions" %}}
 
 - What can you do?
 
@@ -95,20 +100,23 @@ For example, check whether you have permission to read configmaps in the kube-sy
 ```bash
 kubectl auth can-i list configmaps -n kube-system
 ```
+{{% /tab %}}
+{{% tab title="namespace permissions" %}}
 
 Check whether you are allowed to do anything in all namespaces:
 ```bash
 kubectl auth can-i '*' '*' -A
 ```
+{{% /tab %}}
+{{% tab title="AuthC" %}}
 
 - How do you authenticate to your cluster?
 ```bash
 kubectl config view
 ```
 
-Expected result:
-
-- Self Managed k8s 
+{{< tabs title="Expected result" >}}
+{{% tab title="Self Managed k8s output" %}} 
 ```
 apiVersion: v1
 clusters:
@@ -131,10 +139,8 @@ users:
     client-key-data: DATA+OMITTED
 ```
 The user "kubernetes-admin" uses a certificate and key to authenticate itself to the Kubernetes API.
-
-or 
-- AKS
-
+{{% /tab %}}
+{{% tab title="AKS output" %}}
 ```
 apiVersion: v1
 clusters:
@@ -158,3 +164,8 @@ users:
     token: REDACTED
 ```
 The user "clusterUser_k8s51-k8s101-workshop_k8s51-aks-cluster" uses a certificate and key to authenticate itself to the Kubernetes API.
+{{% /tab %}}
+{{< /tabs >}}
+
+{{% /tab %}}
+{{< /tabs >}}
