@@ -32,29 +32,45 @@ Use the script below to create a Kubernetes secret for pulling the cFOS image fr
 If you have your own cFOS image hosted on another registry, you can use that. Just ensure that the **secret** is named "cfosimagepullsecret".
 {{% /notice %}}
 
-Get your ACR access token and paste it into the variable `accessToken` using the command below:
+Get your ACR access token and test it
 
+{{< tabs title="ACR Access Token" >}}
+{{% tab title="Enter Username" %}}
+
+Paste your ACR Username it into the variable `UserName` using the command below:
 ```bash
 loginServer="fortinetwandy.azurecr.io"
+read -p "Paste your UserName for acr server $loginServer:|  " userName
+echo $userName
+```
+{{% /tab %}}
+
+{{% tab title="Enter Password" %}}
+
+Paste your ACR token it into the variable `accessToken` using the command below:
+```bash
+
 read -p "Paste your accessToken for acr server $loginServer:|  " accessToken
 echo $accessToken
 ```
-
-verify accessToken with
-
+{{% /tab %}}
+{{% tab title="Verify accessToken" %}}
 ```bash
-
-docker login $loginServer -u 00000000-0000-0000-0000-000000000000 -p $accessToken
+docker login $loginServer -u $userName -p $accessToken
 ```
-Login shall be Succeeded as shown below
-
-```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+```TableGen
 WARNING! Using --password via the CLI is insecure. Use --password-stdin.
 Login Succeeded
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 Create k8s secret with accessToken and save a copy of yaml file for later use.
 
+{{< tabs title="K8s Secret" >}}
+{{% tab title="Create" %}}
 ```bash
 filename="cfosimagepullsecret.yaml"
 echo $accessToken
@@ -62,23 +78,25 @@ echo $loginServer
 kubectl create namespace $cfosnamespace
 kubectl create secret -n $cfosnamespace docker-registry cfosimagepullsecret \
     --docker-server=$loginServer \
-    --docker-username=00000000-0000-0000-0000-000000000000 \
+    --docker-username=$userName \
     --docker-password=$accessToken \
     --docker-email=wandy@example.com
 kubectl get secret cfosimagepullsecret -n $cfosnamespace -o yaml | tee $filename
 sed -i '/namespace:/d' $filename
-
 ```
-
-**Verify the secret**
+{{% /tab %}}
+{{% tab title="Verify" %}}
 ```bash
 kubectl get secret -n $cfosnamespace
 ```
-shall see
-```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+```TableGen
 NAME                  TYPE                             DATA   AGE
 cfosimagepullsecret   kubernetes.io/dockerconfigjson   1      38m
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Create cFOS configmap license 
 
@@ -93,21 +111,33 @@ cFOS requires a license to be functional. Once your license is activated, downlo
 - replace your **.lic** license file name in the script below to create a ConfigMap for the cFOS license
 - Once the cFOS container boots up, it will automatically retrieve the ConfigMap to apply the license.
 
+{{< tabs title="License" >}}
+{{% tab title="Paste License filename" %}}
+Paste your license filename to use it in configmap
+```bash
 
+read -p "Paste your cFOS License Filename:|  " licFilename
+echo $
+```
+{{% /tab %}}
+{{% tab title="ConfigMap" %}}
 ```bash
 cd $HOME
-cfoslicfilename="<<INSERT YOUR .LIC FILENAME HERE>>"
+cfoslicfilename=$licFilename
 [ ! -f $cfoslicfilename ] && read -p "Input your cfos license file name :|  " cfoslicfilename
 $scriptDir/k8s-201-workshop/scripts/cfos/generatecfoslicensefromvmlicense.sh $cfoslicfilename
 kubectl apply -f cfos_license.yaml -n $cfosnamespace
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+
 {{% notice tip %}}
 You should see the following result: 
 
-**cfos_license.yaml created.**
-
-**configmap/fos-license created**
-
+```commandline
+cfos_license.yaml created.
+configmap/fos-license created
+```
 
 {{% expand title="If not, please use below script instead" %}}
 
@@ -133,15 +163,29 @@ kubectl create -f cfos_license.yaml -n $cfosnamespace
 {{% /expand %}}
 
 {{% /notice %}}
-
+{{% /tab %}}
+{{< /tabs >}}
 
 **check license configmap**
 
-use `kubectl get cm fos-license -o yaml -n $cfosnamespace` to check whether license is correct. or use script below to check 
-
+{{< tabs title="Check License" >}}
+{{% tab title="Option 1" %}}
+Use following command to check whether license is correct
+```
+kubectl get cm fos-license -o yaml -n $cfosnamespace
+ ```
+{{% /tab %}}
+{{% tab title="Option 2" %}}
 ```bash
 diff -s -b <(k get cm fos-license -n $cfosnamespace -o jsonpath='{.data}' | jq -r .license |  sed '${/^$/d}' ) $cfoslicfilename
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+```commandline
+some stuff
+```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Bring up cFOS
 
@@ -221,44 +265,48 @@ For CLI configuration, the cli parser is "/bin/cli", the default username is "ad
 
 To use **kubectl exec** to access the cFOS shell, you need to know the cFOS pod name first. You can use `kubectl get pod -n $cfosnamespace` to display the pod name, then use `kubectl exec -it po/<cFOS podname> -n cfostest -- /bin/cli`  to access the cFOS shell:
 
-{{% expand title="Use this script for quick access into cFOS" %}} 
-
+{{< tabs title="Access into cFOS" >}}
+{{% tab title="Access Attempt" %}}
 ```bash
 podname=$(kubectl get pod -n $cfosnamespace -l app=cfos -o jsonpath='{.items[*].metadata.name}')
 kubectl exec -it po/$podname -n $cfosnamespace -- /bin/cli
 ```
-{{% /expand %}}
-
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 - Username **admin**
 - Password: **<empty>** 
+- Try a command: ```diagnose sys status```
 
-```
-User: admin
-Password: 
+```TableGen 
 cFOS # diagnose sys status
 Version: cFOS v7.2.1 build0255
 Serial-Number: 
 System time: Fri Jun 28 2024 12:46:41 GMT+0000 (UTC)
 ```
-Type ```exit``` to quit cFOS cli.
+Type <kbd>exit</kbd> to quit cFOS cli.
+{{% /tab %}}
+{{< /tabs >}}
 
 - cFOS package update
 
 cFOS can keep updated with FortiGuard services.
 use below command to trigger package updates for all FortiGuard services.
-
-after login cFOS
-
+{{< tabs title="cFOS update" >}}
+{{% tab title="Update command" %}}
+After cFOS login
 ```bash
   execute update-now
 ```
-you shall see  at the end of output
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 ```
 2024/07/03 02:52:21 everything is up-to-date
 2024/07/03 02:52:21 what to do next? stop
 2024/07/03 02:52:21 created botnet ip db v7.3756
 2024/07/03 02:52:21 DB updates notified!
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Q&A 
 

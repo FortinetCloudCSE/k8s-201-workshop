@@ -42,15 +42,18 @@ In the previous chapter, we learned how to use RBAC to grant users permission to
 Kubernetes comes with some default RBAC roles and clusterroles which are required for bootstrapping the cluster. For example, the role "system:controller:bootstrap-signer" grants the permission to Kubernetes nodes to bootstrap themselves. It automatically approves and signs certain CSRs used for node bootstrapping. 
 
 
-- pre-defined role "system:controller:bootstrap-signer"
+- pre-defined role **system:controller:bootstrap-signer**
 
 this role is namespaced. it only grant permission to resource in namespace kube-system
-
+{{< tabs title="roles" >}}
+{{% tab title="Get" %}}
 ```bash
 kubectl get role system:controller:bootstrap-signer -n kube-system -o yaml
 ```
-Expected output:
-```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -73,22 +76,27 @@ rules:
   - list
   - watch
 ```
-To see which RoleBindings are associated with this role:
+{{% /tab %}}
+{{< /tabs >}}
 
+To see which RoleBindings are associated with this role:
 ```bash
 kubectl get rolebinding -n kube-system system:controller:bootstrap-signer -o yaml
 ```
-- pre-definded Clusterrole 
+- pre-definded **Clusterrole** 
 
 Another example is the cluster-admin ClusterRole, which grants full administrative privileges across the entire cluster. This role allows nearly unrestricted access to all resources in the cluster, making it suitable for highly privileged users who need to manage and configure any aspect of the cluster. 
 
 this clusterrole is cluster wide. it can apply to entire cluster with clusterrolebinding. 
 
+{{< tabs title="rolebinding" >}}
+{{% tab title="Get" %}}
 ```bash
 kubectl get clusterrole cluster-admin -o yaml
 ```
-Expected output:
-```
+{{% /tab %}}
+{{% tab title="Expected Output1" style="info" %}}
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -109,14 +117,18 @@ subjects:
   kind: Group
   name: system:masters
 ```
+{{% /tab %}}
+{{% tab title="cluster-admin" %}}
+
 The clusterrole "cluster-admin" is bound to the group "system:masters" cluster-wide, providing all permissions to all resources in the cluster.
 
 ```bash
 kubectl get clusterrolebinding cluster-admin -o yaml
 ```
-Expected output
-you can find Clusterrole "cluster-admin" bound to subject user group -"system:masters" with clusterrolebinding
-```
+{{% /tab %}}
+{{% tab title="Expected Output2" style="info" %}}
+You can find Clusterrole "cluster-admin" bound to subject user group -"system:masters" with clusterrolebinding
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -138,7 +150,8 @@ subjects:
   name: system:masters
 
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Task:  List all RBAC Default Roles and ClusterRoles
 

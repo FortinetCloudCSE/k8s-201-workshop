@@ -69,6 +69,8 @@ enableEmoji = true
     #   (here eg.: theme-relearn-light.css / theme-relearn-dark.css)
     noClasses = false
     style = "native"
+    lineNumbersInTable = false
+    highlightWrap = true
 
   [markup.goldmark.renderer]
     # activated for this showcase to use HTML and JavaScript; decide on your own needs;
