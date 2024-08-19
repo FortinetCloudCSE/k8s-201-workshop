@@ -37,8 +37,7 @@ resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && cont
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
 svcname=$(whoami)-$owner
-#cfosimage="fortinetwandy.azurecr.io/cfos:255"
-cfosimage="public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255"
+cfosimage="fortinetwandy.azurecr.io/cfos:255"
 cfosnamespace="cfostest"
 
 cat << EOF | tee > $HOME/variable.sh
@@ -50,8 +49,7 @@ resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && cont
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
 svcname=$(whoami)-$owner
-#cfosimage="fortinetwandy.azurecr.io/cfos:255"
-cfosimage="public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255"
+cfosimage="fortinetwandy.azurecr.io/cfos:255"
 cfosnamespace="cfostest"
 EOF
 echo location=$location >> $HOME/variable.sh
@@ -86,8 +84,7 @@ You should see results like:
 ReousrceGroup = k8s54-k8s101-workshop
 Location = eastus
 ScriptDir = /home/k8s54
-#cFOS docker image = fortinetwandy.azurecr.io/cfos:255
-cFOS docker image = public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255
+cFOS docker image = fortinetwandy.azurecr.io/cfos:255
 cFOS Name Space= cfostest
 ```
 
@@ -286,8 +283,7 @@ resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && cont
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
 svcname=$(whoami)-$owner
-#cfosimage="fortinetwandy.azurecr.io/cfos:255"
-cfosimage="public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255"
+cfosimage="fortinetwandy.azurecr.io/cfos:255"
 cfosnamespace="cfostest"
 echo "Using resource group $resourceGroupName in location $location"
 
