@@ -17,10 +17,10 @@ ConfigMap holds configuration data for pods to consume. configuration data can b
 
 cFOS has build in feature can read the configMap from k8s via k8s API. when cFOS POD serviceaccount configured with a permission to read configMaps, cFOS can read configMap as it's configuration such as license data , firewall policy related config etc.,
 
-
-- #### Task: Create a configMap for cFOS to import license
-
-- create a cFOS without license 
+#### Task: Create a configMap for cFOS to import license
+{{< tabs >}}
+{{% tab title="Create a cFOS" %}} 
+- First we create CFOS without license
 
 ```bash
 cd $HOME
@@ -88,13 +88,17 @@ kubectl apply -f cfos7210250-deployment.yaml -n cfostest
 kubectl rollout status deployment cfos7210250-deployment -n cfostest
 
 ```
+{{% /tab %}}
+{{% tab title="Check cFOS"  %}}
 
-
-- check cFOS running in restricted mode due to no license applied
+- Check cFOS running in restricted mode due to no license applied
 
 ```bash
 kubectl logs --tail=100 -n cfostest -l app=cfos | grep license
 ```
+
+{{% /tab %}}
+{{% tab title="Configmap"  %}}
 
 - Create a configmap file for cfos license 
 
@@ -127,6 +131,9 @@ The |+ ensures that all the line breaks within the license text
 category: license indicate this is a license 
 {{% /notice %}}
 
+{{% /tab %}}
+{{% tab title="Add License"  %}}
+
 - Add your license 
 
 get your license file, then append the content to yaml file, replace "CFOSVLTM24000016.lic" with your actual file name
@@ -135,6 +142,10 @@ get your license file, then append the content to yaml file, replace "CFOSVLTM24
 licfile="CFOSVLTM24000016.lic"
 while read -r line; do printf "      %s\n" "$line"; done < $licfile >> cfos_license.yaml
 ```
+
+{{% /tab %}}
+{{% tab title="Apply Resource"  %}}
+
 - Apply the resource 
 
 ```bash
@@ -143,12 +154,16 @@ kubectl create -f cfos_license.yaml -n cfostest
 
 cFOS will "watch" ConfigMap has with label= "app: fos", then import the license into cFOS.
 
+{{% /tab %}}
+{{% tab title="Check cFOS log"  %}}
+
 - Check cFOS log 
 
 ```bash
 kubectl logs -f  -l app=cfos -n cfostest
 ```
 
+{{% tab title="Expected Result" style="info" %}}
 Expected Result
 
 ```
@@ -157,13 +172,17 @@ Expected Result
 2024-05-08_10:20:15.11911 INFO: 2024/05/08 10:20:15 got a fos license
 2024-05-08_10:20:15.11955 INFO: 2024/05/08 10:20:15 importing license...
 ```
+
+{{% /tab %}}
+{{% /tab %}}
+{{% tab title="Cerify license"  %}}
 - Check whether license applied from cFOS cli
 
 ```bash
 podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
 kubectl exec -it po/$podname -n cfostest -- /bin/cli
 ```
-input username "admin", the default password is not been setup, just press enter key.
+input username "admin", the default password has not been setup, just press enter key.
 then issue command
 
 ```
@@ -179,15 +198,23 @@ Valid To: 2024-07-25
 ```
 use `exit` to exit the cFOS command parser 
 
-- Troublshooting license apply issue
+
+{{% /tab %}}
+{{% tab title="License troubleshooting"  %}}
+
+- Troubleshooting license apply issue
 
 In case you hit license issue, shell into cFOS, run `execute update-now` to check more detail
 
+{{% /tab %}}
+{{< /tabs >}}
 
 
-- #### Task 2 - Use ConfigMap for cFOS for Firewall VIP config
+#### Task 2 - Use cFOS ConfigMap for Firewall VIP config
 
 
+{{< tabs >}}
+{{% tab title="cFOS Configmap" %}}
 ```bash
 cat << EOF | tee fosconfigmapfirewallvip.yaml
 apiVersion: v1
@@ -222,6 +249,10 @@ type: partial indicates this is a partial configuration
 category: config indicates this is a configuation
 {{% /notice  %}}
 
+
+{{% /tab %}}
+{{% tab title="Check Result" style="info" %}}
+
 - Check Result
 
 Check cFOS container log with `kubectl logs -f  -l app=cfos -n cfostest` . you can find 
@@ -233,10 +264,17 @@ Check cFOS container log with `kubectl logs -f  -l app=cfos -n cfostest` . you c
 2024-05-14_10:57:18.63417 INFO: 2024/05/14 10:57:18 applying a partial fos config...
 2024-05-14_10:57:19.42525 INFO: 2024/05/14 10:57:19 fos config is applied successfully.
 ```
-- Delete ConfigMap 
 
-use `kubectl delete cm <configMap Name>` to delete configmap, however 
-delete a ConfigMap will not delete configuration on the running cFOS, but you can create a ConfigMap with delete command to delete the configuration. 
+{{% /tab %}}
+{{% tab title="Delete Configmap" %}}
+
+- Delete ConfigMap
+
+Take special care: delete a ConfigMap will not delete configuration on the running cFOS, but you can create a ConfigMap with delete command to delete the configuration. 
+ - use `kubectl delete cm <configMap Name>` to delete configmap.  
+
+{{% /tab %}}
+{{% tab title="FW Configmap" %}}
 
 - Create ConfigMap for cFOS to delete a Firewall Config
 
@@ -285,6 +323,8 @@ metadata:
   name: cm-full-empty
 EOF
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 Expected Result
 
@@ -301,26 +341,30 @@ kubectl logs -f -l app=cfos -n cfostest
 ```
 then cFOS will be reloaded with this empty configuraiton, effectively, this is reset cFOS back to the factory default.
 
+{{% /tab %}}
+{{< /tabs >}}
 
 ## Access External Data with Secrets
 
 Kubernetes Secrets are objects that store sensitive data such as passwords, OAuth tokens, SSH keys, etc. The primary purpose of using secrets is to protect sensitive configuration from being exposed in your application code or script. Secrets provide a mechanism to supply containerized applications with confidential data while keeping the deployment manifests or source code non-confidential.
 
-- ### Benefits of Using Secrets
+### Benefits of Using Secrets
 
 - Security: Secrets keep sensitive data out of your application code and Pod definitions.
 Management: Simplifies sensitive data management as updates to secrets do not require image rebuilds or application redeployments.
 - Flexibility: Can be mounted as data volumes or exposed as environment variables to be used by a container in a Pod. Also, they can be used by the Kubernetes system itself for things like accessing a private image registry.
 
-- ### How to Create Secrets 
+### How to Create Secrets 
 
-- Using kubectl cli 
+- use KubeCTL or YAML file
+{{< tabs >}}
+{{% tab title="Using kubectl cli " %}}
 
 ```bash
 kubectl create secret generic ipsec-shared-key --from-literal=ipsec-shared-pass=12345678 -n cfostest
 ```
-
-- check result 
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 use `kubectl get secret ipsec-shared-key -o yaml -n cfostest` can check the secret just created.
 
@@ -331,8 +375,8 @@ kubectl get secret ipsec-shared-key -o json -n cfostest | jq -r '.data["ipsec-sh
 
 
 ```
-
-- Using yaml File
+{{% /tab %}}
+{{% tab title="Using yaml File" %}}
 
 ```bash
 cat << EOF | kubectl apply -n cfostest -f - 
@@ -350,8 +394,10 @@ The type field helps Kubernetes software and developers know how to treat the co
 {{% notice style="info" %}}
 Opaque: This is the default type for a secret. It indicates that the secret contains arbitrary data that isn't structured in any predefined way specific to Kubernetes. This type is used when you are storing secret data that doesn't fit into any of the other types of secrets that Kubernetes understands (like docker-registry or tls). the other options for type are : "kubernetes.io/service-account-token:", "kubernetes.io/dockerconfigjson","kubernetes.io/tls" etc., when we create secret for store docker login secret, we have to use type: kubernetes.io/dockerconfigjson. 
 {{% /notice %}}
+{{% /tab %}}
+{{< /tabs >}}
 
-- ### Consuming Secrets in a Pod
+### Consuming Secrets in a Pod
 
 - Environment Variables
 
@@ -374,13 +420,17 @@ Secret can be part of the ConfigMap for configuration purpose. for example, we c
 for example, HashiCorp Vault, AWS Secrets Manager, or Azure Key Vault . These systems can dynamically inject secrets into your applications, often using a sidecar container or a mutating webhook to provide secrets to the application securely.
 
 
-- ### Task 1 -  use secret in configMap
+### Task 1 -  use secret in configMap
 
+{{< tabs >}}
+{{% tab title="CreateSecret" %}}
 - create secret with key to include the shared password 
 
 ```bash
 kubectl create secret generic ipsec-psks --from-literal=psk1="12345678"
 ```
+{{% /tab %}}
+{{% tab title="clustersvc" %}}
 - create a clustersvc for cfos ipsec 
 
 create a clusterIP svc for cfos to get an ip for ipsec
@@ -388,7 +438,8 @@ create a clusterIP svc for cfos to get an ip for ipsec
 ```bash
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/02_clusterip_cfos.yaml -n cfostest
 ```
-
+{{% /tab %}}
+{{% tab title="Use Secret" %}}
 
 - use secret in configmap data
 
@@ -426,9 +477,11 @@ metadata:
 EOF
 ```
 
-in above configmap. inside the configuration. the line `set psksecret {{ipsec-psks:psk1}}` is reference to a secret. the secrent name is "ipsec-psks", the key is psk1. the actual psksecret "12345678" is saved inside the key "psk1" of secret "ipsec-psks". 
+in above configmap. inside the configuration. the line `set psksecret {{ipsec-psks:psk1}}` is reference to a secret. the secret name is "ipsec-psks", the key is psk1. the actual psksecret "12345678" is saved inside the key "psk1" of secret "ipsec-psks". 
 
-k8s configmap does not support use secret in config data. it is up to cFOS application to parse secret. in above. it is cFOS responsibility to substitue {{ipsec-psks:psk1}} with actual k8s secret ipsec-psks. 
+{{% /tab %}}
+{{% tab title="K8s secret" %}}
+k8s configmap does not support use secret in config data. it is up to cFOS application to parse secret. In above, it is cFOS responsibility to substitute {{ipsec-psks:psk1}} with actual k8s secret ipsec-psks. 
 
 use 
 ```bash
@@ -436,6 +489,9 @@ podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metada
 kubectl exec -it po/$podname -n cfostest -- /bin/cli
 ```
 then use `show vpn ipsec  phase1-interface` and `show vpn ipsec  phase2-interface` from cFOS cli to check cFOS configuration.
+
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Summary
 

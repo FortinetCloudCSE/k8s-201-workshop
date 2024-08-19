@@ -45,7 +45,7 @@ spec:
           type: DirectoryOrCreate 
 ```
 
-## the types of volumes 
+## Volume Types 
 
 - PVC (Persistent Volume Claims)
 
@@ -67,7 +67,10 @@ These volumes allow you to integrate Kubernetes Pods with cloud provider-specifi
 
 A path directly on host node. 
 
-- ###  Example 1 - config cfos deployment to use PVC 
+###  Example 1 - config cfos deployment to use PVC 
+
+{{< tabs >}}
+{{% tab title="Create cFOS license" %}}
 
 - Create cFos license, imagePullSecret and serviceAccount
 
@@ -77,6 +80,8 @@ kubectl create namespace cfostest
 kubectl apply -f cfosimagepullsecret.yaml -n cfostest
 kubectl apply -f $scriptDir/k8s-201-workshop/scripts/cfos/Task1_1_create_cfos_serviceaccount.yaml  -n cfostest
 ```
+{{% /tab %}}
+{{% tab title="Create PVC" %}}
 - create PVC with required capacity
 
 ```bash
@@ -93,7 +98,8 @@ spec:
       storage: 1Gi
 EOF
 ```
-
+{{% /tab %}}
+{{% tab title="cFOS deployment" %}}
 - create cfos Deployment with pvc 
 
 ```bash
@@ -135,19 +141,24 @@ spec:
 
 EOF
 ```
-
+{{% /tab %}}
+{{% tab title="delete cfos" %}}
 - delete cfosDeployment
 
 with PVC used in deployment, even you deleted cFOS deployment, the data on /data is persistent , if you create deployment and mout /data to same PVC again. the data include license , configuration etc are still exist.
 
+
 ```bash
 kubectl delete deployment cfos7210250-deployment -n cfostest 
 ```
-- ### Example 2 - config cfos deployment to use emptyDir
+{{% /tab %}}
+{{< /tabs >}}
+
+### Example 2 - config cfos deployment to use emptyDir
 
 
-with this configuration, the /data lifecycle share POD lifecycle. when POD gone, the data will also gone.
-so if use this configuration, make use cFOS use configmap for all the configuration . and send all log to remote syslog server to prevent loss of the log.
+With this configuration, the /data lifecycle share POD lifecycle. when POD gone, the data will also gone.
+If using this configuration, make sure cFOS use configmap for all the configuration, and send all log to remote syslog server to prevent loss of the log.
 
 to use emptyDir, just change spec.template.spec.volmumens to "emptyDir"
 

@@ -15,12 +15,14 @@ The most common way to install Multus is via a Kubernetes manifest file, which s
 
     You can find the latest configuration on the Multus GitHub repository (Multus CNI on GitHub). Typically, you would use the multus.yaml from the repo. This YAML file contains the configuration for the Multus DaemonSet along with the necessary ClusterRole, ClusterRoleBinding, and ServiceAccount.
 
-{{% notice style="info" %}} 
+{{< tabs >}}
+{{% tab title="download" %}}
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick.yml
 kubectl rollout status ds/kube-multus-ds -n kube-system
 ```
-{{% /notice  %}} 
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 output: 
 
@@ -35,7 +37,8 @@ daemonset.apps/kube-multus-ds created
 Waiting for daemon set "kube-multus-ds" rollout to finish: 0 of 1 updated pods are available...
 daemon set "kube-multus-ds" successfully rolled out
 ```
-
+{{% /tab %}}
+{{% tab title="Verify" style="info" %}}
 ```bash
 kubectl get pod -n kube-system -l app=multus
 ```
@@ -44,11 +47,10 @@ result
 NAME                   READY   STATUS    RESTARTS   AGE
 kube-multus-ds-qlmrf   1/1     Running   0          88s
 ```
+{{% /tab %}}
+{{% tab title="Double Verify" style="info" %}}
 
-
-
-
-You may further validate that it has ran by looking at the /etc/cni/net.d/ directory and ensure that the auto-generated /etc/cni/net.d/00-multus.conf exists corresponding to the alphabetically first configuration file.
+You may further validate the download by looking at the /etc/cni/net.d/ directory and ensure that the auto-generated /etc/cni/net.d/00-multus.conf exists corresponding to the alphabetically first configuration file.
 
 refer [how ssh into worker node](/01gettingstarted/4_task3.html#ssh-into-your-worker-node) for detail. 
 
@@ -69,7 +71,8 @@ azureuser@aks-worker-27647061-vmss000000:~$ sudo cat /etc/cni/net.d/00-multus.co
   "type": "multus-shim"
 }
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 
 
 **Step 2: Creating additional interfaces**
@@ -104,6 +107,9 @@ Secondarily, note the config field. You'll see that this is a CNI configuration 
 
 Lastly but very importantly, note under metadata the name field -- here's where we give this configuration a name, and it's how we tell pods to use this configuration. The name here is **macvlan-conf** -- as we're creating a configuration for macvlan.
 
+{{< tabs title="Custom Resource" >}}
+{{% tab title="create" %}}
+
 Here's the command to create this example configuration:
 
 ```bash
@@ -132,13 +138,11 @@ spec:
 EOF
 ```
 
+{{% /tab %}}
+{{% tab title="Verify" style="info" %}}
 ```kubectl get network-attachment-definitions```
 
-Output: 
-
-```sallam@master1:~$ kubectl get network-attachment-definitions```
-
-output:
+Output:
 
 ```
 NAME            AGE
@@ -149,6 +153,7 @@ For more detail:
 
 ```kubectl describe network-attachment-definitions macvlan-conf```
 
+Expected Output:
 ```
 sallam@master1:~$kubectl describe network-attachment-definitions macvlan-conf
 Name:         macvlan-conf
@@ -180,12 +185,17 @@ Spec:
   Config:  { "cniVersion": "0.3.0", "type": "macvlan", "master": "eth0", "mode": "bridge", "ipam": { "type": "host-local", "subnet": "192.168.1.0/24", "rangeStart": "192.168.1.200", "rangeEnd": "192.168.1.216", "routes": [ { "dst": "0.0.0.0/0" } ], "gateway": "192.168.1.100" } }
 Events:    <none>
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 **Step 4: Creating a pod that attaches an additional interface**
 
 We're going to create a pod. This will look familiar as any pod you might have created before, but, we'll have a special annotations field -- in this case we'll have an annotation called k8s.v1.cni.cncf.io/networks. This field takes a comma delimited list of the names of your NetworkAttachmentDefinitions as we created above. Note in the command below that we have the annotation of k8s.v1.cni.cncf.io/networks: macvlan-conf where macvlan-conf is the name we used above when we created our configuration.
 
+{{< tabs >}}
+{{% tab title="create Pod" %}}
 Let's go ahead and create a pod (that just sleeps for a really long time) with this command:
+
 
 ```bash
 cat <<EOF | kubectl create -f -
@@ -202,6 +212,9 @@ spec:
     image: alpine
 EOF
 ```
+
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 We can inspect the pod with ```kubectl exec -it samplepod -- ip a```
 
@@ -229,13 +242,20 @@ sallam@sallam-master1:~$ kubectl exec -it samplepod -- ip a
        valid_lft forever preferred_lft forever
 ```
 
-**Cleanup:**
+{{% /tab %}}
+{{% tab title="Cleanup" %}}
 
 ```kubectl delete pod samplepod```
+
+{{% /tab %}}
+{{< /tabs >}}
 
 **Step 5: What if I want more interfaces?**
 
 You can add more interfaces to a pod by creating more custom resources and then referring to them in pod's annotation. You can also reuse configurations, so for example, to attach two macvlan interfaces to a pod, you could create a pod like so:
+
+{{< tabs >}}
+{{% tab title="more interfaces" %}}
 
 ```bash
 cat <<EOF | kubectl create -f -
@@ -252,6 +272,9 @@ spec:
     image: alpine
 EOF
 ```
+
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 Now inspect the pod with ```kubectl exec -it samplepod -- ip a```
 
@@ -289,9 +312,12 @@ Note that the annotation now reads k8s.v1.cni.cncf.io/networks: macvlan-conf,mac
 If you were to create another custom resource with the name foo you could use that such as: k8s.v1.cni.cncf.io/networks: foo,macvlan-conf, and use any number of attachments.
 
 
-**Cleanup:**
+{{% /tab %}}
+{{% tab title="Cleanup" %}}
 
 ```bash
 kubectl delete pod samplepod
 kubectl delete net-attach-def macvlan-conf
 ```
+{{% /tab %}}
+{{< /tabs >}}

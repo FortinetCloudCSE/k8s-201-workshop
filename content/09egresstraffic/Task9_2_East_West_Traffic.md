@@ -2,7 +2,7 @@
 title: "Task 2 - Securing pod to pod traffic"
 chapter: false
 linkTitle: "East-West with cFOS"
-weight: 5
+weight: 10
 ---
 
 East-West traffic in the context of container-based environments, particularly with Kubernetes, refers to the data flow between different nodes or pods within the same data center or network. This type of traffic is crucial for the performance and security of microservices architectures, where multiple services need to communicate with each other frequently.
@@ -11,7 +11,8 @@ Microservices break down applications into smaller, independent services, which 
 
 ![imagespod](../images/cfosptop.png)
 
-
+{{< tabs "E-W Traffic" >}}
+{{% tab title="E-W Policy" %}}
 continue from previous Task [Egress with cFOS](/09egresstraffic/task9_1_understanding_egress_rules.html#purpose)
 - create firewall policy for east-west traffic 
 
@@ -63,6 +64,8 @@ data:
 EOF
 kubectl apply -f net1net2cmfirewallpolicy.yaml  -n cfosegress
 ```
+{{% /tab %}}
+{{% tab title="get ip" %}}
 
 - get ip from diag100 and diag200
 
@@ -73,11 +76,16 @@ diag100ip=$(k get po/diag100 -n app-2 -o jsonpath='{.metadata.annotations}' | jq
 echo $diag100ip
 
 ```
+{{% /tab %}}
+{{% tab title="check connectivity" %}}
+
 - check connectivity between diag100 to diag200
 ```bash
 k exec -it po/diag100 -n app-2 -- ping -c 5  $diag200ip
 k exec -it po/diag200 -n app-1 -- ping -c 5 $diag100ip
 ```
+{{% /tab %}}
+{{% tab title="ATTACK!!!" style="warning" %}}
 - Send malicious traffic
 
 ```bash
@@ -86,6 +94,9 @@ k exec -it po/diag200 -n app-1 -- curl --max-time 5 -H "User-Agent: () { :; }; /
 
 
 ```
+{{% /tab %}}
+{{% tab title="Verify Block" style="info" %}}
+
 - Check Result
 
 ```bash
@@ -104,12 +115,8 @@ date=2024-06-27 time=09:37:35 eventtime=1719481055 tz="+0000" logid="0419016384"
 date=2024-06-27 time=09:37:41 eventtime=1719481061 tz="+0000" logid="0419016384" type="utm" subtype="ips" eventtype="signature" level="alert" severity="critical" srcip=10.1.200.22 dstip=10.1.100.22 srcintf="net1" dstintf="net2" sessionid=11 action="dropped" proto=6 service="HTTP" policyid=10 attack="Bash.Function.Definitions.Remote.Code.Execution" srcport=40358 dstport=80 hostname="10.1.100.22" url="/" direction="outgoing" attackid=39294 profile="high_security" incidentserialno=265289734 msg="applications3: Bash.Function.Definitions.Remote.Code.Execution"
 ```
 
-Q&A
-
-1. Use ConfigMap to change firewall policy to stop icmp traffic between app1 and app2, meanwhile still allow http/https traffic betwen app1 and app2 with security inspection. 
-
-
-
+{{% /tab %}}
+{{% tab title="Clean up" style="info" %}}
 
 
 - clean up
@@ -159,3 +166,12 @@ done
 
 az aks delete -n $(whoami)-aks-cluster -g $rg
 ```
+{{% /tab %}}
+{{< /tabs >}}
+
+Q&A
+
+1. Use ConfigMap to change firewall policy to stop icmp traffic between app1 and app2, meanwhile still allow http/https traffic betwen app1 and app2 with security inspection. 
+
+
+
