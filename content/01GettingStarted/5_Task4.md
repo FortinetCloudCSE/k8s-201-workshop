@@ -33,7 +33,7 @@ Use the script below to create a Kubernetes secret for pulling the cFOS image fr
 If you have your own cFOS image hosted on another registry, you can use that. Just ensure that the **secret** is named "cfosimagepullsecret".
 {{% /notice %}}
 
-Get your ACR access token and test it
+If you have your own ACR, Get your ACR access token and test it 
 
 {{< tabs title="ACR Access Token" >}}
 {{% tab title="Enter Username" %}}
