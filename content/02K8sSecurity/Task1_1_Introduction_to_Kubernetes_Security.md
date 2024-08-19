@@ -198,7 +198,7 @@ add linux capabilites to ["NET_ADMIN","NET_RAW"] then check log again
 {{% /notice %}}
 
 {{% notice style="info" %}}
-In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent.
+In above cFOS yaml, runAsUser=0, AllowPriviledgeEscalation=false, priviledged=false can be removed as they are the default setting for securityContent in current version of AKS or self-managed k8s.
 {{% /notice %}}
 
 - Answer
@@ -209,7 +209,7 @@ kubectl replace -f cfos7210250-deployment.yaml -n cfostest
 kubectl rollout status deployment cfos7210250-deployment -n cfostest
 ```
 
-Check again with 
+Check again with below command after new pod created
 ```bash
 cmd="iptables -t nat -L -v"
 podname=$(kubectl get pod -n cfostest -l app=cfos -o jsonpath='{.items[*].metadata.name}')
