@@ -175,7 +175,7 @@ kubectl create -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_creat
 ```
 
 {{% /tab %}}
-{{% tab title="Expected Result" style="info" %}}
+{{% tab title="Service Acct Expected Result " style="info" %}}
 output:
 
 ```
@@ -255,7 +255,7 @@ kubectl apply -f cfos7210250-deployment.yaml -n $cfosnamespace
 ```
 
 {{% /tab %}}
-{{% tab title="Expected Result" style="info" %}}
+{{% tab title="cFOS Expected Result" style="info" %}}
 
 check result with
 ```bash
@@ -330,7 +330,12 @@ goweb        ClusterIP   10.102.150.225   <none>        80/TCP    4m17s
 {{% /tab %}}
 {{% tab title="cFOS shell" %}}
 
-then shell into cFOS 
+then shell into cFOS with below commands
+
+```sh
+podname=$(kubectl get pod -n $cfosnamespace -l app=cfos -o jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$podname -n $cfosnamespace -- /bin/cli
+```
 
 ```k8s51 [ ~ ]$ kubectl exec -it po/cfos7210250-deployment-7968d94f44-gfwfm  -n cfosingress -- sh
 Defaulted container "cfos7210250-container" out of: cfos7210250-container, init-myservice (init)
@@ -364,7 +369,7 @@ Console escape. Commands are:
 ```
 
 
-you can try with below script, use Ctrl-c to exit
+you can also try with below script, use Ctrl-c to exit
 
 ```bash
 podname=$(kubectl get pod -l app=cfos -n cfosingress -o jsonpath="{.items[0].metadata.name}")
@@ -400,7 +405,7 @@ kubectl apply -f headlessservice.yaml -n $cfosnamespace
 ```
 
 {{% /tab %}}
-{{% tab title="Expected Output" style="info" %}}
+{{% tab title="YAML Expected Output" style="info" %}}
 
 check result
 
@@ -425,7 +430,7 @@ kubectl exec -it po/$podname -n $cfosnamespace -- ip address
 kubectl exec -it po/$podname -n $cfosnamespace -- ping -c 3 cfostest-headless.$cfosnamespace.svc.cluster.local
 ```
 {{% /tab %}}
-{{% tab title="Expected Output" style="info" %}}
+{{% tab title="DNS Expected Output" style="info" %}}
 
 result
 

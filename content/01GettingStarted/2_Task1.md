@@ -26,24 +26,33 @@ weight: 2
 
 * Select **Bash**
 
-    ![cloudshell6](../images/cloudshell-06.jpg)
+    ![cloudshell6](../images/cloudshell-06.png)
 
-* Click on **Show advanced settings**
+* Click on **Mount Storage Account**
 
-    ![cloudshell7](../images/cloudshell-07.jpg)
+    ![cloudshell7](../images/cloudshell-07.png)
 * Select
-  * Use existing Resource Group  - it ***should*** auto populate with USERXX-k8s101-workshop (USERXX is your Username)
-  * Use existing Storage account - it ***should*** auto populate with USERXX########## (########## is a random string) 
+  * Storage Account Subscription - **Internal-Training**
+  * Apply
 
-  {{< notice warning >}} Please make sure to switch the **cloud shell region** to **East US** for the existing storage account to reflect
-  {{< /notice >}}  
 
-  * Use existing File Share  - type **cloudshellshare** 
-
-* Click "Attach Storage"
+* Click **Select existing Storage account**, Click Next
 
     ![cloudshell8](../images/cloudshell-08.png)
 
-* You should now have access to Azure Cloud Shell console
+* in Select Storage account Step, 
 
-    ![cloudshell9](../images/cloudshell-09.jpg)
+   * Subscription: **Internal-Training**
+   * Resource Group: Select the Resource group from the drop down: **K8sXX-K8s101-workshop**
+   * Storage Account: Use existing storage account from dropdown.
+   * File share: Use **cloudshellshare**
+   * Click Select
+
+    ![cloudshell9](../images/cloudshell-09.png)
+
+ {{< notice warning >}} Please make sure to use the existing ones. you wont be able to create any Resource Group or Storage account
+  {{< /notice >}}  
+
+* After 1-2 minutes, You should now have access to Azure Cloud Shell console
+
+    ![cloudshell10](../images/cloudshell-10.png)
