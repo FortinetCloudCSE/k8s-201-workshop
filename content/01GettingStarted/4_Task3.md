@@ -1,5 +1,6 @@
 ---
-title: "Task 2 Get Kubernetes Ready"
+title: "Task 2 - Get Kubernetes Ready"
+linkTitle: "2-Get Kubernetes Ready"
 weight: 3
 ---
 

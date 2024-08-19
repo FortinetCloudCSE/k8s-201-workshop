@@ -1,5 +1,6 @@
 ---
 title: "Task 1 - Setup Azure CloudShell"
+linkTitle: "1-Setup Azure CloudShell"
 weight: 2
 ---
 

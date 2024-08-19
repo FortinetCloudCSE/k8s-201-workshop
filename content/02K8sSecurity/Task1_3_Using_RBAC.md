@@ -1,7 +1,7 @@
 ---
-title: "Introduction to Kubernetes Security"
+title: "Task 3 - Introduction to Kubernetes Security"
 chapter: false
-linkTitle: "Using RBAC"
+linkTitle: "3-Using RBAC"
 weight: 10
 ---
 

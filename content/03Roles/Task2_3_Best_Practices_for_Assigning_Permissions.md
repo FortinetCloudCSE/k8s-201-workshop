@@ -1,7 +1,7 @@
 ---
 title: "Task 3 - Best practices for assigning permissions"
 chapter: false
-linkTitle: "Best Practices"
+linkTitle: "3-Best Practices"
 weight: 10
 ---
 

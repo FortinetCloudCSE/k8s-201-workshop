@@ -1,7 +1,7 @@
 ---
-title: "Introduction to Kubernetes Security"
+title: "Task 1 - Introduction to Kubernetes Security"
 chapter: false
-linkTitle: "Kubernetes Security"
+linkTitle: "1-Kubernetes Security"
 weight: 1
 ---
 
