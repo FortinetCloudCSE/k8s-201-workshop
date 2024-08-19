@@ -5,6 +5,7 @@ This is a continuation of the K8s 101 workshop. This workshop will help you unde
 
 Chapters 2, 3, 4, 5, and 6 extend the previous K8s 101 workshop, focusing on concepts used in cFOS use cases. Even if you are already familiar with these topics, you can benefit from reviewing Chapters 2 through 6.
 
+if you already familar with k8s concept, you only want learn cFOS ingress and egress use case, then you can take Chapter 1 then go directly to Chapter 7 and 9.
 
 ## Chapter 1
 
