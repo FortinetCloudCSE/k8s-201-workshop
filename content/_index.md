@@ -9,9 +9,11 @@ if you already familar with k8s concept, you only want learn cFOS ingress and eg
 
 ## Chapter 1
 
-Get your Kubernetes cluster ready with one of the following options:
+Get your Kubernetes cluster ready.
 
-- [Continue from K8s 101](/01gettingstarted/4_task3.html#option-1--continue-from-k8s-101-session)
+set [variable first](/01gettingstarted/4_task3.html#setup-some-variable) then choose  one of the following options: 
+
+- [Continue from K8s 101](/01gettingstarted/4_task3.html#option-1-continue-from-k8s-101-session)
 - [Create a new self-managed Kubernetes cluster](/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s)
 - [Create a managed Kubernetes cluster - AKS](/01gettingstarted/4_task3.html#option-3-create-aks)
 
