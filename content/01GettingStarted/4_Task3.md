@@ -28,7 +28,7 @@ You have multiple options for setting up Kubernetes:
 2. If you are on the K8s-201 environment, choose [Option 2](/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s) or [Option 3](/01gettingstarted/4_task3.html#option-3-create-aks) to start from K8s-201 directly.
 
 
-**setup some variable** 
+#### setup some variable 
 ```bash
 owner="tecworkshop"
 alias k="kubectl"
