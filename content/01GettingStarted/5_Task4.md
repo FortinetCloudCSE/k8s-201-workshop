@@ -46,22 +46,13 @@ Get your ACR access token and paste it into the variable `accessToken` using the
 
 ```bash
 loginServer="fortinetwandy.azurecr.io"
-read -p "Paste your accessToken for acr server $loginServer:|  " accessToken
+#acrUsername="00000000-0000-0000-0000-000000000000"
+read -p "Paste your ACR user name, default is 00000000-0000-0000-0000-000000000000 :| " acrUsername
+acrUsername=${acrUsername:-00000000-0000-0000-0000-000000000000}
+read -p "Paste your accessToken for acr user $acrUsername at  server $loginServer:|  " accessToken
 echo $accessToken
 ```
 
-verify accessToken with
-
-```bash
-
-docker login $loginServer -u 00000000-0000-0000-0000-000000000000 -p $accessToken
-```
-Login shall be Succeeded as shown below
-
-```
-WARNING! Using --password via the CLI is insecure. Use --password-stdin.
-Login Succeeded
-```
 
 Create k8s secret with accessToken and save a copy of yaml file for later use.
 
@@ -72,7 +63,7 @@ echo $loginServer
 kubectl create namespace $cfosnamespace
 kubectl create secret -n $cfosnamespace docker-registry cfosimagepullsecret \
     --docker-server=$loginServer \
-    --docker-username=00000000-0000-0000-0000-000000000000 \
+    --docker-username=$acrUsername \
     --docker-password=$accessToken \
     --docker-email=wandy@example.com
 kubectl get secret cfosimagepullsecret -n $cfosnamespace -o yaml | tee $filename
@@ -89,7 +80,11 @@ shall see
 NAME                  TYPE                             DATA   AGE
 cfosimagepullsecret   kubernetes.io/dockerconfigjson   1      38m
 ```
+you can also verify the username and password for acr from your secret object 
 
+```bash
+kubectl get secret -n $cfosnamespace cfosimagepullsecret -o jsonpath="{.data.\.dockerconfigjson}" | base64 --decode | jq -r '.auths."fortinetwandy.azurecr.io".auth' | base64 --decode
+```
 ### Create cFOS configmap license 
 
 cFOS requires a license to be functional. Once your license is activated, download the license file and then upload it to Azure Cloud Shell. 
@@ -212,7 +207,7 @@ spec:
       dnsPolicy: ClusterFirst
 EOF
 kubectl apply -f cfos7210250-deployment.yaml -n $cfosnamespace
-kubectl rollout status deployment cfos7210250-deployment -n $cfosnamespace
+kubectl rollout status deployment cfos7210250-deployment -n $cfosnamespace &
 ```
 ### Config cFOS 
 
@@ -283,6 +278,14 @@ if you want learn how to use cFOS for ingress protection , go directly to [Chapt
 
 if you want learn how to use cFOS for egress protection , go directly to [Chapter 8](/08deployingmultus.html) and [Chapter 9](/09egresstraffic.html)
 
+if you want learn cFOS role in k8s security , check out [Chapter 2](/02k8ssecurity/task1_1_introduction_to_kubernetes_security.html#scope-of-kubernetes-security).
+
+if you want understand more about what is RBAC in k8s, check out [Chapter 3](/03roles/task2_1_understanding_role_cluster_role.html) and [Chapter4 ](/04rolebindings.html). 
+
+if you want understand more about configmap, secret  and how cFOS use configmap and secret, check out [Chapter 5](/05configmapsecrets.html). 
+
+if you want undertsand what is k8s network and multus in general, check out [Chapter 6](/06networkingbasics.html) and [Chapter 8](/08deployingmultus.html). 
+ 
 
 
 
