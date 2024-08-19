@@ -24,7 +24,7 @@ cd $HOME
 
 You have multiple options for setting up Kubernetes:
 
-1. If you are using the [K8s-101 workshop environment](https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html), you can continue in the K8s-101 environment and choose [Option 1](/01gettingstarted/4_task3.html#option-1--continue-from-k8s-101-session).
+1. If you are using the [K8s-101 workshop environment](https://fortinetcloudcse.github.io/k8s-101-workshop/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall.html), you can continue in the K8s-101 environment and choose [Option 1](/01gettingstarted/4_task3.html#option-1-continue-from-k8s-101-session).
 2. If you are on the K8s-201 environment, choose [Option 2](/01gettingstarted/4_task3.html#option-2-create-self-managed-k8s) or [Option 3](/01gettingstarted/4_task3.html#option-3-create-aks) to start from K8s-201 directly.
 
 
@@ -37,7 +37,8 @@ resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && cont
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
 svcname=$(whoami)-$owner
-cfosimage="fortinetwandy.azurecr.io/cfos:255"
+#cfosimage="fortinetwandy.azurecr.io/cfos:255"
+cfosimage="public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255"
 cfosnamespace="cfostest"
 
 cat << EOF | tee > $HOME/variable.sh
@@ -49,7 +50,8 @@ resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && cont
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
 svcname=$(whoami)-$owner
-cfosimage="fortinetwandy.azurecr.io/cfos:255"
+#cfosimage="fortinetwandy.azurecr.io/cfos:255"
+cfosimage="public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255"
 cfosnamespace="cfostest"
 EOF
 echo location=$location >> $HOME/variable.sh
@@ -84,7 +86,8 @@ You should see results like:
 ReousrceGroup = k8s54-k8s101-workshop
 Location = eastus
 ScriptDir = /home/k8s54
-cFOS docker image = fortinetwandy.azurecr.io/cfos:255
+#cFOS docker image = fortinetwandy.azurecr.io/cfos:255
+cFOS docker image = public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255
 cFOS Name Space= cfostest
 ```
 
@@ -248,7 +251,20 @@ workernodename="k8strainingworker-$(whoami)-1.${location}.cloudapp.azure.com"
 ssh ubuntu@$workernodename
 ```
 
-or [ssh via internal ip](/01gettingstarted/4_task3.html#ssh-into-your-worker-node)
+or refer [ssh via internal ip](/01gettingstarted/4_task3.html#ssh-into-your-worker-node) to create ssh client pod, then use 
+
+```bash
+kubectl exec -it ssh-jump-host -- sh -c "mkdir -p ~/.ssh"
+kubectl cp ~/.ssh/id_rsa default/ssh-jump-host:/root/.ssh/id_rsa
+kubectl exec -it ssh-jump-host -- sh -c 'chmod 600 /root/.ssh/id_rsa'
+```
+then use 
+
+`kubectl exec -it ssh-jump-host -- ssh ubuntu@$masternodename` ssh into master node.
+
+or 
+
+`kubectl exec -it ssh-jump-host -- ssh ubuntu@$workernodename` ssh into worker node.
 
 After you ssh into node. you can use `cat /etc/cni/net.d/10-calico.conflist` to check CNI configuration.
 
@@ -270,7 +286,8 @@ resourceGroupName=$(az group list --query "[?contains(name, '$(whoami)') && cont
 location=$(az group show --name $resourceGroupName --query location -o tsv)
 scriptDir="$HOME"
 svcname=$(whoami)-$owner
-cfosimage="fortinetwandy.azurecr.io/cfos:255"
+#cfosimage="fortinetwandy.azurecr.io/cfos:255"
+cfosimage="public.ecr.aws/t8s9q7q9/andy2024public:cfosx86v255"
 cfosnamespace="cfostest"
 echo "Using resource group $resourceGroupName in location $location"
 
@@ -365,7 +382,7 @@ spec:
   - name: ssh-client
     image: alpine
     command: ["/bin/sh"]
-    args: ["-c", "apk add --no-cache openssh && tail -f /dev/null"]
+    args: ["-c", "apk add --no-cache openssh && apk add --no-cache curl && tail -f /dev/null"]
     stdin: true
     tty: true
 EOF

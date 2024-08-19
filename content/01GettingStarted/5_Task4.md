@@ -113,9 +113,8 @@ kubectl apply -f cfos_license.yaml -n $cfosnamespace
 if you do not have generatecfoslicensefromvmlicense.sh , you can use below script instead
 
 ```bash
-get your cFOS license file ready.
 
-```bash
+echo get your cFOS license file ready.
 cat <<EOF | tee cfos_license.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -249,10 +248,10 @@ use `exit` to quit from cFOS cli.
 cFOS can keep updated with FortiGuard services.
 use below command to trigger package updates for all FortiGuard services.
 
-after login cFOS
+after login cFOS , at `cFOS #` prompt, type 
 
 ```bash
-cFOS # execute update-now
+execute update-now
 ```
 you shall see  at the end of output
 ```
