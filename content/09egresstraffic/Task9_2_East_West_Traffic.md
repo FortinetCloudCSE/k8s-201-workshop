@@ -67,9 +67,9 @@ kubectl apply -f net1net2cmfirewallpolicy.yaml  -n cfosegress
 - get ip from diag100 and diag200
 
 ```bash
-diag200ip=$(k get po/diag200 -n app-1 -o jsonpath='{.metadata.annotations}' | jq -r '.["k8s.v1.cni.cncf.io/network-status"]' | jq -r '.[1].ips[0]')
+diag200ip=$(k get po/diag200 -n app-1 -o jsonpath='{.metadata.annotations}' | jq -r '.["k8s.v1.cni.cncf.io/network-status"]' | jq -r '.[0].ips[0]')
 echo $diag200ip
-diag100ip=$(k get po/diag100 -n app-2 -o jsonpath='{.metadata.annotations}' | jq -r '.["k8s.v1.cni.cncf.io/network-status"]' | jq -r '.[1].ips[0]')
+diag100ip=$(k get po/diag100 -n app-2 -o jsonpath='{.metadata.annotations}' | jq -r '.["k8s.v1.cni.cncf.io/network-status"]' | jq -r '.[0].ips[0]')
 echo $diag100ip
 
 ```

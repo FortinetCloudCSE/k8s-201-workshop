@@ -18,8 +18,10 @@ Let's create an application and exposed by loadBalancer directly.
 ```bash
 #!/bin/bash -x
 cd $HOME
+gowebimage="public.ecr.aws/t8s9q7q9/andy2024public:fileuploadserverx86v1.1"
+#gowebimage="interbeing/myfmg:fileuploadserverx86"
 kubectl create namespace mytest
-kubectl create deployment goweb --image=interbeing/myfmg:fileuploadserverx86  --namespace mytest
+kubectl create deployment goweb --image=$gowebimage  --namespace mytest
 kubectl expose  deployment goweb --target-port=80  --port=80  --namespace mytest
 svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d "." -f 1 | cut -d "/" -f 3)
 metallbip=$(kubectl get ipaddresspool -n metallb-system -o jsonpath='{.items[*].spec.addresses[0]}' 2>/dev/null | cut -d '/' -f 1)
@@ -248,7 +250,8 @@ Let's create a file upload server application and an Nginx application, and expo
 
 
 ```
-kubectl create deployment goweb --image=interbeing/myfmg:fileuploadserverx86 
+gowebimage="public.ecr.aws/t8s9q7q9/andy2024public:fileuploadserverx86v1.1"
+kubectl create deployment goweb --image=$gowebimage
 kubectl expose  deployment goweb --target-port=80  --port=80 
 kubectl create deployment nginx --image=nginx 
 kubectl expose deployment nginx --target-port=80 --port=80 
@@ -311,6 +314,14 @@ Console escape. Commands are:
  c      go to character mode
  z      suspend telnet
  e      exit telnet
+```
+
+you can try with below script, use Ctrl-c to exit
+
+```bash
+podname=$(kubectl get pod -l app=cfos -n cfosingress -o jsonpath="{.items[0].metadata.name}")
+kubectl exec -it po/$podname -n $cfosnamespace -- sh -c '/bin/busybox telnet goweb.default.svc.cluster.local 80'
+
 ```
 
 ### Create headless svc for cFOS 
@@ -389,7 +400,7 @@ EOF
 kubectl apply -f rest8080.yaml -n $cfosnamespace
 ```
 
-- config VIP configmap 
+- config VIP configmap  for backend application
 
 A few things need to be configured:
 
@@ -535,7 +546,7 @@ cd $HOME
 svcname=$(kubectl config view -o json | jq .clusters[0].cluster.server | cut -d "." -f 1 | cut -d "/" -f 3)
 metallbip=$(kubectl get ipaddresspool -n metallb-system -o jsonpath='{.items[*].spec.addresses[0]}' | cut -d '/' -f 1)
 if [ ! -z "$metallbip" ] ; then 
-   metallbannotation=metallb.universe.tf/loadBalancerIPs: $metallbip
+   metallbannotation="metallb.universe.tf/loadBalancerIPs: $metallbip"
 fi
 
 echo use pool ipaddress $metallbip for svc 

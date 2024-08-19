@@ -65,7 +65,7 @@ For Option 2, we need modify K8s Default CNI to make this happen. this is not al
 In this workshop, we use Option 1. 
 
 
-Before continue, ensure you have installed [multus CNI](/08deployingmultus.html) 
+Before continue, ensure you have installed [multus CNI](/08deployingmultus/task8_2_installing_multus.html).
 
 ### Create application deployment  with NAD
 
@@ -107,7 +107,7 @@ spec:
         "rangeEnd": "10.1.200.100",
         "routes": [
          { "dst": "1.1.1.1/32", "gw": "10.1.200.252"},
-         { "dst": "34.117.186.0/24", "gw": "10.1.200.252"},
+         { "dst": "34.117.0.0/16", "gw": "10.1.200.252"},
          { "dst": "10.1.100.0/24", "gw": "10.1.200.252"} 
         ],
         "gateway": "10.1.200.252"
@@ -142,7 +142,7 @@ output
         "gw": "10.1.200.252"
       },
       {
-        "dst": "34.117.186.0/24",
+        "dst": "34.117.0.0/16",
         "gw": "10.1.200.252"
       },
       {
@@ -254,7 +254,7 @@ spec:
         "rangeEnd": "10.1.100.100",
         "routes": [
          { "dst": "1.1.1.1/32", "gw": "10.1.100.252"},
-         { "dst": "34.117.186.0/24", "gw": "10.1.100.252"},
+         { "dst": "34.117.0.0/16", "gw": "10.1.100.252"},
          { "dst": "10.1.200.0/24", "gw": "10.1.100.252"} 
         ],
         "gateway": "10.1.100.252"
