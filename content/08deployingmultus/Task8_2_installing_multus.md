@@ -1,7 +1,7 @@
 ---
 title: "Task 2 - Installing Multus"
 chapter: false
-linkTitle: "Multus install"
+linkTitle: "2-Multus install"
 weight: 10
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Task 1 - Overview of Ingress in Kubernetes"
 chapter: false
-linkTitle: "cFOS Overview"
+linkTitle: "1-cFOS Overview"
 weight: 1
 ---
 

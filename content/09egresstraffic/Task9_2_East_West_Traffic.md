@@ -1,7 +1,7 @@
 ---
 title: "Task 2 - Securing pod to pod traffic"
 chapter: false
-linkTitle: "East-West with cFOS"
+linkTitle: "2-East-West with cFOS"
 weight: 10
 ---
 

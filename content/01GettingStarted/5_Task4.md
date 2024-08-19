@@ -1,5 +1,6 @@
 ---
 title: "Task 3 - Get Familiar with cFOS"
+linkTitle: "3-Get Familiar with cFOS"
 weight: 3
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Task 2 - Creating and Managing ConfigMaps and Secrets"
 chapter: false
-linkTitle: "Creating ConfigMaps and Secrets"
+linkTitle: "2-Creating ConfigMaps and Secrets"
 weight: 5
 ---
 
