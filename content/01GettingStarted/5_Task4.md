@@ -151,6 +151,7 @@ configmap/fos-license created
 {{% expand title="If not, please use below script instead" %}}
 
 
+```sh
 echo get your cFOS license file ready.
 cat <<EOF | tee cfos_license.yaml
 apiVersion: v1
@@ -192,7 +193,7 @@ diff -s -b <(k get cm fos-license -n $cfosnamespace -o jsonpath='{.data}' | jq -
 {{% /tab %}}
 {{% tab title="Expected Output" style="info" %}}
 ```commandline
-some stuff
+Files /dev/fd/63 and CFOSVLTMxxxxxx.lic are identical
 ```
 {{% /tab %}}
 {{< /tabs >}}
@@ -285,10 +286,10 @@ kubectl exec -it po/$podname -n $cfosnamespace -- /bin/cli
 {{% tab title="Expected Output" style="info" %}}
 - Username **admin**
 - Password: **<empty>** 
-- Try a command: ```diagnose sys status```
+- Try a command: ```diagnose sys license```
 
 ```TableGen 
-cFOS # diagnose sys status
+cFOS # diagnose sys license
 Version: cFOS v7.2.1 build0255
 Serial-Number: 
 System time: Fri Jun 28 2024 12:46:41 GMT+0000 (UTC)

@@ -175,7 +175,7 @@ Expected Result
 
 {{% /tab %}}
 {{% /tab %}}
-{{% tab title="Cerify license"  %}}
+{{% tab title="Verify license"  %}}
 - Check whether license applied from cFOS cli
 
 ```bash

@@ -23,7 +23,7 @@ uglyURLs = true     # true -> basic/index.html -> basic.html
 # use this theme ;-)
 theme = ["hugo-theme-relearn"]
 
-title = "Fortinet K8S 201 workshop"
+title = "Fortinet K8s 201 workshop"
 
 # We disable this for testing the exampleSite; you must do so too
 # if you want to use the themes parameter disableGeneratorVersion=true;
@@ -84,7 +84,7 @@ enableEmoji = true
   #Optional, By Default, the logo banner will match the Text from themeVariant Above
   # If you would like to change the primary logo banner text, uncommenet logoBannerText Parameter and set to desired text.
   
-  logoBannerText = "K8S 201 Workshop"
+  logoBannerText = "K8s 201 Workshop"
   
   # Optional: If you'd like additional logo sub text/descriptions, use logoBannerSubText Parameter.  leave empty string to omit: ""
   
@@ -184,25 +184,25 @@ enableEmoji = true
 
   [params.author]
   # Author of the site, will be used in meta information
-    name = "Andy Wang"
+    name = "Andy Wang, Srija Allam"
 
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Fortinet Cloud CSE GitHub Org"
-url = "https://github.com/FortinetCloudCSE"
+name = "<i class='fas fa-tools-cap'></i> K8s 101 workshop"
+url = "https://fortinetcloudcse.github.io/k8s-101-workshop/"
 weight = 10
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Fortinet Standard Workshop Guide"
-url = "https://fortinetcloudcse.github.io/UserRepo"
+name = "<i class='fas fa-tools-cap'></i> Kubernetes Admin Guide"
+url = "https://kubernetes.io/docs/concepts/"
 weight = 20
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Fortinet Standard Workshop Template Repo"
-url = "https://github.com/FortinetCloudCSE/UserRepo"
+name = "<i class='fas fa-tools-cap'></i> Kubectl reference"
+url = "https://kubernetes.io/docs/reference/kubectl/quick-reference/"
 weight = 30
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Fortinet Hugo reLearn theme - Guide"
-url = "https://mcshelby.github.io/hugo-theme-relearn/index.html"
+name = "<i class='fas fa-tools-cap'></i> Container FortiOS"
+url = "https://docs.fortinet.com/product/container-fortios/7.2"
 weight = 40

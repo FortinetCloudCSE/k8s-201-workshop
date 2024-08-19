@@ -124,7 +124,7 @@ kubectl apply -f nad_10_1_200_1_1_1_1.yaml -n app-1
 ```
 
 {{% /tab %}}
-{{% tab title="Verify" style="info" %}}
+{{% tab title="NAD Verify" style="info" %}}
 
 check with `kubectl get net-attach-def -n app-1`
 
@@ -205,7 +205,7 @@ kubectl apply -f demo_application_nad_200.yaml -n app-1
 ```
 
 {{% /tab %}}
-{{% tab title="Verify" style="info" %}}
+{{% tab title="App Verify" style="info" %}}
 
 use command `kubectl describe po/diag200 -n app-1` to check the application shall get second NIC 
 
@@ -374,11 +374,11 @@ spec:
     }'
 EOF
 kubectl apply -f nad_10_1_200_252_cfos.yaml -n cfosegress
+```
 
 {{% /tab %}}
 {{% tab title="NAD 2" %}}
 
-```
 - NAD cfosdefaultcni6100
 
 ```bash

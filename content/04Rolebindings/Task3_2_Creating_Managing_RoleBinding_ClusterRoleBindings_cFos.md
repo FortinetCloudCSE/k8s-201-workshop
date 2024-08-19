@@ -232,7 +232,7 @@ cfosimagepullsecret   kubernetes.io/dockerconfigjson   1      3m25s
 
 - Using kubectl with a YAML file 
 
-{{< tabs title="CFos Deployment" >}}
+{{< tabs title="cFOS Deployment" >}}
 {{% tab title="kubectl" %}}
 ```bash
 cat << EOF | tee cfosPOD.yaml 
