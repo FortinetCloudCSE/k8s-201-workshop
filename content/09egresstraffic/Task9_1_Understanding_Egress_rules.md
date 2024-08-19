@@ -65,7 +65,7 @@ For Option 2, we need modify K8s Default CNI to make this happen. this is not al
 In this workshop, we use Option 1. 
 
 
-Before continue, ensure you have installed [multus CNI](/08deployingmultus.html) 
+Before continue, ensure you have installed [multus CNI](/08deployingmultus/task8_2_installing_multus.html).
 
 ### Create application deployment  with NAD
 
