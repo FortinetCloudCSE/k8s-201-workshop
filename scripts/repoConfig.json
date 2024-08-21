@@ -1,34 +1,34 @@
 {
   "repoName":"k8s-201-workshop",
-  "author":"Andy Wang",
-  "workshopTitle":"Fortinet K8S 201 workshop",
+  "author":"Andy Wang, Srija Allam",
+  "workshopTitle":"Fortinet K8s 201 workshop",
   "themeVariant":"Xperts2024",
-  "logoBannerText":"K8S 201 Workshop",
+  "logoBannerText":"K8s 201 Workshop",
   "logoBannerSubText":"cFOS",
   "errorLevel":"warning",
   "googleServicesID":"G-5RZBH288ST",
   "shortcuts": [
   {
-    "text": "Fortinet Cloud CSE GitHub Org",
-    "URL": "https://github.com/FortinetCloudCSE",
+    "text": "K8s 101 workshop",
+    "URL": "https://fortinetcloudcse.github.io/k8s-101-workshop/",
     "icon": "fa-tools-cap",
     "weight":10
   },
   {
-    "text": "Fortinet Standard Workshop Guide",
-    "URL": "https://fortinetcloudcse.github.io/UserRepo",
+    "text": "Kubernetes Admin Guide",
+    "URL": "https://kubernetes.io/docs/concepts/",
     "icon": "fa-tools-cap",
     "weight":20
   },
   {
-    "text": "Fortinet Standard Workshop Template Repo",
-    "URL": "https://github.com/FortinetCloudCSE/UserRepo",
+    "text": "Kubectl reference",
+    "URL": "https://kubernetes.io/docs/reference/kubectl/quick-reference/",
     "icon": "fa-tools-cap",
     "weight":30
   },
   {
-    "text": "Fortinet Hugo reLearn theme - Guide",
-    "URL": "https://mcshelby.github.io/hugo-theme-relearn/index.html",
+    "text": "Container FortiOS",
+    "URL": "https://docs.fortinet.com/product/container-fortios/7.2",
     "icon": "fa-tools-cap",
     "weight":40
   }
