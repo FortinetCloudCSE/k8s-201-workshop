@@ -18,7 +18,7 @@ When deploying cFOS, concepts such as Role and ClusterRole will be required. To 
 
 For more information about cFOS, check the [cFOS overview](/07ingresstraffic/task7_1_overview-of-ingress-in-kubernetes.html#cfos-overview) and [cFOS role in K8s](/02k8ssecurity/task1_1_introduction_to_kubernetes_security.html#preventionprotection-via-network-security-1).
 
-### Create namespae 
+### Create namespace
 
 ```bash
 cfosnamespace="cfostest"
@@ -40,7 +40,7 @@ If you have your own ACR, Get your ACR access token and test it
 {{< tabs title="ACR Access Token" >}}
 {{% tab title="Enter Username" %}}
 
-Paste your ACR Username it into the variable `UserName` using the command below:
+Paste your ACR Username into the variable `UserName` using the command below:
 ```bash
 loginServer="fortinetwandy.azurecr.io"
 
@@ -212,7 +212,7 @@ Files /dev/fd/63 and CFOSVLTMxxxxxx.lic are identical
 Enter the following YAML manifest to deploy a cFOS **Deployment**. This deployment includes **annotations** to work around the cFOS mount permission issue. It also features an **_initContainers_** section to ensure cFOS gets DNS configuration from Kubernetes. The number of replicas is set to 1.
 - The file `Task1_1_create_cfos_serviceaccount.yaml` includes a ServiceAccount configured with the necessary permissions to read ConfigMaps and Secrets from Kubernetes. This setup involves Kubernetes RBAC (Role-Based Access Control), which includes creating a [Role](/03roles.html) and a [Role Binding](/04rolebindings.html). For more details, refer to [K8S RBAC](/02k8ssecurity/task1_3_using_rbac.html). 
 - The field "securityContext" has linux priviledge defined for cFOS container. check [K8s Security](/02k8ssecurity/task1_1_introduction_to_kubernetes_security.html) for more detail. 
-- The field "volumes"  about how to create [storage](/05configmapsecrets/task4_3_creating_managing_storage.html#use-external-data) for cFOS,the example below cFOS will not persist the data into storage.  
+- The field "volumes" creates [storage](/05configmapsecrets/task4_3_creating_managing_storage.html#use-external-data) for cFOS,the example below cFOS will not persist the data into storage.
 
 ```bash
 kubectl create namespace $cfosnamespace
