@@ -33,6 +33,8 @@ Use the script below to create a Kubernetes secret for pulling the cFOS image fr
 If you have your own cFOS image hosted on another registry, you can use that. Just ensure that the **secret** is named "cfosimagepullsecret".
 {{% /notice %}}
 
+{{% expand title="**Optional Step: ONLY run If you have your own ACR...**" %}}
+
 If you have your own ACR, Get your ACR access token and test it 
 
 {{< tabs title="ACR Access Token" >}}
@@ -68,6 +70,10 @@ Login Succeeded
 ```
 {{% /tab %}}
 {{< /tabs >}}
+
+{{% /expand %}}
+
+{{% expand title="**Mandatory Step: To create a Secret with Access Token...**" %}}
 
 Create k8s secret with accessToken and save a copy of yaml file for later use.
 
@@ -107,6 +113,8 @@ you can also verify the username and password for acr from your secret object
 ```bash
 kubectl get secret -n $cfosnamespace cfosimagepullsecret -o jsonpath="{.data.\.dockerconfigjson}" | base64 --decode | jq -r '.auths."fortinetwandy.azurecr.io".auth' | base64 --decode
 ```
+{{% /expand %}}
+
 ### Create cFOS configmap license 
 
 cFOS requires a license to be functional. Once your license is activated, download the license file and then upload it to Azure Cloud Shell. 

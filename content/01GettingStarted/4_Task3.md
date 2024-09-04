@@ -34,7 +34,7 @@ You have multiple options for setting up Kubernetes:
 {{% tab title="Establish initialization variables" %}}
 
 
-#### setup some variable 
+#### setup some variable (Mandatory step)
 
 ```bash
 owner="tecworkshop"
@@ -102,7 +102,7 @@ echo cFOS NameSpace = $cfosnamespace
 {{% expand title="**Option 1: Continue from K8S-101 Session...**" %}}
 #### Option 1: Continue from K8S-101 Session
 
-If you are continuing from the K8s-101 session, you should already have Kubernetes installed.
+If you are continuing from the K8s-101-workshop, you should already have Kubernetes installed. Hence continue with Option1. if you dont have lab from K8s-101-workshop you can pick from Option2 or Option 3. 
 
 **check your k8s**
 {{< tabs title="MetalLB install" >}}
@@ -157,7 +157,9 @@ nodemaster    Ready    control-plane   9m30s   v1.26.1   10.0.0.5      <none>   
 
 #### Option 2: Create Self-managed K8S
 
-If you are in the K8s-201 workshop, you can create a self-managed Kubernetes cluster, which will take around 10 minutes. If you prefer to use AKS instead of a self-managed cluster, proceed to Option 3.
+If you are in the K8s-201 workshop, you can create a self-managed Kubernetes cluster, which will take around 10 minutes. If you prefer to use AKS instead of a self-managed cluster, proceed to Option 3. 
+
+The Self managed cluster is where you wont use Azure based Kubernetes Service but build Kubernetes from scratch on Linux vM's hosted in Azure. 
 
 The self-managed Kubernetes cluster uses Calico as the CNI, which is the most common CNI in self-managed environments. Refer to the [K8s Network](/06networkingbasics.html) section for more information about Kubernetes networking.
 
@@ -301,8 +303,7 @@ After you ssh into node. you can use `cat /etc/cni/net.d/10-calico.conflist` to 
 
 #### Option 3: Create AKS 
 
-If you prefer AKS, use the script below to create a single-node cluster.
-
+If you prefer AKS(Azure Kubernetes Service), use this option. This option will deploy an AKS cluster along with Kubernetes already installed. Use the script below to create a single-node cluster.
 
 {{< tabs title="AKS K8s Deployment" icon="thumbtack" >}}
 {{% tab title="Start Here" %}}
