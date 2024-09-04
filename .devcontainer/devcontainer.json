@@ -1,0 +1,8 @@
+{
+  "image": "ghcr.io/robinmordasiewicz/devcontainer:latest",
+  "initializeCommand": "docker pull ghcr.io/robinmordasiewicz/devcontainer:latest",
+  "name": "k8s-workshop",
+  "runArgs": [
+    "--hostname=k8s-workshop"
+  ]
+}

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restapi
+  labels:
+      app: fos
+      category: config
+data:
+  type: partial
+  config: |- 
+     config system global
+       set admin-port 8080
+       set admin-server-cert "Device"
+     end

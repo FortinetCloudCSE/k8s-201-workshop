@@ -17,15 +17,15 @@ Here are some of the major CNI plugins widely used across the industry:
 - Cilium
 - Canal
 
-for managed k8s like AKS, because it ususally require integrate with VNET, so azure has it's own CNI which is "azure-vnet" cni.
+A managed k8s cluster (AKS) may require integration with a VNET, which may require using the azure CNI (azure-vnet).
 
 - Azure AKS ["azure-vnet"](https://github.com/Azure/azure-container-networking/blob/master/docs/cni.md)
 - AWS EKS  ["amazon VPC CNI"](https://github.com/aws/amazon-vpc-cni-k8s)
 - Googke GKE ["kubenet" or "calico etc"](https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview)
 
-all these CNI from managed k8s allow POD use subnet from VNET/VPC address space. 
+The cloud providers CNI in a managed k8s allow POD's to use a subnet from a VNET/VPC address space.
 
-normally, the cni configuration can be found from each node  "/etc/cni/net.d" directory. 
+A cni configuration is commonly located at the path "/etc/cni/net.d" on each of the nodes.
 
 for example on AKS worker node.
 
