@@ -79,7 +79,7 @@ Login Succeeded
 
 {{% /expand %}}
 
-{{% expand title="** To create a Secret with Access Token...**" %}}
+{{% expand title="**Create Image pull Secret with Token ...**" %}}
 
 Create k8s secret with accessToken and save a copy of yaml file for later use.
 
