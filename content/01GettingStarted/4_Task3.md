@@ -279,15 +279,40 @@ ssh ubuntu@$masternodename
 workernodename="k8strainingworker-$(whoami)-1.${location}.cloudapp.azure.com"
 ssh ubuntu@$workernodename
 ```
+or create a jumphost ssh client pod 
+```bash
+nodeip=$(kubectl get node -o jsonpath='{.items[0].status.addresses[0].address}')
+echo $nodeip 
+ 
+cat << EOF | tee sshclient.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ssh-jump-host
+  labels:
+    app: ssh-jump-host
+spec:
+  containers:
+  - name: ssh-client
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "apk add --no-cache openssh && apk add --no-cache curl && tail -f /dev/null"]
+    stdin: true
+    tty: true
+EOF
 
-or refer [ssh via internal ip](/01gettingstarted/4_task3.html#ssh-into-your-worker-node) to create ssh client pod, then use 
+kubectl apply -f sshclient.yaml
+echo wait for pod ready, use Ctr-c to break
+kubectl get pod  ssh-jump-host -w
+```
+then copy ssh key  into jumphost client pod
 
 ```bash
 kubectl exec -it ssh-jump-host -- sh -c "mkdir -p ~/.ssh"
 kubectl cp ~/.ssh/id_rsa default/ssh-jump-host:/root/.ssh/id_rsa
 kubectl exec -it ssh-jump-host -- sh -c 'chmod 600 /root/.ssh/id_rsa'
 ```
-then use 
+and then use 
 
 `kubectl exec -it ssh-jump-host -- ssh ubuntu@$masternodename` ssh into master node.
 
