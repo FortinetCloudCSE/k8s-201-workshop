@@ -33,32 +33,38 @@ Use the script below to create a Kubernetes secret for pulling the cFOS image fr
 If you have your own cFOS image hosted on another registry, you can use that. Just ensure that the **secret** is named "cfosimagepullsecret".
 {{% /notice %}}
 
-{{% expand title="**Optional Step: ONLY run If you have your own ACR...**" %}}
+{{% expand title="**Get the ACR access username and token...**" %}}
 
-If you have your own ACR, Get your ACR access token and test it 
+Get your ACR sever, access token for pull cFOS image and test it 
 
-{{< tabs title="ACR Access Token" >}}
-{{% tab title="Enter Username" %}}
+{{< tabs title="ACR Access Server,User,Token" >}}
+{{% tab title="Enter ACR Sever, Username , Token" %}}
 
-Paste your ACR Username it into the variable `UserName` using the command below:
+Paste your ACR Server, UserName, Token  below:
 ```bash
-loginServer="fortinetwandy.azurecr.io"
+defaultServer="fortinetwandy.azurecr.io"
 
-read -p "Paste your UserName for acr server $loginServer:|  " userName
-echo $userName
+echo -n "Enter the login server (default is $defaultServer): "
+read -r loginServer
+loginServer=${loginServer:-$defaultServer}
+
+echo "Using login server: $loginServer"
+
+echo -n "Paste your UserName for acr server $loginServer: "
+read -r userName
+echo "$userName"
+
+echo -n "Paste your accessToken for acr server $loginServer: "
+read -rs accessToken
+echo  # This adds a newline after the hidden input
+
+# Echo a masked version of the token for confirmation
+echo "Access token received (masked): ${accessToken:0:4}****${accessToken: -4}"
 ```
 {{% /tab %}}
 
-{{% tab title="Enter Password" %}}
-
-Paste your ACR token it into the variable `accessToken` using the command below:
-```bash
-
-read -p "Paste your accessToken for acr server $loginServer:|  " accessToken
-echo $accessToken
-```
-{{% /tab %}}
-{{% tab title="Verify accessToken" %}}
+{{% tab title="Optional: Verify accessToken" %}}
+if you client has docker login command avaiable, you can verify it, otherwise, skip this.
 ```bash
 docker login $loginServer -u $userName -p $accessToken
 ```
@@ -73,7 +79,7 @@ Login Succeeded
 
 {{% /expand %}}
 
-{{% expand title="**Mandatory Step: To create a Secret with Access Token...**" %}}
+{{% expand title="** To create a Secret with Access Token...**" %}}
 
 Create k8s secret with accessToken and save a copy of yaml file for later use.
 
