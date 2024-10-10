@@ -390,7 +390,6 @@ aks-worker-39339143-vmss000000   Ready    agent   47m   v1.28.9   10.224.0.4    
 {{% /tab %}}
 {{< /tabs >}}
 
-{{% /expand %}}
 
 ### ssh into your worker node.
 
@@ -462,6 +461,8 @@ azureuser@aks-worker-32004615-vmss000000:~$
 
 {{% /tab %}}
 {{< /tabs >}}
+
+{{% /expand %}}
 
 ### Summary
 
