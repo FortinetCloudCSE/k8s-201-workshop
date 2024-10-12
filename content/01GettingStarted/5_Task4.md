@@ -339,8 +339,26 @@ execute update-now
 ### Q&A 
 
 1. How much CPU/memory does cFOS consume in the cluster?
+
+{{% expand title="Click for Answer..." %}}
+
+```bash
+ kubectl top pod -n $cfosnamespace
+```
+{{% /expand %}}
+
 2. How quickly does cFOS become fully functional from the moment it is created?
 
+{{% expand title="Click for Answer..." %}}
+
+```bash
+"The time for cFOS to become fully functional varies and involves several steps:
+Downloading the cFOS image
+Booting up the system
+Applying the license
+For a new installation, the process typically takes 1-3 minutes, depending on network connectivity speed and system resources." 
+```
+{{% /expand %}}
 
 
 
