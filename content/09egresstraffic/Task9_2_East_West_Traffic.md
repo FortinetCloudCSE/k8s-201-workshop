@@ -169,9 +169,6 @@ az aks delete -n $(whoami)-aks-cluster -g $rg
 {{% /tab %}}
 {{< /tabs >}}
 
-Q&A
-
-1. Use ConfigMap to change firewall policy to stop icmp traffic between app1 and app2, meanwhile still allow http/https traffic betwen app1 and app2 with security inspection. 
 
 
 
