@@ -918,10 +918,22 @@ kubectl delete -f $scriptDir/k8s-201-workshop/scripts/cfos/ingress_demo/01_creat
 {{< /tabs >}}
 ### Q&A
 
-1. Please explain whether cFOS can be used to protect ingress traffic to target application from POD in other namespace ?
+1. Please describe how to use cFOS ingress protection to secure east-west traffic
 
-if answer is Yes. please show cli command in azure shell to verify it. you may use eicar with curl command to run from POD in other namespace.
+{{% expand title="Click for Answer..." %}}
+
+```bash
+1. Create a ClusterIP service or an internal Service Load Balancer (SLB) for the target application within the cluster.
+2. Configure ingress protection vip/polcies  for that service using cFOS.
+3. Define and apply appropriate firewall policies to filter and control traffic to the service.
+```
+{{% /expand %}}
+
 
 2. if not using cFOS to protect ingress traffic to goweb, what are other viable solutions ?
+{{% expand title="Click for Answer..." %}}
 
-
+```bash
+Fortiweb with ingress controller
+```
+{{% /expand %}}
