@@ -710,16 +710,26 @@ date=2024-06-27 time=08:16:09 eventtime=1719476169 tz="+0000" logid="0419016384"
 
 ### Q&A
 
-1. assume you have a database VM deployed in azure VNET, in same VNET, you have AKS deployed in other subnet. 
-how to secure traffic from your application POD to database VM ?
+1. In cFOS egress use case, what is the purpose of use multus CNI ?
+
+{{% expand title="Click for Answer..." %}}
+
+```bash
+Steer traffic from protected POD to cFOS  
+```
+{{% /expand %}}
 2. config cFOS add web filter feature to block traffic to www.casino.org 
 
 Answer:
 
+{{% expand title="Click for Answer..." %}} 
+```bash
 1. Modify NAD for application to insert route to www.casino.org
 2. Modify cFOS in firewall policy to add web filter profile 
 3. send traffic from application pod
 4. check web filter log
+```
+{{% /expand %}}
 
 
 
