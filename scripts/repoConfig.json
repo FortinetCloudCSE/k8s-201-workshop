@@ -3,7 +3,7 @@
   "author":"Andy Wang, Srija Allam",
   "workshopTitle":"Fortinet K8s 201 workshop",
   "themeVariant":"Xperts2024",
-  "logoBannerText":"K8s 201 Workshop",
+  "logoBannerText":"K8s 201",
   "logoBannerSubText":"cFOS",
   "errorLevel":"warning",
   "googleServicesID":"G-5RZBH288ST",
@@ -11,25 +11,25 @@
   {
     "text": "K8s 101 workshop",
     "URL": "https://fortinetcloudcse.github.io/k8s-101-workshop/",
-    "icon": "fa-tools-cap",
+    "icon": "fa-graduation-cap",
     "weight":10
   },
   {
     "text": "Kubernetes Admin Guide",
     "URL": "https://kubernetes.io/docs/concepts/",
-    "icon": "fa-tools-cap",
+    "icon": "fa-tools",
     "weight":20
   },
   {
     "text": "Kubectl reference",
     "URL": "https://kubernetes.io/docs/reference/kubectl/quick-reference/",
-    "icon": "fa-tools-cap",
+    "icon": "fa-tools",
     "weight":30
   },
   {
     "text": "Container FortiOS",
     "URL": "https://docs.fortinet.com/product/container-fortios/7.2",
-    "icon": "fa-tools-cap",
+    "icon": "fa-tools",
     "weight":40
   }
   ]

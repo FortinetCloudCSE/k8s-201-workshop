@@ -84,7 +84,7 @@ enableEmoji = true
   #Optional, By Default, the logo banner will match the Text from themeVariant Above
   # If you would like to change the primary logo banner text, uncommenet logoBannerText Parameter and set to desired text.
   
-  logoBannerText = "K8s 201 Workshop"
+  logoBannerText = "K8s 201"
   
   # Optional: If you'd like additional logo sub text/descriptions, use logoBannerSubText Parameter.  leave empty string to omit: ""
   
@@ -188,21 +188,21 @@ enableEmoji = true
 
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> K8s 101 workshop"
+name = "<i class='fas fa-graduation-cap'></i> K8s 101 workshop"
 url = "https://fortinetcloudcse.github.io/k8s-101-workshop/"
 weight = 10
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Kubernetes Admin Guide"
+name = "<i class='fas fa-tools'></i> Kubernetes Admin Guide"
 url = "https://kubernetes.io/docs/concepts/"
 weight = 20
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Kubectl reference"
+name = "<i class='fas fa-tools'></i> Kubectl reference"
 url = "https://kubernetes.io/docs/reference/kubectl/quick-reference/"
 weight = 30
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools-cap'></i> Container FortiOS"
+name = "<i class='fas fa-tools'></i> Container FortiOS"
 url = "https://docs.fortinet.com/product/container-fortios/7.2"
 weight = 40

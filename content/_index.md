@@ -1,10 +1,11 @@
 ---
-title: "Fortinet K8S 201 Workshop"
+title: "Fortinet XPerts 2024"
 weight: 1
 archetype: "home"
 description : "Fortinet K8S 201 Workshop"
 ---
 
+{{< Xperts24Banner line1="K8s 201:" line2="Container FortiOS" line3="cFOS" >}}
 
 # Welcome to the Kubernetes 201 Workshop!
 
