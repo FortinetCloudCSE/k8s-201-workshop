@@ -188,6 +188,11 @@ enableEmoji = true
 
 
 [[menu.shortcuts]]
+name = "<i class='fas fa-graduation-cap'></i> Workshop PDF"
+url = "k8s-201.pdf"
+weight = 5
+
+[[menu.shortcuts]]
 name = "<i class='fas fa-graduation-cap'></i> K8s 101 workshop"
 url = "https://fortinetcloudcse.github.io/k8s-101-workshop/"
 weight = 10

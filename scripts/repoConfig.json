@@ -9,6 +9,12 @@
   "googleServicesID":"G-5RZBH288ST",
   "shortcuts": [
   {
+    "text": "Workshop PDF",
+    "URL": "k8s-201.pdf",
+    "icon": "fa-graduation-cap",
+    "weight": 5
+  },
+  {
     "text": "K8s 101 workshop",
     "URL": "https://fortinetcloudcse.github.io/k8s-101-workshop/",
     "icon": "fa-graduation-cap",
