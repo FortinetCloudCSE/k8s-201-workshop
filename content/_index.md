@@ -20,6 +20,7 @@ if you already familar with k8s concept, you only want learn cFOS ingress and eg
 
 Get your Kubernetes cluster ready.
 
+after completed [setup azure cloudShell](/01gettingstarted/2_task1.html) then 
 set [variable first](/01gettingstarted/4_task3.html#setup-some-variable) then choose  one of the following options: 
 
 - [Continue from K8s 101](/01gettingstarted/4_task3.html#option-1-continue-from-k8s-101-session)

@@ -35,4 +35,4 @@ Multus is an open-source Container Network Interface (CNI) plugin for Kubernetes
 
 Multus is particularly useful in environments where advanced networking configurations are necessary, such as in telecommunications, large enterprise deployments, and applications that require high network performance and security.
 
-![imagemultus](../images/mutlus.png)
+![imagemultus](../images/multus.png)
