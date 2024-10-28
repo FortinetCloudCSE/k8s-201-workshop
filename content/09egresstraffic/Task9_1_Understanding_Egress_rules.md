@@ -676,7 +676,7 @@ you can try do sniff on cFOS to check the packet detail
 - Send malicous traffic 
 
 ```bash
-kubectl exec -it po/diag200 -n app-1 -- curl --max-time 5 -H "User-Agent: () { :; }; /bin/ls" http://ipinfo.io
+kubectl exec -it po/diag200 -n app-1 -- curl --max-time 5 -H "User-Agent: () { :; }; /bin/ls" http://www.vulnweb.com
 ```
 it's expected that you wont get response as it droped by cFOS. as this traffic will be blocked by cFOS because it will be marked as malicious by cFOS IPS profile.
 
@@ -686,8 +686,7 @@ it's expected that you wont get response as it droped by cFOS. as this traffic w
 - do same on app-2
 
 ```bash
-kubectl exec -it po/diag100 -n app-2 -- curl ipinfo.io
-kubectl exec -it po/diag100 -n app-2 -- curl --max-time 5 -H "User-Agent: () { :; }; /bin/ls" http://ipinfo.io
+kubectl exec -it po/diag100 -n app-2 -- curl --max-time 5 -H "User-Agent: () { :; }; /bin/ls" http://www.vulnweb.com
 
 ```
 - Check Result
