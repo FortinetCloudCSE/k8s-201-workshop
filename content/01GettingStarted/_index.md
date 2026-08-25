@@ -8,7 +8,7 @@ weight: 1
 Provision your Azure Environment, enter your Email address and click _Provision_
 {{< launchdemoform labdefinition="azure-k8s-seintro-110" >}}
 
-{{< notice info >}} Enter your email and click **Provision Accounts** once. You'll see a live progress bar while your account is created — this typically takes a few minutes. When it's done, your credentials (username and sign-in info) will appear directly on this page, and a copy is also sent to your email as a backup. If you reload this page or come back later, your credentials will still be here — no need to re-submit. {{< /notice >}}
+{{< notice info >}} Enter your email and click **Provision Accounts** once. You'll see a live progress bar while your account is created — this typically takes a few minutes. When it's done, your credentials (username and sign-in info) will appear directly on this page, and a copy is also sent to your email as a backup. If you reload this page or come back later, your credentials will still be here — no need to re-submit. If you're continuing from an earlier workshop in this session, you'll be offered the option to reuse your existing credentials instead of provisioning new ones. {{< /notice >}}
 
 Tasks
 
